@@ -11,6 +11,18 @@ All notable changes are recorded here. Format: [Keep a Changelog](https://keepac
   icons were regenerated from `app-icon.png`.
 
 ### Added
+- Phase 5: the MCP server and its installers. A single-file server (`mcp/dist/atelier-mcp.mjs`, MCP
+  SDK v2, Node 20+) exposes 22 tools, resources and prompts: read and edit designs atomically
+  (compare-and-write, safe beside the app and other agents), take screenshots of the live canvas
+  (image plus a saved file for hosts that cannot show images; also when the window is minimised),
+  read the user's selection, annotations and references, import images (images only, confined),
+  lint, and manage projects. `install` / `uninstall` / `doctor` / `print-config` for Claude Code,
+  Codex and Cursor (idempotent, backed up, never clobbers). The app embeds the server and installs
+  it on launch, has a real Connect dialog (paste-in text with the true path, copy, connection test),
+  a green pill while an agent is connected, an "An AI is editing" chip and a pulse on the nodes an
+  agent changed. Verified with the built bundle and the real SDK client, the real `claude` CLI in an
+  isolated config, an end-to-end test against the app in Chrome, and one against the production
+  desktop window.
 - Phase 4: persistence and sync. Projects are saved under `~/.atelier/projects/<id>/` (autosave
   within a quarter of a second, a rolling `.bak`, a project lock and compare-and-write so no writer
   can overwrite another's change), the open project and selection are published for agents by a

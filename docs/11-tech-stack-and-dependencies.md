@@ -18,6 +18,9 @@
 | Rust `dirs` | Phase 4 | The user's home directory for `~/.atelier` (the one platform detail not worth hand-rolling) |
 | Rust `tauri-plugin-single-instance` | Phase 4 | A second launch focuses the running window; two apps on one home would fight over the same files. Registered first, as its docs require |
 | Rust `tauri-plugin-window-state` | Phase 4 | Remembers window size and position between runs |
+| `@modelcontextprotocol/server`, `@modelcontextprotocol/client` | Phase 5 | The MCP SDK v2 (stable line, Node 20+, zod 4): the server is bundled into `atelier-mcp.mjs`; the client is a dev dependency used by the integration and live tests (it is the same code hosts use). Verified by a spike before anything was built on it |
+| `esbuild` (dev) | Phase 5 | Bundles the server and its dependencies into one file |
+| `html-to-image` | Phase 5 | Rasterises cloned artboards for the `screenshot` tool. Last released April 2025: a known risk, mitigated by cloning into a controlled container, a timer for animation frames, and the real-window test; a native capture is the documented fallback |
 | `tsx` (dev, already present) | Phase 4 | Also runs the persistence e2e and the writer child process, which import the TypeScript file module directly |
 
 Versions below are the *intended major versions at time of writing*. Claude Code must run `npm view <pkg> version` / check docs and pin what's current and compatible; don't blindly trust these numbers.

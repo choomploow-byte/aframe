@@ -68,6 +68,11 @@ Colour picker: swatches from tokens first, then custom; hex input; eyedropper (w
 - **A damaged project** is never opened silently: a dialog says what is wrong and offers "Restore previous version" when the backup is intact; meanwhile another project is open so the app stays usable.
 - **Not built yet:** a "recently opened" menu in the top bar (the dialog's order serves), project thumbnails, duplicate project, moving the projects folder.
 
+### As built in Phase 5 (decision log #67-#78)
+- **Connect dialog** (top-bar pill, or Welcome): tabs for Claude Code, Codex and Other. Each shows the kit's paste-in text with the real path to the server filled in (written the way that machine writes paths), a Copy button (if the browser refuses, the text is selected and the button says to press Ctrl+C), the equivalent terminal lines, and for Other the MCP JSON. Below: a connection test (waiting / connected / "your AI tool just used Atelier": it turns green on a tool call made after the dialog was opened) and example things to ask.
+- **Top-bar pill** shows a green dot while an agent's server is running (its presence file is fresh), grey otherwise.
+- **While an agent edits:** an "An AI is editing…" chip for a few seconds after each of its saves (only for changes that arrive while the project is open), a pulse on the nodes it changed, and a toast "The AI changed the design." with Undo. The whole agent change is one undo step labelled "AI change".
+
 ## Annotations (the "point at it" feature)
 - Tool `A`: click to drop a numbered pin, or drag for a region. Inline popover to type the comment. Enter to save.
 - Pins render in an overlay (not part of the design, excluded from exports and screenshots unless `annotations:true`).

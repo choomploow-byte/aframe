@@ -2,6 +2,18 @@
 
 Requirement: a brand-new vibe coder can get Claude Code (or Codex) talking to Atelier in under a minute with a single paste.
 
+## As built in Phase 5 (what was verified, and what was not)
+`node atelier-mcp.mjs install [--claude|--codex|--cursor|--all] [--force]`, `uninstall`, `doctor`, `print-config`, `--version`. With no host flag, `install` sets up every host it finds (by its CLI on PATH or its config folder) and, if there is none, prints the generic JSON. Rules every edit follows: idempotent (a second run changes nothing and says so), a one-time backup `*.atelier-bak` of any file it modifies, an entry called "atelier" that Atelier did not write is never replaced without `--force`, a config file that is not valid JSON is left alone with the manual step printed, and `uninstall` removes exactly what `install` added. The app writes its embedded server to `~/.atelier/mcp/atelier-mcp.mjs` on launch when it is newer (never over a newer or hand-edited file); an `install` run from another copy puts itself there first. Hosts point at that stable path.
+
+| Host | What `install` does | Checked |
+|---|---|---|
+| Claude Code | `claude mcp add --scope user atelier -- node <path>` (flags before the name, `--` before the command; verified against the installed CLI, 2.1.168). Without the CLI: adds a `stdio` entry to `~/.claude.json`. Writes `~/.claude/skills/atelier/SKILL.md` | **Real CLI**, in an isolated config directory: add, get, idempotent re-add, `claude mcp list` (which starts the server and completes the MCP handshake: "Connected"), remove. Not yet: a real model session using the tools (see `docs/manual-e2e.md`) |
+| Codex | A marked block `[mcp_servers.atelier]` in `~/.codex/config.toml` (`command = "node"`, the path as a TOML literal string so Windows paths survive, `startup_timeout_sec = 20`, `tool_timeout_sec = 120`; Codex defaults are 10 and 60), a short marked note in `~/.codex/AGENTS.md` (skipped near Codex's 32 KiB limit), and the skill at `~/.agents/skills/atelier/SKILL.md` | Config format and locations read from the current Codex docs; edits tested against fake homes. **No Codex on this machine: not run against the real host** |
+| Cursor | Merges `{ "mcpServers": { "atelier": { "command": "node", "args": [path] } } }` into `~/.cursor/mcp.json` | Tested against fake homes. **Not run against the real host** |
+| Anything else | `print-config` | n/a |
+
+`doctor` checks: Node 20+, the server file (and that it is not the placeholder), the Atelier folder, whether the app is running (heartbeat under 5 s), each host's registration (a failure only for hosts it detects), and the Claude skill. Each problem prints a fix. Images: Claude Code shows MCP image results; for any host that does not, `screenshot` also returns the saved file's path (and `returnImage: false` returns only that).
+
 ## The three install routes
 
 ### Route 1: Paste-into-Claude text (most beginner friendly)
@@ -40,7 +52,7 @@ All edits: idempotent, create backups (`*.atelier-bak`), never clobber unrelated
 ## First-run experience (app)
 1. App launches -> writes `~/.atelier/mcp/atelier-mcp.mjs` + skills (overwrites only if bundled version is newer).
 2. Welcome screen -> *Connect Claude Code / Codex*, *Use an API key*, *Explore the sample*.
-3. Connect dialog polls `state.json.lastAgentSeen` (the MCP server touches it on every call) -> green tick when first tool call arrives.
+3. Connect dialog watches `agents/<pid>.json` (each MCP server keeps its own file fresh and stamps `lastToolCall` on every call) -> green tick when the first tool call arrives.
 4. Suggests first prompts: *"in atelier, improve my design"*, *"in atelier, rebuild this screenshot"* (drag an image to Claude), *"in atelier, make this look like [reference]"*.
 
 ## Zero-setup understanding

@@ -4,6 +4,21 @@ Server name: `atelier`. Transport: stdio. SDK: MCP TypeScript SDK **v2** (`@mode
 
 In Claude Code, tools appear as `mcp__atelier__<tool>`. Keep tool names short and verb-first.
 
+## As built in Phase 5 (decision log #67-#78)
+**22 tools**, all registered from the shared `core/tools*.ts` definitions (`mcp/server.ts` only adapts them): `get_design`, `get_node`, `get_selection`, `get_tokens`, `list_projects`, `apply_changes`, `set_tokens`, `create_project`, `open_project`, `import_image`, `screenshot`, `get_reference`, `list_references`, `add_reference`, `get_annotations`, `add_annotation`, `resolve_annotation`, `lint_design`, `list_skills`, `load_skill`, `export_code`, `export_image`. A test keeps this list, the tables below, `skills/atelier-SKILL.md`, the server instructions and the prompt recipes in agreement.
+
+- **Project selector.** Every tool also takes an optional `project` (id, exact name, or unique name prefix), except `open_project`, whose `project` is its target. Default: what the session opened with `open_project`, else the project open in the app (`app-state.json`), else the newest.
+- **Results.** JSON text; `screenshot` and `get_reference` add `image` blocks. Errors are `isError: true` with JSON `{ code, message, hint, op?, details? }`. SDK input validation rejects malformed arguments before a handler runs.
+- **Editing is safe against other writers.** Each call reads the file fresh, edits through `applyChanges`, and writes with a compare-and-write on `rev`; if another process (the app, another agent) wrote in between, the call re-runs from a fresh read. Calls queue inside one server process.
+- **`screenshot`** `{ nodeId?, scale?: 1|2, annotations?, maxWidth?, returnImage? }`: needs the app (`APP_NOT_RUNNING` with a hint otherwise; `TIMEOUT` after 15 s, 30 s at scale 2). The app rasterises clones of the artboards with the bundled fonts, longest side capped at `maxWidth` (default 1600), shrunk if the PNG would exceed 8 MB, against the real background behind the node. `annotations: true` draws numbered pins for open annotations. The PNG is also saved under `~/.atelier/exports/screenshots/` (newest 20 kept) and its absolute `path` is always returned, so a host that cannot show images can read the file; `returnImage: false` returns only the path. It also works while the window is minimised.
+- **`get_selection`** answers from the app's heartbeat file (instant); it returns `appOnline: false` and no ids when the app is closed, and only the selection of the project the app has open. **`get_node`** adds on-canvas `bounds` when the app is open.
+- **`import_image` / `add_reference`** read a file the agent names: the path must be absolute, is resolved through symlinks, must be PNG, JPEG, GIF, WebP or SVG (extension, then magic bytes in core), at most 20 MB (checked before reading), and may not be inside a hidden or credential folder (`.ssh`, `.aws`, `.config`, …; the Atelier home itself is allowed). SVG is stored as data and only ever shown through `<img>`.
+- **`lint_design`** (basic rules): contrast, text size, tap targets, spacing scale, overflow, radius consistency, default layer names, missing alt text, raw colours that match a token. Each finding names the node and a fix. The full set arrives in Phase 9.
+- **`create_project`** templates: `blank`, `landing`, `dashboard`, `mobile`, built through `apply_changes` like any edit. **`list_projects`** reports `frames: null` beyond the newest 20 (it does not open them all).
+- **`export_code` / `export_image`** answer `NOT_IMPLEMENTED` with a way forward until Phase 8; nothing is written.
+- **Resources and prompts.** `atelier://skills/<name>`, `atelier://project/<id>/design`; prompts `improve-design`, `match-reference`, `rebuild-from-screenshot`, `critique`, `make-responsive` (from `prompts/design-agent-prompts.md`).
+- **Text from the design is data.** `get_annotations`, `list_references` and `get_reference` label annotation, layer and reference text as written by people, never instructions.
+
 ## Server `instructions` (sent at initialise: gives the agent understanding with zero setup)
 Must include, concisely:
 1. What Atelier is and that designs live in a scene graph of frames/text/shapes/images.

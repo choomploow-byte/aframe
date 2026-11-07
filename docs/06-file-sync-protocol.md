@@ -118,8 +118,16 @@ In `vite dev`, `scripts/vite-dev-fs.ts` exposes the same operations over `POST /
 | Edit -> file under 500 ms | same | automated: median ~260 ms |
 | Agent requests answered; unknown/planned/malicious requests refused | `requests.test.ts`, `persistence.mjs` | automated: ~100-270 ms |
 | Installer installs, app launches, uninstalls | `tests/e2e/installer-smoke.mjs` | automated (Windows) |
-| App closed: doc tools work, screenshot errors clearly | Phase 5 | pending |
+| App closed: doc tools work, screenshot errors clearly | `tests/mcp/server.test.ts` | automated |
+| An agent through the real MCP bundle edits the open app live (150-250 ms), screenshots match the canvas, selection reaches the agent, the project switches | `tests/e2e/mcp-live.mjs` | automated (Chrome) |
+| The same against the desktop window: production CSP, embedded server, minimised window | `tests/e2e/mcp-desktop.mjs` | automated (Windows) |
 | macOS and Linux file behaviour, WebKit | CI matrix (`rust-tests`, `tauri-build`) | defined, **not yet run** (no remote) |
+
+## As built in Phase 5 (the agent side of the bridge)
+- **Agent presence.** Each MCP process writes `agents/<pid>.json` (`pid`, `version`, `startedAt`, `lastAgentSeen`, `lastToolCall?`, `currentProject?`): refreshed every 30 s while it lives, on every tool call (a trailing write at most once a second, so the newest call is never lost), and removed on exit; files untouched for a day are swept. The app polls the folder every 3 s: an agent is "connected" if its file is under 95 s old, and the Connect dialog's test turns green on a `lastToolCall` newer than the moment it was opened.
+- **Request types now live:** `ping`, `get_selection`, `open_project`, `screenshot`, `get_node_bounds`. `export_image` is allowed but answers `NOT_IMPLEMENTED`. A request may carry a top-level `project`; for `get_selection`, `screenshot` and `get_node_bounds` the app refuses with `PROJECT_NOT_OPEN` if that is not the project on screen (the server turns that into a hint to call `open_project`).
+- **Heartbeat vs rendering when the window is hidden.** Measured on the real window: with the window minimised, requests are still delivered and answered in about 200 ms (the native watcher), but animation frames stop, and the screenshot library waits for one before it returns each image, so screenshots hung until the window was restored. The capture now runs frame callbacks from a timer while `document.hidden` (and restores the original afterwards); a screenshot of a minimised window takes under a second.
+- **The server never trusts the file protocol blindly:** `app-state.json` is read with validation (a missing or garbled file means "app not running"), and every response is parsed defensively.
 
 ## Changes from the first draft
 1. `state.json` split into `app-state.json` (app only) and `agents/<pid>.json` (each MCP process): read-modify-write on one shared file loses updates.
