@@ -70,7 +70,7 @@ Atelier is a desktop design app. You drive it through the `atelier` MCP tools (s
 - *"Improve my design"* → loop above; fix hierarchy/spacing/type first.
 - *"Make it look like my reference"* → `load_skill reference-matching`; style brief; apply via tokens; compare.
 - *"Rebuild this screenshot"* → structure with nested auto-layout, extract tokens, compare, fix deltas.
-- *"Address my annotations"* → `get_annotations`, fix each, screenshot, `resolve_annotation`.
+- *"Address my annotations"* → `get_annotations` (each has a pin `number`, the node and the frame around it), fix each, then `screenshot` with `annotations: true` (the open pins are drawn where the person put them), then `resolve_annotation` with a one-line reply the person will read. Leave your own note with `add_annotation` when a choice needs explaining.
 - *"Make a mobile version"* → duplicate frame at 390 wide, stack, enlarge targets, reuse tokens.
 - *"Export to React"* → ask for the folder, `lint_design`, then `export_code`.
 - *"Design a game HUD / shop / inventory"* → `load_skill game-ui`; start from a `game-*` template if it fits; icons via `search_icons`; buttons as components with states; check them with `screenshot` and `state: "all"`.

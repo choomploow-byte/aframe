@@ -80,6 +80,11 @@ Colour picker: swatches from tokens first, then custom; hex input; eyedropper (w
 - **New project** (Ctrl+O, then New project) has a *Start from* picker with the eight templates and a one-line description; the palette lists each template as `New project: ...`.
 - **Icons on the canvas** draw as SVG in the node's colour; an unknown name draws a dashed placeholder with a `?` and the requested name.
 
+### As built in Phase 6 (decision log #98-#101)
+- **Annotate tool (`A`).** Click drops a numbered pin, drag marks a region; a composer opens at the spot (Enter saves, Shift+Enter is a new line, Esc cancels; an empty note cannot be saved). The node under the pin is remembered with the offset inside its box, so the pin follows it. Pins are 26 px at every zoom; resolved notes show a muted check. Clicking a pin opens its card (text, author, the AI's reply, Resolve/Reopen, Delete).
+- **Notes tab** (right panel, with the open count): filter Open / Resolved / All, each note with its number, text, author badge (You / AI), the node it is on and the AI's reply; clicking a note selects its node, opens its card and pans the pin to the middle of the view; resolve, reopen, delete. **Ask AI to address N open notes** copies the sentence for Claude Code or Codex.
+- **References** (Assets tab): "Reference N" and its id, name, scope (style / layout / everything), a note, and **Compare with the selected frame**: an overlay with an opacity slider or side by side; a bar on the canvas switches mode and closes it.
+
 ## Annotations (the "point at it" feature)
 - Tool `A`: click to drop a numbered pin, or drag for a region. Inline popover to type the comment. Enter to save.
 - Pins render in an overlay (not part of the design, excluded from exports and screenshots unless `annotations:true`).

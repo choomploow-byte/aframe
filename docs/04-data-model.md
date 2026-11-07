@@ -123,6 +123,7 @@ interface Annotation {
   nodeId?: string;                    // node under the pin (if any)
   x: number; y: number;               // world coords of the pin
   rect?: { x: number; y: number; w: number; h: number }; // optional region
+  offset?: { x: number; y: number };  // where inside nodeId's box the pin (or region top-left) sits, so it follows the node; x/y/rect keep the world position it was made at
   text: string;
   author: 'user' | 'agent';
   status: 'open' | 'resolved';

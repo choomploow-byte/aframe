@@ -11,6 +11,7 @@ All notable changes are recorded here. Format: [Keep a Changelog](https://keepac
   icons were regenerated from `app-icon.png`.
 
 ### Added
+- Phase 6: notes and references. Press **A** to drop a numbered pin or drag a region on anything; the pin follows the node it is on. A **Notes** tab lists them (open / resolved / all, who wrote each, the AI's reply, click to jump), with **Ask AI to address N open notes**. An agent reads them with `get_annotations`, sees them drawn on `screenshot` (`annotations: true`), and answers with `resolve_annotation`. References take a scope and a note, and **Compare** shows one over or beside a frame.
 - Asset library: your own folder of images (textures, halftones, sunbursts, particles...) kept in `~/.atelier/library/`, filled with `atelier-mcp library add <folder>`, searched and placed by agents with `search_library` and `use_library_asset` (a picture is stored in a project once however often it is used). Not part of the app or repository.
 - Game-UI toolkit (decision log #79-#96; version 0.1.1 so installed apps refresh the MCP server): an **icon set** (165 solid icons in one style: coins, gems,
   keys, shields, stars, swords, potions, chests, arrows, close, check, settings and more; Font
