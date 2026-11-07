@@ -32,7 +32,7 @@ describe('mergeTokens', () => {
     expect(next.radii.pill).toBe(999);
     expect(next.radii).not.toHaveProperty('sm');
     expect(next.spacing).toEqual([2, 4, 8]);
-    expect(tokens.colors.primary).toBe('#C96442');
+    expect(tokens.colors.primary).toBe('#5B3CB0');
   });
 
   it('an empty patch changes nothing', () => {
@@ -103,7 +103,7 @@ describe('renameToken', () => {
   it('moves the token and every reference, keeping the design resolvable', () => {
     const doc = design();
     const next = renameToken(doc, 'color', 'primary', 'accent');
-    expect(next.tokens.colors.accent).toBe('#C96442');
+    expect(next.tokens.colors.accent).toBe('#5B3CB0');
     expect(next.tokens.colors).not.toHaveProperty('primary');
     expect(next.tokens.colors.brand).toBe('$accent');
     expect(next.nodes.n_btn02?.fill).toBe('$accent');
@@ -142,11 +142,11 @@ describe('deleteToken', () => {
     const doc = design();
     const next = deleteToken(doc, 'color', 'primary');
     expect(next.tokens.colors).not.toHaveProperty('primary');
-    expect(next.nodes.n_btn02?.fill).toBe('#C96442');
+    expect(next.nodes.n_btn02?.fill).toBe('#5B3CB0');
     // Only the deleted token is detached; the other stop still references its token.
-    expect(next.nodes.n_btn01?.fill).toBe('linear-gradient(90deg, #C96442, $primarySoft)');
-    expect(next.nodes.n_card1?.shadow?.[0]?.color).toBe('#C96442');
-    expect(next.tokens.colors.brand).toBe('#C96442'); // the alias is detached too
+    expect(next.nodes.n_btn01?.fill).toBe('linear-gradient(90deg, #5B3CB0, $primarySoft)');
+    expect(next.nodes.n_card1?.shadow?.[0]?.color).toBe('#5B3CB0');
+    expect(next.tokens.colors.brand).toBe('#5B3CB0'); // the alias is detached too
     for (const n of Object.values(next.nodes)) expect(findTokenIssues(n, next.tokens)).toEqual([]);
   });
 

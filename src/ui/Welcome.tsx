@@ -2,6 +2,7 @@ import { Frame, MessageCircle, Sparkles } from 'lucide-react';
 import { createSampleProject } from '../projects/session';
 import { store } from '../store/store';
 import { STRINGS } from '../strings';
+import { Wordmark3D } from './Brand';
 import { openDialog } from './ui-state';
 
 /** What an empty canvas says: three ways to begin, written for someone who has never seen the app. */
@@ -9,6 +10,7 @@ export function Welcome() {
   const w = STRINGS.welcome;
   return (
     <div className="welcome" data-testid="welcome">
+      <Wordmark3D width={220} />
       <h1 className="welcome__title">{w.title}</h1>
       <p className="welcome__lead">{w.lead}</p>
       <div className="welcome__actions" data-ui>

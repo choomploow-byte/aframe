@@ -1,8 +1,8 @@
 # 07. UI / UX Specification
 
 ## Design language: "calm, warm, restrained" (think the Claude app, not Figma's density)
-- **Palette (light):** background `#FAF9F5`, panels `#FFFFFF`, borders `#E8E6DC`, text `#1F1E1D`, muted `#6B6A65`, accent `#C96442` (single accent, used sparingly), selection blue-free: use accent for selection outlines. Canvas background `#F0EEE6` with a very faint dot grid.
-- **Palette (dark):** background `#262624`, panels `#30302E`, borders `#41403B`, text `#F5F4EE`, muted `#A3A29B`, same accent.
+- **Palette (light):** background `#FAF9F5`, panels `#FFFFFF`, borders `#E8E6DC`, text `#1F1E1D`, muted `#6B6A65`, accent `#5B3CB0`, the brand purple (single accent, used sparingly; `#432B78` is the deeper brand purple for fills with white text, `#4B2F94` for accent-coloured text), selection blue-free: use accent for selection outlines. Canvas background `#F0EEE6` with a very faint dot grid.
+- **Palette (dark):** background `#262624`, panels `#30302E`, borders `#41403B`, text `#F5F4EE`, muted `#A3A29B`, accent `#8A6EE0` (lighter so it clears 3:1 on the dark panels; `#6A4BC4` for fills with white text, `#C0AEF5` for text).
 - **Type:** UI in Inter (or system UI), 13px base, 12px for dense panels; serif (Fraunces) only for empty states/onboarding headlines.
 - **Shape:** 8px radius controls, 12px panels/dialogs, 1px borders, soft shadows only on floating elements.
 - **Motion:** 120-180 ms ease-out; no bouncy animations; respect `prefers-reduced-motion`.

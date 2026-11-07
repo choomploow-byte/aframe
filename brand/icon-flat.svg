@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Atelier logo - final</title>
+  <rect width="800" height="800" rx="176" fill="#432B78"/>
+  <g fill="#F3ECE2" fill-rule="evenodd">
+    <path d="M476.6 553.0 L565.0 486.0 L483.5 214.2 L347.2 112.0 L172.0 696.0 L270.0 696.0 L312.9 553.0 Z M341.1 459.0 L400.0 262.7 L458.9 459.0 Z"/>
+    <path d="M410.0 126.6 L447.7 95.0 L472.0 173.1 Z"/>
+    <path d="M530.0 696.0 L628.0 696.0 L592.6 578.0 L494.6 578.0 Z"/>
+  </g>
+</svg>

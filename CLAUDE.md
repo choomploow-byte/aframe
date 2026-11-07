@@ -33,7 +33,7 @@ Atelier = open-source native desktop AI design studio (Tauri 2 + React + TypeScr
 - Dependencies: justify every addition in the PR/commit message; prefer standard library.
 
 ## UI/UX
-Calm, warm, restrained (docs/07): near-neutral warm palette, one accent `#C96442`, generous whitespace, 13px base type, 8/12px radii, minimal chrome. Light + dark themes via CSS variables. Real empty/error states. Keyboard-first.
+Calm, warm, restrained (docs/07): near-neutral warm palette, one accent, the brand purple `#5B3CB0` (`#432B78` for fills with white text), generous whitespace, 13px base type, 8/12px radii, minimal chrome. Light + dark themes via CSS variables. Real empty/error states. Keyboard-first.
 
 ## Working agreements
 - Work one phase at a time; start each by restating goal + acceptance criteria and creating a task list.

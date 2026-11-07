@@ -95,7 +95,7 @@ The MCP server is **not** started by the app. The agent host starts it (that's h
 atelier/
   package.json  vite.config.ts  tsconfig.json  index.html
   CLAUDE.md  AGENTS.md  README.md  LICENSE
-  scripts/  build-mcp.mjs  test-mcp.mjs  make-icons.py
+  scripts/  build-mcp.mjs  test-mcp.mjs
   src/
     main.tsx  App.tsx  styles.css
     core/  types.ts ops.ts apply.ts style.ts tools.ts export.ts lint.ts tokens.ts ids.ts skills/*.ts

@@ -136,7 +136,7 @@ function drawPins(ctx: CanvasRenderingContext2D, doc: Doc, region: Region, scale
     const r = 11 * Math.max(1, scale * 0.8);
     ctx.beginPath();
     ctx.arc(px, py, r, 0, Math.PI * 2);
-    ctx.fillStyle = '#c96442';
+    ctx.fillStyle = '#5b3cb0';
     ctx.fill();
     ctx.lineWidth = Math.max(2, scale * 1.5);
     ctx.strokeStyle = '#ffffff';
@@ -147,6 +147,23 @@ function drawPins(ctx: CanvasRenderingContext2D, doc: Doc, region: Region, scale
     ctx.textBaseline = 'middle';
     ctx.fillText(String(i + 1), px, py + 0.5);
   });
+}
+
+/**
+ * A minimised or covered window produces no animation frames, and `html-to-image` waits for one
+ * before it hands each image back, so a screenshot of a hidden window would never finish. While the
+ * page is hidden, frame callbacks run from a timer instead, for the length of the capture only.
+ */
+async function whileFramesMayNotRun<T>(work: () => Promise<T>): Promise<T> {
+  if (!document.hidden) return work();
+  const original = window.requestAnimationFrame;
+  window.requestAnimationFrame = (callback) =>
+    window.setTimeout(() => callback(performance.now()), 16);
+  try {
+    return await work();
+  } finally {
+    window.requestAnimationFrame = original;
+  }
 }
 
 /** One render at one pixel ratio. */
@@ -219,7 +236,9 @@ export async function captureScreenshot(
   // The longest side is capped at maxWidth, whatever the scale asks for.
   let scale = Math.min(wanted, maxSide / Math.max(region.w, region.h));
   for (let attempt = 0; attempt < 4; attempt += 1) {
-    const canvas = await render(doc, region, scale, params.annotations === true, background);
+    const canvas = await whileFramesMayNotRun(() =>
+      render(doc, region, scale, params.annotations === true, background),
+    );
     const dataUrl = canvas.toDataURL('image/png');
     const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
     // base64 is 4/3 of the bytes: shrink and retry if the PNG would be over the cap.

@@ -4,6 +4,12 @@ All notable changes are recorded here. Format: [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+### Changed
+- Brand: the Atelier icon and wordmark (`brand/`) replace the placeholder square, and the accent is
+  now purple everywhere: the interface (light and dark), the favicon, annotation pins in agent
+  screenshots, the gradient editor's default and the starter tokens of a new project. Desktop
+  icons were regenerated from `app-icon.png`.
+
 ### Added
 - Phase 4: persistence and sync. Projects are saved under `~/.atelier/projects/<id>/` (autosave
   within a quarter of a second, a rolling `.bak`, a project lock and compare-and-write so no writer

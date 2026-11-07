@@ -187,9 +187,9 @@ describe('frame layout', () => {
 describe('appearance', () => {
   it('solid, token and gradient fills', () => {
     expect(css(node({ type: 'rect', fill: '#112233' })).backgroundColor).toBe('#112233');
-    expect(css(node({ type: 'rect', fill: '$primary' })).backgroundColor).toBe('#C96442');
+    expect(css(node({ type: 'rect', fill: '$primary' })).backgroundColor).toBe('#5B3CB0');
     const grad = css(node({ type: 'rect', fill: 'linear-gradient(90deg, $primary, #fff)' }));
-    expect(grad.backgroundImage).toBe('linear-gradient(90deg, #C96442, #fff)');
+    expect(grad.backgroundImage).toBe('linear-gradient(90deg, #5B3CB0, #fff)');
     expect(grad).not.toHaveProperty('backgroundColor');
     expect(css(node({ type: 'rect', fill: 'radial-gradient(circle, #000, #fff)' }))).toHaveProperty(
       'backgroundImage',

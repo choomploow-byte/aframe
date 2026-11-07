@@ -62,7 +62,7 @@ describe('read tools', () => {
 
   it('get_tokens returns the tokens', async () => {
     const r = await runTool(ctx(), 'get_tokens', undefined);
-    expect(r).toMatchObject({ ok: true, data: { colors: { primary: '#C96442' } } });
+    expect(r).toMatchObject({ ok: true, data: { colors: { primary: '#5B3CB0' } } });
   });
 });
 

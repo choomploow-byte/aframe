@@ -21,8 +21,8 @@ export const DEFAULT_GRADIENT: GradientModel = {
   kind: 'linear',
   angle: 90,
   stops: [
-    { color: '#C96442', at: 0 },
-    { color: '#F6E6DF', at: 100 },
+    { color: '#5B3CB0', at: 0 },
+    { color: '#ECE6F8', at: 100 },
   ],
 };
 

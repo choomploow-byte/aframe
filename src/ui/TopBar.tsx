@@ -6,6 +6,7 @@ import { useProjects } from '../projects/session';
 import { renameProject } from '../store/panel-commands';
 import { store, useAtelier } from '../store/store';
 import { STRINGS } from '../strings';
+import { LogoMark, Wordmark } from './Brand';
 import { ContextMenu } from './ContextMenu';
 import { TextField } from './fields';
 import { nextTheme, setThemePreference, useThemePreference } from './theme';
@@ -63,8 +64,8 @@ export function TopBar() {
 
   return (
     <header className="topbar">
-      <span className="topbar__logo" aria-hidden="true" />
-      <span className="topbar__brand">{BRAND.name}</span>
+      <LogoMark size={22} />
+      <Wordmark height={18} label={BRAND.name} />
       <button
         type="button"
         className="icon-btn"

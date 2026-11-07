@@ -108,7 +108,7 @@ const ops: Op[] = [
   {
     op: 'update',
     id: '$primary',
-    set: { shadow: [{ x: 0, y: 4, blur: 12, spread: 0, color: 'rgba(201,100,66,0.35)' }] },
+    set: { shadow: [{ x: 0, y: 4, blur: 12, spread: 0, color: 'rgba(91,60,176,0.35)' }] },
   },
 ];
 

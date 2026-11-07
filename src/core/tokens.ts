@@ -1,6 +1,6 @@
 import type { Node, RadiusTuple, Tokens } from './types';
 
-/** Starter tokens for new documents (the warm palette from docs/07, as used by the sample fixture). */
+/** Starter tokens for new documents: warm neutrals from docs/07 with the brand purple as the accent. */
 export const DEFAULT_TOKENS: Tokens = {
   colors: {
     surface: '#FAF9F5',
@@ -8,8 +8,8 @@ export const DEFAULT_TOKENS: Tokens = {
     border: '#E8E6DC',
     text: '#1F1E1D',
     muted: '#6B6A65',
-    primary: '#C96442',
-    primarySoft: '#F6E6DF',
+    primary: '#5B3CB0',
+    primarySoft: '#ECE6F8',
   },
   fonts: { heading: 'Fraunces', body: 'Inter', mono: 'JetBrains Mono' },
   spacing: [4, 8, 12, 16, 24, 32, 48, 64, 96],

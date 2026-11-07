@@ -440,7 +440,7 @@ await group('build a landing hero by hand (panels + canvas only)', async () => {
     (id) => getComputedStyle(document.querySelector(`[data-node-id="${id}"]`)).backgroundColor,
     btnId,
   );
-  check('the button renders in the primary colour', bg === 'rgb(201, 100, 66)', bg);
+  check('the button renders in the primary colour', bg === 'rgb(91, 60, 176)', bg);
   const secs = (Date.now() - t0) / 1000;
   r.info('time to hand-build the hero (scripted)', `${secs.toFixed(1)}s`);
   check('well under the 5-minute acceptance budget', secs < 120, `${secs}s`);

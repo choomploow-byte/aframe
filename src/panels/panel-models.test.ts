@@ -78,7 +78,7 @@ describe('fuzzy', () => {
 describe('gradient model', () => {
   it('builds and parses the canonical forms and round-trips them', () => {
     const css = buildGradient(DEFAULT_GRADIENT);
-    expect(css).toBe('linear-gradient(90deg, #C96442 0%, #F6E6DF 100%)');
+    expect(css).toBe('linear-gradient(90deg, #5B3CB0 0%, #ECE6F8 100%)');
     expect(parseGradient(css)).toEqual(DEFAULT_GRADIENT);
     const radial = buildGradient({
       kind: 'radial',

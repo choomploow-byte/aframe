@@ -68,6 +68,7 @@
 | 63 | 2026-11-07 | The window closes through the page: native emits `atelier://close-requested`, the page saves and calls `app_quit`; a 4 s grace period quits regardless | Never lose the last edit, never trap the user behind a hung page | Close immediately | Accepted |
 | 64 | 2026-11-07 | Project import/export use the browser's file input and download, not a dialog plugin | No extra plugin or permission; the page only ever sees a file the user picked | `tauri-plugin-dialog` + a path-taking command | Accepted (dialog plugin returns in Phase 8 for the export folder) |
 | 65 | 2026-11-07 | Browser test runs always use a throwaway `ATELIER_HOME`; `?nopersist` (honoured only in dev and the dev-hooks build) keeps the canvas tests in memory | A test must never write into a real projects folder (one early run wrote into `~/.atelier-dev`; fixed) | Share the dev home | Accepted |
+| 66 | 2026-11-07 | Brand accent is purple (`#5B3CB0` light, `#8A6EE0` dark), replacing the placeholder terracotta; new projects start with the same primary | The logo and wordmark are purple, so the UI, the favicon, the pins and a new document's starter tokens use one colour family. Brand masters live in `brand/`, web copies in `public/brand/`, desktop icons are generated from `app-icon.png` with `tauri icon`. | The placeholder `scripts/make-icons.py` was removed (it would have overwritten the real icon). |
 
 Template for new entries: *Decision / Context / Options / Choice / Consequences.*
 

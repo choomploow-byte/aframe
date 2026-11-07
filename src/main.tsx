@@ -3,6 +3,7 @@ import '@fontsource-variable/fraunces';
 import './canvas/fonts.css';
 import './styles.css';
 import './ui/ui.css';
+import './ui/brand.css';
 import './panels/panels.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
