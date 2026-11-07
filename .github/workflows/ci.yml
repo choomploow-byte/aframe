@@ -22,34 +22,54 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run build:mcp
+      # Includes tests/node: the file protocol (confinement, locks, crashes, concurrent processes),
+      # projects, sync and the agent bridge, against real temp directories.
       - run: npm run test:unit
       - run: node scripts/test-mcp.mjs
-      # Chrome is preinstalled on ubuntu-latest; the smoke test runs headless.
+      # Chrome is preinstalled on ubuntu-latest; the browser suites run headless. The suites use a
+      # throwaway ATELIER_HOME each, never a real projects folder.
       - run: npm run test:e2e
         env:
           CI: 'true'
 
+  # The native side (confined file commands, locks, heartbeat) on every OS it ships for.
   rust-tests:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
       - name: Tauri system deps
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
-      # src-tauri is added in the Tauri smoke step; skip cleanly until it exists.
-      - run: |
-          if [ -f src-tauri/Cargo.toml ]; then cargo test --manifest-path src-tauri/Cargo.toml; else echo "no src-tauri yet"; fi
+      - run: cargo fmt --manifest-path src-tauri/Cargo.toml --check
+      - run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path src-tauri/Cargo.toml
 
-  # Enabled once the desktop shell is real (Phase 4). Kept here so the Windows/WebView2 path is
-  # not forgotten: docs/13 asks for a build smoke on three OSes.
-  tauri-build-windows:
-    if: false
-    runs-on: windows-latest
+  # Docs/13: a desktop build on three OSes. Installers are built unsigned (signing is Phase 11).
+  tauri-build:
+    needs: [test, rust-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            bundles: nsis
+          - os: macos-latest
+            bundles: dmg
+          - os: ubuntu-latest
+            bundles: appimage,deb
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -57,5 +77,24 @@ jobs:
           node-version: 24
           cache: npm
       - uses: dtolnay/rust-toolchain@stable
+      - name: Tauri system deps
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
       - run: npm ci
-      - run: npm run tauri:build -- --debug
+      - run: npm run tauri:build -- --bundles ${{ matrix.bundles }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: atelier-${{ matrix.os }}
+          path: src-tauri/target/release/bundle/**
+          if-no-files-found: error
+      # Installs the NSIS installer silently, starts the installed app, checks it, uninstalls.
+      # Not yet confirmed on a GitHub runner (it was run on a developer machine): see docs/13.
+      - name: Windows installer smoke test
+        if: matrix.os == 'windows-latest'
+        continue-on-error: true
+        run: node tests/e2e/installer-smoke.mjs
