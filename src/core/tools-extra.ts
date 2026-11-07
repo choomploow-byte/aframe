@@ -9,6 +9,7 @@ import { CoreError } from './errors';
 import { generateId } from './ids';
 import { lintDesign } from './lint';
 import { getOutline } from './outline';
+import { lookupId } from './ops';
 import { TEMPLATES } from './templates';
 import { defineTool, ToolFailure, withImages, type Tool } from './tool-kit';
 import type { Annotation, Doc, ToolContext } from './types';
@@ -66,12 +67,23 @@ const screenshot = defineTool({
       .max(4096)
       .optional()
       .describe('Longest side in px (default 1600)'),
+    state: z
+      .enum(['default', 'hover', 'pressed', 'disabled', 'selected', 'all'])
+      .optional()
+      .describe(
+        'Show components in this state without changing the design: every instance (and master) in the picture takes it. "all" draws default, hover, pressed, disabled and selected side by side, labelled. Use it to check how a button looks in each state.',
+      ),
     returnImage: z.boolean().optional().describe('false: only save the file and return its path'),
   }),
   handler: async (ctx, input) => {
     const take = need(ctx.screenshot, 'Screenshots');
     const { returnImage, ...opts } = input;
+    if (opts.nodeId !== undefined) {
+      const doc = await ctx.getDoc();
+      opts.nodeId = lookupId(doc.nodes, opts.nodeId);
+    }
     const result = await take({
+      ...(opts.state === undefined ? {} : { state: opts.state }),
       ...(opts.nodeId === undefined ? {} : { nodeId: opts.nodeId }),
       ...(opts.scale === undefined ? {} : { scale: opts.scale }),
       ...(opts.annotations === undefined ? {} : { annotations: opts.annotations }),
@@ -129,14 +141,15 @@ const addAnnotation = defineTool({
   }),
   handler: async (ctx, input) => {
     const doc = await ctx.getDoc();
-    if (input.nodeId !== undefined && doc.nodes[input.nodeId] === undefined) {
+    if (input.nodeId !== undefined && doc.nodes[lookupId(doc.nodes, input.nodeId)] === undefined) {
       throw new CoreError(
         'NOT_FOUND',
         `Node ${input.nodeId} does not exist.`,
         'Call get_design to see the ids.',
       );
     }
-    const node = input.nodeId === undefined ? undefined : doc.nodes[input.nodeId];
+    const node =
+      input.nodeId === undefined ? undefined : doc.nodes[lookupId(doc.nodes, input.nodeId)];
     const id = generateId('a', { has: (x) => doc.annotations.some((a) => a.id === x) });
     const annotation: Annotation = {
       id,
@@ -366,14 +379,15 @@ const lintDesignTool = defineTool({
   inputSchema: z.object({ nodeId: z.string().optional().describe('Limit to this subtree') }),
   handler: async (ctx, { nodeId }) => {
     const doc: Doc = await ctx.getDoc();
-    if (nodeId !== undefined && doc.nodes[nodeId] === undefined) {
+    const target = nodeId === undefined ? undefined : lookupId(doc.nodes, nodeId);
+    if (target !== undefined && doc.nodes[target] === undefined) {
       throw new CoreError(
         'NOT_FOUND',
-        `Node ${nodeId} does not exist.`,
+        `Node ${nodeId ?? ''} does not exist.`,
         'Call get_design to see the ids.',
       );
     }
-    return lintDesign(doc, nodeId);
+    return lintDesign(doc, target);
   },
 });
 

@@ -11,7 +11,9 @@ import {
   LIMITS,
   type Draft,
 } from './ops';
-import { findTokenIssues } from './tokens';
+import { fontInfo, supportsWeight } from './fonts';
+import { getIcon, suggestIcons } from './icons';
+import { findTokenIssues, resolveFont } from './tokens';
 import type { ApplyResult, Doc, Op, Warning } from './types';
 import { deepEqual, isFiniteNumber, isPlainObject } from './util';
 
@@ -117,6 +119,19 @@ function runOp(d: Draft, raw: unknown): void {
   }
 }
 
+function definedTokens(doc: Doc, token: string): string {
+  const group = /^\$(font|radius)\./.exec(token)?.[1];
+  const names =
+    group === 'font'
+      ? Object.keys(doc.tokens.fonts).map((n) => `$font.${n}`)
+      : group === 'radius'
+        ? Object.keys(doc.tokens.radii).map((n) => `$radius.${n}`)
+        : Object.keys(doc.tokens.colors).map((n) => `$${n}`);
+  return names.length > 0
+    ? ` Defined: ${names.join(', ')}.`
+    : ' No tokens of that kind are defined.';
+}
+
 function tokenWarnings(doc: Doc, ids: readonly string[], nodes: Doc['nodes']): Warning[] {
   const out: Warning[] = [];
   for (const id of ids) {
@@ -128,8 +143,48 @@ function tokenWarnings(doc: Doc, ids: readonly string[], nodes: Doc['nodes']): W
         nodeId: id,
         message:
           issue.reason === 'UNKNOWN'
-            ? `Token ${issue.token} is not defined; the property is ignored until it exists (see get_tokens).`
+            ? `Token ${issue.token} is not defined; the property is ignored until it exists.${definedTokens(doc, issue.token)}`
             : `Token ${issue.token} cannot be used here (${issue.reason.toLowerCase().replace('_', ' ')}); the property is ignored.`,
+      });
+    }
+  }
+  return out;
+}
+
+/** Things that will not draw the way the property suggests: unknown icons, faked weights, effects on text. */
+function contentWarnings(doc: Doc, ids: readonly string[], nodes: Doc['nodes']): Warning[] {
+  const out: Warning[] = [];
+  for (const id of ids) {
+    const node = nodes[id];
+    if (!node || node.from !== undefined) continue; // layers of an instance follow their master
+    if (node.type === 'icon' && getIcon(node.icon) === undefined) {
+      const near = node.icon === undefined ? [] : suggestIcons(node.icon);
+      out.push({
+        code: 'UNKNOWN_ICON',
+        nodeId: id,
+        message:
+          node.icon === undefined
+            ? `Icon ${id} has no icon name, so a labelled placeholder is drawn. Set icon to a name from search_icons.`
+            : `There is no icon named "${node.icon}", so a labelled placeholder is drawn.${near.length > 0 ? ` Did you mean: ${near.join(', ')}?` : ''} Use search_icons to find names.`,
+      });
+    }
+    if (node.type === 'text' && node.fontWeight !== undefined) {
+      const family = resolveFont(node.fontFamily, doc.tokens);
+      const info = fontInfo(family);
+      if (info && !supportsWeight(family, node.fontWeight)) {
+        const [lo, hi] = info.weights;
+        out.push({
+          code: 'FONT_WEIGHT',
+          nodeId: id,
+          message: `${info.name} has ${lo === hi ? `only weight ${lo}` : `weights ${lo} to ${hi}`}; fontWeight ${node.fontWeight} will draw as ${Math.min(hi, Math.max(lo, node.fontWeight))} (no fake bold).`,
+        });
+      }
+    }
+    if (node.type === 'text' && node.effects !== undefined && node.effects.length > 0) {
+      out.push({
+        code: 'EFFECT_ON_TEXT',
+        nodeId: id,
+        message: `Effect presets are box recipes and are not drawn on text node ${id}. Put them on the frame behind the text; use shadow for a glyph shadow.`,
       });
     }
   }
@@ -192,6 +247,10 @@ export function applyChanges(
     changed,
     deleted,
     idMap: { ...d.idMap },
-    warnings: [...d.warnings, ...tokenWarnings(doc, [...created, ...changed], d.nodes)],
+    warnings: [
+      ...d.warnings,
+      ...tokenWarnings(doc, [...created, ...changed], d.nodes),
+      ...contentWarnings(doc, [...created, ...changed], d.nodes),
+    ],
   };
 }

@@ -5,7 +5,7 @@
 
 export const SCHEMA_VERSION = 1 as const;
 
-export type NodeType = 'page' | 'frame' | 'rect' | 'ellipse' | 'line' | 'text' | 'image';
+export type NodeType = 'page' | 'frame' | 'rect' | 'ellipse' | 'line' | 'text' | 'image' | 'icon';
 /** Node types a tool may create (the page node is created with the document). */
 export type CreatableNodeType = Exclude<NodeType, 'page'>;
 export type Size = number | 'hug' | 'fill';
@@ -19,6 +19,48 @@ export interface Shadow {
   spread: number;
   color: string;
   inset?: boolean;
+}
+
+/** Native repeating fills (docs/04 "Pattern fills"). */
+export type PatternName = 'stripes' | 'halftone' | 'sunburst' | 'noise';
+
+/**
+ * A pattern used as `fill`. `color` is the ink; `background` (optional, any colour or gradient) is
+ * what the ink sits on. Meaning of the numbers per pattern:
+ * - stripes: `size` stripe thickness px, `spacing` gap px, `angle` degrees
+ * - halftone: `size` dot diameter px, `spacing` distance between dot centres px
+ * - sunburst: `size` ray width in degrees, `spacing` gap in degrees, `angle` start rotation
+ * - noise: `size` grain tile px (larger = coarser)
+ */
+export interface PatternFill {
+  pattern: PatternName;
+  color: string;
+  size?: number;
+  spacing?: number;
+  angle?: number;
+  /** 0..1 strength of the ink (default 1). */
+  opacity?: number;
+  background?: string;
+}
+
+/** Named box-shadow recipes (docs/04 "Effect presets"). */
+export type EffectPreset =
+  'bevel-raised' | 'bevel-pressed' | 'gloss-top' | 'inner-glow' | 'hard-3d-bottom';
+
+/** A preset by name, or with options: `intensity` scales it (default 1), `color` tints it. */
+export type EffectRef = EffectPreset | { preset: EffectPreset; intensity?: number; color?: string };
+
+export type ComponentKind = 'button' | 'card' | 'tab' | 'slot' | 'panel' | 'toast' | 'custom';
+export type ComponentState = 'default' | 'hover' | 'pressed' | 'disabled' | 'selected';
+
+/** Property changes for one layer of a component, keyed by the master's layer id (`$self` = the root). */
+export type LayerPatches = Record<string, Record<string, unknown>>;
+
+/** Marks a frame as a master component (docs/04 "Components"). */
+export interface ComponentDef {
+  kind: ComponentKind;
+  /** What differs from the master's own look in each non-default state. */
+  states?: Partial<Record<Exclude<ComponentState, 'default'>, LayerPatches>>;
 }
 
 /** Corner radii in CSS order: top-left, top-right, bottom-right, bottom-left. */
@@ -43,7 +85,8 @@ export interface Node {
   opacity: number; // 0..1
 
   // Appearance
-  fill?: string; // '#RRGGBB[AA]' | '$token' | 'linear-gradient(...)' | 'radial-gradient(...)'
+  /** '#RRGGBB[AA]' | '$token' | 'linear-gradient(...)' | 'radial-gradient(...)' | a pattern */
+  fill?: string | PatternFill;
   stroke?: string;
   strokeWidth?: number;
   strokeAlign?: 'inside' | 'center' | 'outside';
@@ -51,6 +94,8 @@ export interface Node {
   shadow?: Shadow[];
   blur?: number;
   backdropBlur?: number;
+  /** Named shadow recipes drawn after `shadow`; box-based, so ignored on text. */
+  effects?: EffectRef[];
 
   // Frame
   layout?: 'none' | 'row' | 'column';
@@ -79,6 +124,20 @@ export interface Node {
   assetId?: string;
   fit?: 'cover' | 'contain' | 'fill';
 
+  // Icon
+  /** Name from the icon set (search_icons). Unknown names draw a labelled placeholder. */
+  icon?: string;
+
+  // Components (frames only; docs/04). A master has `component`; an instance has `instanceOf`.
+  component?: ComponentDef;
+  instanceOf?: string;
+  /** Which state an instance shows. */
+  state?: ComponentState;
+  /** Instance-level changes, keyed by the master's layer id (`$self` = the instance root). */
+  overrides?: LayerPatches;
+  /** On the layers inside an instance: the master layer they were copied from. Managed, not settable. */
+  from?: string;
+
   // Semantics for export + AI
   role?: Role;
   href?: string;
@@ -86,7 +145,7 @@ export interface Node {
 }
 
 /** Everything on a node that a tool may set (identity and structure are managed by ops). */
-export type NodeProps = Omit<Node, 'id' | 'type' | 'parentId' | 'children'>;
+export type NodeProps = Omit<Node, 'id' | 'type' | 'parentId' | 'children' | 'from'>;
 export type NodePropKey = keyof NodeProps;
 
 export interface Tokens {
@@ -186,7 +245,15 @@ export interface OpError {
   path?: string;
 }
 
-export type WarningCode = 'LOCKED_NODE' | 'UNKNOWN_TOKEN' | 'MISSING_ASSET';
+export type WarningCode =
+  | 'LOCKED_NODE'
+  | 'UNKNOWN_TOKEN'
+  | 'MISSING_ASSET'
+  | 'LAYOUT_IGNORED'
+  | 'UNKNOWN_ICON'
+  | 'FONT_WEIGHT'
+  | 'EFFECT_ON_TEXT'
+  | 'INSTANCE_OVERRIDE';
 
 export interface Warning {
   code: WarningCode;
@@ -219,6 +286,8 @@ export interface ScreenshotOptions {
   scale?: 1 | 2;
   annotations?: boolean;
   maxWidth?: number;
+  /** Show components in this state (without changing the design); 'all' draws every state side by side. */
+  state?: ComponentState | 'all';
 }
 
 export interface ScreenshotResult {

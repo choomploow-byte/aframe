@@ -1,7 +1,9 @@
 import { isValidId } from './ids';
+import { EFFECT_PRESETS, PATTERN_NAMES } from './paint';
 import { CONTAINER_TYPES, NODE_TYPES, ownersOf, propsFor, REQUIRED_PROPS } from './props';
+import { suggest } from './suggest';
 import { parseTokenRef } from './tokens';
-import type { Doc, NodeType, OpError, Warning } from './types';
+import type { Doc, NodeType, OpError, Tokens, Warning } from './types';
 import { SCHEMA_VERSION } from './types';
 import { isFiniteNumber, isPlainObject } from './util';
 
@@ -154,6 +156,116 @@ const customProps: Check = (v) => {
     : shape;
 };
 
+const COMPONENT_KINDS = ['button', 'card', 'tab', 'slot', 'panel', 'toast', 'custom'];
+const COMPONENT_STATES = ['default', 'hover', 'pressed', 'disabled', 'selected'];
+const PATTERN_KEYS = ['pattern', 'color', 'size', 'spacing', 'angle', 'opacity', 'background'];
+const LAYER_KEY_RE = /^(?:\$self|n_[a-z0-9]{4,8})$/;
+const ICON_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9 _.-]{0,59}$/;
+
+const PATTERN_SHAPE =
+  '{ pattern: "stripes" | "halftone" | "sunburst" | "noise", color, size?, spacing?, angle?, opacity?, background? }';
+const COLOR_SHAPE = 'a colour: #RRGGBB[AA], rgb()/hsl(), a $token, or a gradient';
+
+const patternFill: Check = (v) => {
+  if (!isPlainObject(v)) return `a colour or a pattern ${PATTERN_SHAPE}`;
+  const bad = Object.keys(v).find((k) => !PATTERN_KEYS.includes(k));
+  if (bad !== undefined)
+    return `a pattern with only these keys: ${PATTERN_KEYS.join(', ')} ('${bad}' is not one)`;
+  if (typeof v.pattern !== 'string' || !(PATTERN_NAMES as readonly string[]).includes(v.pattern)) {
+    return `pattern to be one of ${PATTERN_NAMES.join(', ')}`;
+  }
+  if (!isValidColor(v.color)) return `pattern.color to be ${COLOR_SHAPE}`;
+  if (v.background !== undefined && !isValidColor(v.background)) {
+    return `pattern.background to be ${COLOR_SHAPE}`;
+  }
+  for (const [k, lo, hi] of [
+    ['size', 0.5, 2000],
+    ['spacing', 0.5, 2000],
+    ['angle', -3600, 3600],
+    ['opacity', 0, 1],
+  ] as const) {
+    const val = v[k];
+    if (val !== undefined && !(isFiniteNumber(val) && val >= lo && val <= hi)) {
+      return `pattern.${k} to be a number from ${lo} to ${hi}`;
+    }
+  }
+  return null;
+};
+
+const fillCheck: Check = (v) => (typeof v === 'string' ? color(v) : patternFill(v));
+
+const effects: Check = (v) => {
+  const shape = `an array of preset names (${EFFECT_PRESETS.join(', ')}) or { preset, intensity?, color? }, at most 8`;
+  if (!Array.isArray(v) || v.length > 8) return shape;
+  for (const e of v) {
+    if (typeof e === 'string') {
+      if (!(EFFECT_PRESETS as readonly string[]).includes(e)) return shape;
+      continue;
+    }
+    if (!isPlainObject(e)) return shape;
+    if (Object.keys(e).some((k) => !['preset', 'intensity', 'color'].includes(k))) return shape;
+    if (typeof e.preset !== 'string' || !(EFFECT_PRESETS as readonly string[]).includes(e.preset))
+      return shape;
+    if (
+      e.intensity !== undefined &&
+      !(isFiniteNumber(e.intensity) && e.intensity >= 0 && e.intensity <= 3)
+    )
+      return 'an intensity from 0 to 3';
+    if (e.color !== undefined && !isValidColor(e.color)) return `effect color to be ${COLOR_SHAPE}`;
+  }
+  return null;
+};
+
+/** Property values a component may change per layer: known, non-structural, each value valid. */
+function layerPatchProblem(patch: unknown): string | null {
+  if (!isPlainObject(patch)) return 'an object of property changes';
+  for (const [key, value] of Object.entries(patch)) {
+    const check = CHECKS[key];
+    if (!check || STRUCTURAL_KEYS.has(key) || MANAGED_KEYS.has(key)) {
+      return `known visual properties only ('${key}' cannot be changed per layer)`;
+    }
+    if (value === null) {
+      if (REQUIRED_PROPS.has(key)) return `'${key}' cannot be removed`;
+      continue;
+    }
+    const problem = check(value);
+    if (problem !== null) return `'${key}' to be ${problem}`;
+  }
+  return null;
+}
+
+function layerPatches(v: unknown, what: string): string | null {
+  if (!isPlainObject(v)) return `${what} as an object keyed by layer id (or "$self")`;
+  const entries = Object.entries(v);
+  if (entries.length > 400) return `${what} for at most 400 layers`;
+  for (const [layer, patch] of entries) {
+    if (!LAYER_KEY_RE.test(layer))
+      return `${what} keyed by layer id like "n_abc12" or "$self" (got "${layer}")`;
+    const problem = layerPatchProblem(patch);
+    if (problem !== null) return `${what}["${layer}"] to hold ${problem}`;
+  }
+  return null;
+}
+
+const componentDef: Check = (v) => {
+  const shape = `{ kind: ${COMPONENT_KINDS.join(' | ')}, states?: { hover?, pressed?, disabled?, selected? } }`;
+  if (!isPlainObject(v)) return shape;
+  if (Object.keys(v).some((k) => k !== 'kind' && k !== 'states')) return shape;
+  if (typeof v.kind !== 'string' || !COMPONENT_KINDS.includes(v.kind)) {
+    return `component.kind to be one of ${COMPONENT_KINDS.join(', ')}`;
+  }
+  if (v.states === undefined) return null;
+  if (!isPlainObject(v.states)) return shape;
+  for (const [state, patches] of Object.entries(v.states)) {
+    if (state === 'default' || !COMPONENT_STATES.includes(state)) {
+      return `states named hover, pressed, disabled or selected (the master itself is the default look; got "${state}")`;
+    }
+    const problem = layerPatches(patches, `component.states.${state}`);
+    if (problem !== null) return problem;
+  }
+  return null;
+};
+
 const CHECKS: Record<string, Check> = {
   name: (v) =>
     typeof v === 'string' && v.trim().length > 0 && v.length <= 200
@@ -167,7 +279,7 @@ const CHECKS: Record<string, Check> = {
   visible: bool,
   locked: bool,
   opacity: num(0, 1, 'opacity'),
-  fill: color,
+  fill: fillCheck,
   stroke: color,
   strokeWidth: num(0, 1000, 'px'),
   strokeAlign: oneOf('inside', 'center', 'outside'),
@@ -175,6 +287,7 @@ const CHECKS: Record<string, Check> = {
   shadow,
   blur: num(0, 1000, 'px'),
   backdropBlur: num(0, 1000, 'px'),
+  effects,
   role: oneOf('button', 'input', 'link', 'nav', 'section', 'heading', 'card', 'list', 'icon'),
   href: (v) =>
     isValidHref(v) ? null : 'a URL starting with https://, http://, mailto:, tel:, /, ./, ../ or #',
@@ -199,10 +312,20 @@ const CHECKS: Record<string, Check> = {
   color,
   textTransform: oneOf('none', 'uppercase', 'capitalize'),
   assetId: (v) => (isValidId(v, 'img') ? null : "an asset id like 'img_ab12c'"),
+  icon: (v) =>
+    typeof v === 'string' && ICON_NAME_RE.test(v)
+      ? null
+      : "an icon name such as 'coins' (find names with search_icons)",
+  component: componentDef,
+  instanceOf: (v) => (isValidId(v, 'n') ? null : "a master component's node id like 'n_abc12'"),
+  state: oneOf(...COMPONENT_STATES),
+  overrides: (v) => layerPatches(v, 'overrides'),
   fit: oneOf('cover', 'contain', 'fill'),
 };
 
-const STRUCTURAL_KEYS = new Set(['id', 'type', 'parentId', 'children', 'tempId']);
+const STRUCTURAL_KEYS = new Set(['id', 'type', 'parentId', 'children', 'tempId', 'from']);
+/** Per-layer patches may not touch component machinery. */
+const MANAGED_KEYS = new Set(['component', 'instanceOf', 'state', 'overrides']);
 
 function show(value: unknown): string {
   try {
@@ -214,6 +337,8 @@ function show(value: unknown): string {
 }
 
 export interface PropIssueOptions {
+  /** Tokens of the document, so a bad value can be answered with the token it probably meant. */
+  tokens?: Tokens;
   /** Accept `null` as "remove this optional property" (update patches). */
   allowNull?: boolean;
   /** Path prefix for issue paths, e.g. `node` or `set`. */
@@ -239,7 +364,9 @@ export function propIssues(
         hint:
           key === 'parentId' || key === 'children'
             ? "Use a 'move' op to change where a node lives."
-            : "A node's id and type are fixed when it is created.",
+            : key === 'from'
+              ? 'Component instances manage this themselves; use create_instance.'
+              : "A node's id and type are fixed when it is created.",
         path: where(key),
       });
       continue;
@@ -281,7 +408,9 @@ export function propIssues(
       issues.push({
         code: 'INVALID_VALUE',
         message: `Invalid value for '${key}': ${show(value)}.`,
-        hint: `Expected ${problem}.`,
+        hint: [`Expected ${problem}.`, suggest(key, value, options.tokens)]
+          .filter(Boolean)
+          .join(' '),
         path: where(key),
       });
     }

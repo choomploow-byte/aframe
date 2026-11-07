@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   COMMON_PROPS,
+  COMPONENT_PROPS,
   FRAME_PROPS,
+  ICON_PROPS,
   IMAGE_PROPS,
   NODE_TYPES,
   ownersOf,
@@ -32,6 +34,7 @@ const ALL_PROPS: Record<NodePropKey, true> = {
   shadow: true,
   blur: true,
   backdropBlur: true,
+  effects: true,
   layout: true,
   gap: true,
   padding: true,
@@ -50,6 +53,11 @@ const ALL_PROPS: Record<NodePropKey, true> = {
   textTransform: true,
   assetId: true,
   fit: true,
+  icon: true,
+  component: true,
+  instanceOf: true,
+  state: true,
+  overrides: true,
   role: true,
   href: true,
   props: true,
@@ -57,7 +65,15 @@ const ALL_PROPS: Record<NodePropKey, true> = {
 
 describe('property tables', () => {
   it('cover every node property exactly once', () => {
-    const listed = [...COMMON_PROPS, ...FRAME_PROPS, ...TEXT_PROPS, ...IMAGE_PROPS];
+    // `color` is shared by text and icons, so it is listed once (with the text properties).
+    const listed = [
+      ...COMMON_PROPS,
+      ...FRAME_PROPS,
+      ...COMPONENT_PROPS,
+      ...TEXT_PROPS,
+      ...IMAGE_PROPS,
+      ...ICON_PROPS.filter((p) => p !== 'color'),
+    ];
     expect(new Set(listed).size).toBe(listed.length);
     expect([...listed].sort()).toEqual(Object.keys(ALL_PROPS).sort());
   });

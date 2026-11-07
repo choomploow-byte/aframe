@@ -90,6 +90,25 @@ function outlineOf(node: Node, parent: Node | undefined): OutlineNode {
     setIf(out, 'color', node.color);
   }
   if (node.type === 'image') setIf(out, 'assetId', node.assetId);
+  if (node.type === 'icon') {
+    setIf(out, 'icon', node.icon);
+    setIf(out, 'color', node.color);
+  }
+  if (node.effects && node.effects.length > 0) out.effects = node.effects;
+  if (node.component) {
+    out.component = {
+      kind: node.component.kind,
+      states: Object.keys(node.component.states ?? {}),
+    };
+  }
+  if (node.instanceOf !== undefined) {
+    out.instanceOf = node.instanceOf;
+    if (node.state !== undefined && node.state !== 'default') out.state = node.state;
+    const overridden = Object.keys(node.overrides ?? {}).length;
+    if (overridden > 0) out.overrides = overridden;
+  }
+  // A layer inside an instance is derived from its master: say so, so an agent edits the right thing.
+  if (node.from !== undefined) out.from = node.from;
   setIf(out, 'role', node.role);
   if (node.opacity !== 1) out.opacity = node.opacity;
   if (!node.visible) out.visible = false;

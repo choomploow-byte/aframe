@@ -1,3 +1,4 @@
+import { fillColors } from './fill';
 import type { Node, RadiusTuple, Tokens } from './types';
 
 /** Starter tokens for new documents: warm neutrals from docs/07 with the brand purple as the accent. */
@@ -171,8 +172,11 @@ export function resolveRadius(
 /** Every token problem a node's style would hit, for warnings and lint. */
 export function findTokenIssues(node: Node, tokens: Tokens): TokenIssue[] {
   const issues: TokenIssue[] = [];
-  resolveColor(node.fill, tokens, issues);
+  for (const c of fillColors(node.fill)) resolveColor(c, tokens, issues);
   resolveColor(node.stroke, tokens, issues);
+  for (const e of node.effects ?? []) {
+    if (typeof e !== 'string' && e.color !== undefined) resolveColor(e.color, tokens, issues);
+  }
   resolveColor(node.color, tokens, issues);
   resolveFont(node.fontFamily, tokens, issues);
   resolveRadius(node.radius, tokens, issues);

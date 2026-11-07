@@ -1,9 +1,20 @@
+import {
+  descendantsOf,
+  detachInstance,
+  instanceRootOf,
+  masterRootOf,
+  mergeOverride,
+  ROOT_OWNED_KEYS,
+  SELF,
+  settleComponents,
+  type NodeSpace,
+} from './components';
 import { CoreError } from './errors';
 import { generateId, isValidId, isValidTempId, type Rng } from './ids';
 import { deriveName, normalizeNode } from './normalize';
 import { CONTAINER_TYPES, CREATABLE_TYPES } from './props';
 import { descendantIds, isEffectivelyLocked, isInSubtree } from './tree';
-import type { Doc, Node, NodePatch, NodeSpec, Warning } from './types';
+import type { Doc, LayerPatches, Node, NodePatch, NodeSpec, Warning } from './types';
 import { deepEqual, isFiniteNumber, isPlainObject } from './util';
 import { propIssues } from './validate';
 
@@ -55,6 +66,8 @@ export function beginDraft(base: Doc, rng: Rng = Math.random): Draft {
 /** The document after the draft's changes; the same object when nothing changed. */
 export function finishDraft(d: Draft): Doc {
   if (!d.dirty) return d.base;
+  // Instances follow their masters: rebuild whatever this batch made stale.
+  settleComponents(spaceOf(d), d.touched, d.deleted, d.base.nodes);
   let annotations = d.base.annotations;
   if (d.deleted.size > 0) {
     // Deleting a node must not leave pins pointing at nothing; the pin keeps its x/y.
@@ -78,6 +91,80 @@ function put(d: Draft, node: Node): void {
   d.dirty = true;
 }
 
+/** The view of a draft that the component engine edits through. */
+function spaceOf(d: Draft): NodeSpace {
+  return {
+    nodes: d.nodes,
+    used: d.used,
+    rng: d.rng,
+    put: (node) => put(d, node),
+    created: (id) => {
+      if (!d.created.includes(id)) d.created.push(id);
+    },
+    removed: (id) => {
+      d.deleted.add(id);
+      d.touched.delete(id);
+    },
+  };
+}
+
+/** `abc12` -> `n_abc12` when only the prefixed id exists, so ids work with or without the prefix. */
+export function lookupId(nodes: Record<string, unknown>, ref: string): string {
+  if (Object.prototype.hasOwnProperty.call(nodes, ref)) return ref;
+  const prefixed = `n_${ref}`;
+  if (!ref.startsWith('n_') && Object.prototype.hasOwnProperty.call(nodes, prefixed)) {
+    return prefixed;
+  }
+  return ref;
+}
+
+const containsComponent = (nodes: Record<string, Node>, id: string): boolean => {
+  const self = nodes[id];
+  return (
+    self?.component !== undefined ||
+    self?.instanceOf !== undefined ||
+    descendantsOf(nodes, id).some((n) => n.component !== undefined || n.instanceOf !== undefined)
+  );
+};
+
+/** Layers inside an instance are derived from the master: nothing may be added to or taken from them. */
+function insideInstance(nodes: Record<string, Node>, id: string): Node | null {
+  const node = nodes[id];
+  if (!node) return null;
+  return node.from !== undefined || node.instanceOf !== undefined
+    ? instanceRootOf(nodes, node)
+    : null;
+}
+
+function guardParentNotInstance(d: Draft, parentId: string): void {
+  const owner = insideInstance(d.nodes, parentId);
+  if (!owner) return;
+  throw new CoreError(
+    'BAD_PARENT',
+    `${parentId} is inside the component instance ${owner.id}; nodes cannot be added there.`,
+    `Edit the master (${owner.instanceOf ?? 'its component'}) so every instance gets the change, or detach the instance first: update ${owner.id} set { "instanceOf": null }.`,
+  );
+}
+
+/** Components cannot contain components (yet): keeps instances one level deep and sync simple. */
+function guardNoNesting(
+  d: Draft,
+  movedId: string | null,
+  hasComponent: boolean,
+  parentId: string,
+): void {
+  const carries = movedId === null ? hasComponent : containsComponent(d.nodes, movedId);
+  if (!carries) return;
+  const parent = d.nodes[parentId];
+  if (parent && masterRootOf(d.nodes, parent)) {
+    throw new CoreError(
+      'BAD_PARENT',
+      `A component or instance cannot be placed inside the master component ${parentId}.`,
+      'Components cannot contain other components yet. Build the master from plain frames, text and icons.',
+    );
+  }
+}
+
 function getNode(d: Draft, id: string): Node {
   const node = d.nodes[id];
   if (!node) {
@@ -92,7 +179,7 @@ function getNode(d: Draft, id: string): Node {
 
 /** `$tempId` -> the id a create op earlier in this batch gave it; real ids pass through. */
 export function resolveRef(d: Draft, ref: string, path: string): string {
-  if (!ref.startsWith('$')) return ref;
+  if (!ref.startsWith('$')) return lookupId(d.nodes, ref);
   const real = Object.prototype.hasOwnProperty.call(d.idMap, ref.slice(1))
     ? d.idMap[ref.slice(1)]
     : undefined;
@@ -161,12 +248,44 @@ function spend(d: Draft, count = 1): void {
 // create
 // ---------------------------------------------------------------------------
 
+/** An auto-layout parent, for the "x/y will be ignored" warning. */
+interface FlexParent {
+  id: string;
+  name: string;
+  layout: 'row' | 'column';
+}
+
+function flexParentOf(node: Node | undefined): FlexParent | null {
+  return node?.type === 'frame' && (node.layout === 'row' || node.layout === 'column')
+    ? { id: node.id, name: node.name, layout: node.layout }
+    : null;
+}
+
+/** x/y only place a node under a layout-none frame or the page; in auto-layout they do nothing. */
+function warnIgnoredPosition(
+  d: Draft,
+  node: { id: string; name: string },
+  parent: FlexParent | null,
+  keys: string[],
+): void {
+  if (!parent || keys.length === 0) return;
+  const set = keys.join(' and ');
+  d.warnings.push({
+    code: 'LAYOUT_IGNORED',
+    nodeId: node.id,
+    message:
+      `${set} on "${node.name}" (${node.id}) has no effect: its parent "${parent.name}" (${parent.id}) uses auto-layout (${parent.layout}), so position comes from the layout. ` +
+      `To place it by hand set the parent's layout to "none"; to reorder use a move op with an index; for spacing use the parent's gap and padding.`,
+  });
+}
+
 function buildSubtree(
   d: Draft,
   spec: unknown,
   parentId: string,
   depth: number,
   path: string,
+  parentFlex: FlexParent | null = flexParentOf(d.nodes[parentId]),
 ): string {
   if (!isPlainObject(spec)) {
     throw new CoreError('INVALID_VALUE', 'A node must be an object.', undefined, path);
@@ -189,7 +308,29 @@ function buildSubtree(
     );
   }
   const nodeType = type as NodeSpec['type'];
-  throwFirstIssue(propIssues(props, nodeType, { path }));
+  throwFirstIssue(propIssues(props, nodeType, { path, tokens: d.base.tokens }));
+  if (typeof props.instanceOf === 'string') {
+    const masterId = lookupId(d.nodes, props.instanceOf);
+    if (d.nodes[masterId]?.component === undefined) {
+      throw new CoreError(
+        'NOT_FOUND',
+        `${props.instanceOf} is not a master component.`,
+        'Call component_list for the masters, or make one with define_component.',
+        `${path}.instanceOf`,
+      );
+    }
+    props.instanceOf = masterId;
+    guardNoNesting(d, null, true, parentId);
+    if (Array.isArray(children) && children.length > 0) {
+      throw new CoreError(
+        'BAD_PARENT',
+        'An instance takes its layers from its master, so it cannot have children of its own.',
+        'Change a layer with an update op on it after creating the instance, or edit the master.',
+        `${path}.children`,
+      );
+    }
+  }
+  if (props.component !== undefined) guardNoNesting(d, null, true, parentId);
 
   if (children !== undefined) {
     if (!Array.isArray(children)) {
@@ -256,18 +397,42 @@ function buildSubtree(
   }
 
   d.created.push(newId);
+  const ownName =
+    typeof props.name === 'string'
+      ? props.name
+      : deriveName(
+          nodeType,
+          typeof props.text === 'string' ? props.text : undefined,
+          typeof props.icon === 'string' ? props.icon : undefined,
+        );
+  const ownFlex: FlexParent | null =
+    nodeType === 'frame' && (props.layout === 'row' || props.layout === 'column')
+      ? { id: newId, name: ownName, layout: props.layout }
+      : null;
   const childIds = (Array.isArray(children) ? (children as unknown[]) : []).map((child, i) =>
-    buildSubtree(d, child, newId, depth + 1, `${path}.children.${i}`),
+    buildSubtree(d, child, newId, depth + 1, `${path}.children.${i}`, ownFlex),
   );
-  put(
+  if (props.component !== undefined && childIds.some((c) => containsComponent(d.nodes, c))) {
+    throw new CoreError(
+      'BAD_PARENT',
+      'A master component cannot contain other components.',
+      'Build the master from plain frames, text and icons.',
+      `${path}.children`,
+    );
+  }
+  const built = normalizeNode({
+    ...(props as Partial<Node>),
+    id: newId,
+    type: nodeType,
+    parentId,
+    children: childIds,
+  });
+  put(d, built);
+  warnIgnoredPosition(
     d,
-    normalizeNode({
-      ...(props as Partial<Node>),
-      id: newId,
-      type: nodeType,
-      parentId,
-      children: childIds,
-    }),
+    built,
+    parentFlex,
+    (['x', 'y'] as const).filter((k) => typeof props[k] === 'number' && props[k] !== 0),
   );
   return newId;
 }
@@ -277,6 +442,7 @@ export function draftCreate(d: Draft, parentRef: string, spec: unknown, index?: 
   const parentId = resolveRef(d, parentRef, 'parentId');
   const parent = getNode(d, parentId);
   assertContainer(parent);
+  guardParentNotInstance(d, parentId);
   checkIndex(index, parent.children.length, 'index');
   const newId = buildSubtree(d, spec, parentId, 0, 'node');
   const latest = getNode(d, parentId);
@@ -290,10 +456,10 @@ export function draftCreate(d: Draft, parentRef: string, spec: unknown, index?: 
 // update
 // ---------------------------------------------------------------------------
 
-export function draftUpdate(d: Draft, idRef: string, patch: unknown): void {
+export function draftUpdate(d: Draft, idRef: string, rawPatch: unknown): void {
   const id = resolveRef(d, idRef, 'id');
   const node = getNode(d, id);
-  if (!isPlainObject(patch)) {
+  if (!isPlainObject(rawPatch)) {
     throw new CoreError(
       'INVALID_VALUE',
       "'set' must be an object of properties to change.",
@@ -301,6 +467,7 @@ export function draftUpdate(d: Draft, idRef: string, patch: unknown): void {
       'set',
     );
   }
+  let patch: Record<string, unknown> = rawPatch;
   if (node.type === 'page' && Object.keys(patch).some((k) => k !== 'name')) {
     throw new CoreError(
       'INVALID_VALUE',
@@ -309,14 +476,106 @@ export function draftUpdate(d: Draft, idRef: string, patch: unknown): void {
       'set',
     );
   }
-  throwFirstIssue(propIssues(patch, node.type, { allowNull: true, path: 'set' }));
+  throwFirstIssue(
+    propIssues(patch, node.type, { allowNull: true, path: 'set', tokens: d.base.tokens }),
+  );
 
-  const next: Record<string, unknown> = { ...node };
+  // A layer inside an instance: the change is kept as an override on the instance root.
+  if (node.from !== undefined && node.instanceOf === undefined) {
+    recordLayerOverride(d, node, patch);
+    return;
+  }
+  if (patch.component !== undefined && patch.component !== null) {
+    const containing = masterRootOf(d.nodes, node);
+    if (insideInstance(d.nodes, id) || (containing !== null && containing.id !== id)) {
+      throw new CoreError(
+        'BAD_PARENT',
+        `${id} is inside a component, so it cannot become a master itself.`,
+        'Components cannot be nested. Move it out first.',
+        'set.component',
+      );
+    }
+    if (
+      descendantsOf(d.nodes, id).some(
+        (n) => n.component !== undefined || n.instanceOf !== undefined,
+      )
+    ) {
+      throw new CoreError(
+        'BAD_PARENT',
+        `${id} contains other components, so it cannot become a master.`,
+        'A master is built from plain frames, text and icons.',
+        'set.component',
+      );
+    }
+  }
+  if (typeof patch.instanceOf === 'string') {
+    const masterId = lookupId(d.nodes, patch.instanceOf);
+    if (d.nodes[masterId]?.component === undefined || masterId === id) {
+      throw new CoreError(
+        'NOT_FOUND',
+        `${patch.instanceOf} is not a master component.`,
+        'Call component_list for the masters.',
+        'set.instanceOf',
+      );
+    }
+    if (node.instanceOf === undefined && node.children.length > 0) {
+      throw new CoreError(
+        'INVALID_VALUE',
+        `${id} already has content; turning it into an instance would replace that content.`,
+        'Use create_instance to place a new instance instead.',
+        'set.instanceOf',
+      );
+    }
+    patch = { ...patch, instanceOf: masterId };
+  }
+  if (node.instanceOf !== undefined) {
+    const own: Record<string, unknown> = {};
+    const rest: Record<string, unknown> = {};
+    let detach = false;
+    for (const [key, value] of Object.entries(patch)) {
+      if (value === undefined) continue;
+      if (key === 'instanceOf' && value === null) detach = true;
+      else if (
+        ROOT_OWNED_KEYS.has(key) ||
+        key === 'state' ||
+        key === 'instanceOf' ||
+        key === 'overrides'
+      )
+        own[key] = value;
+      else rest[key] = value;
+    }
+    if (detach) {
+      detachInstance(spaceOf(d), id);
+      patch = { ...own, ...rest }; // detached: ordinary properties now
+    } else if (Object.keys(rest).length > 0) {
+      const merged = mergeOverride(
+        'overrides' in own ? ((own.overrides as LayerPatches | null) ?? undefined) : node.overrides,
+        SELF,
+        rest,
+      );
+      patch = { ...own, overrides: merged };
+      noteOverride(d, id);
+    } else {
+      patch = own;
+    }
+  }
+  const current = d.nodes[id] as Node;
+  const next: Record<string, unknown> = { ...current };
   for (const [key, value] of Object.entries(patch)) {
     if (value === undefined) continue;
     if (value === null) delete next[key];
     else next[key] = value;
   }
+  warnIgnoredPosition(
+    d,
+    current,
+    flexParentOf(current.parentId === null ? undefined : d.nodes[current.parentId]),
+    (['x', 'y'] as const).filter(
+      (k) =>
+        typeof patch[k] === 'number' &&
+        patch[k] !== (current as unknown as Record<string, unknown>)[k],
+    ),
+  );
   // A text layer still carrying its auto-generated name follows its content.
   if (
     node.type === 'text' &&
@@ -326,9 +585,52 @@ export function draftUpdate(d: Draft, idRef: string, patch: unknown): void {
   ) {
     next.name = deriveName('text', typeof patch.text === 'string' ? patch.text : undefined);
   }
-  if (deepEqual(next, node)) return;
+  if (deepEqual(next, current)) return;
   warnLocked(d, id, 'edited');
   put(d, next as unknown as Node);
+}
+
+function noteOverride(d: Draft, rootId: string): void {
+  if (d.warnings.some((w) => w.code === 'INSTANCE_OVERRIDE' && w.nodeId === rootId)) return;
+  const root = d.nodes[rootId];
+  d.warnings.push({
+    code: 'INSTANCE_OVERRIDE',
+    nodeId: rootId,
+    message: `${rootId} is an instance of ${root?.instanceOf ?? 'a component'}: the change is stored as an override on this instance and survives edits to the master. Edit the master to change every instance.`,
+  });
+}
+
+const MANAGED_ON_LAYER = ['component', 'instanceOf', 'state', 'overrides'];
+
+function recordLayerOverride(d: Draft, layer: Node, patch: Record<string, unknown>): void {
+  const root = instanceRootOf(d.nodes, layer);
+  const from = layer.from;
+  if (!root || from === undefined) return;
+  const bad = MANAGED_ON_LAYER.find((k) => k in patch);
+  if (bad !== undefined) {
+    throw new CoreError(
+      'INVALID_VALUE',
+      `'${bad}' cannot be set on ${layer.id}, a layer inside a component instance.`,
+      undefined,
+      `set.${bad}`,
+    );
+  }
+  const clean: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(patch)) if (v !== undefined) clean[k] = v;
+  if (Object.keys(clean).length === 0) return;
+  warnLocked(d, layer.id, 'edited');
+  warnIgnoredPosition(
+    d,
+    layer,
+    flexParentOf(layer.parentId === null ? undefined : d.nodes[layer.parentId]),
+    (['x', 'y'] as const).filter(
+      (k) =>
+        typeof clean[k] === 'number' &&
+        clean[k] !== (layer as unknown as Record<string, unknown>)[k],
+    ),
+  );
+  put(d, { ...root, overrides: mergeOverride(root.overrides, from, clean) });
+  noteOverride(d, root.id);
 }
 
 // ---------------------------------------------------------------------------
@@ -347,6 +649,7 @@ export function draftDelete(d: Draft, idRef: string): string[] {
       'id',
     );
   }
+  guardLayerOfInstance(d, node, 'deleted', 'Hide it instead: update it with { "visible": false }.');
   warnLocked(d, id, 'deleted');
   const removed = [id, ...descendantIds(d.nodes, id)];
   const parent = getNode(d, node.parentId);
@@ -371,6 +674,9 @@ export function draftMove(d: Draft, idRef: string, parentRef: string, index?: nu
   }
   const newParent = getNode(d, newParentId);
   assertContainer(newParent);
+  guardLayerOfInstance(d, node, 'moved', 'Reorder the layers in the master instead.');
+  guardParentNotInstance(d, newParentId);
+  guardNoNesting(d, id, false, newParentId);
   if (isInSubtree(d.nodes, newParentId, id)) {
     throw new CoreError(
       'CYCLE',
@@ -400,15 +706,55 @@ export function draftMove(d: Draft, idRef: string, parentRef: string, index?: nu
 // duplicate
 // ---------------------------------------------------------------------------
 
-function copySubtree(d: Draft, sourceId: string, parentId: string): string {
+function copySubtree(
+  d: Draft,
+  sourceId: string,
+  parentId: string,
+  idMap: Map<string, string>,
+): string {
   const source = getNode(d, sourceId);
   spend(d);
   const newId = generateId('n', d.used, d.rng);
   d.used.add(newId);
   d.created.push(newId);
-  const children = source.children.map((c) => copySubtree(d, c, newId));
+  idMap.set(sourceId, newId);
+  const children = source.children.map((c) => copySubtree(d, c, newId, idMap));
   put(d, { ...source, id: newId, parentId, children });
   return newId;
+}
+
+/** A copied master's state patches name layers by id: point them at the copy's own layers. */
+function remapComponentStates(d: Draft, idMap: Map<string, string>): void {
+  for (const newId of idMap.values()) {
+    const node = d.nodes[newId];
+    const states = node?.component?.states;
+    if (!node || !node.component || !states) continue;
+    const remapped: Record<string, Record<string, Record<string, unknown>>> = {};
+    for (const [state, patches] of Object.entries(states)) {
+      const next: Record<string, Record<string, unknown>> = {};
+      for (const [layer, patch] of Object.entries(patches ?? {})) {
+        next[layer === SELF ? layer : (idMap.get(layer) ?? layer)] = patch;
+      }
+      remapped[state] = next;
+    }
+    put(d, {
+      ...node,
+      component: {
+        ...node.component,
+        states: remapped,
+      },
+    });
+  }
+}
+
+function guardLayerOfInstance(d: Draft, node: Node, verb: string, hint: string): void {
+  if (node.from === undefined) return;
+  const owner = instanceRootOf(d.nodes, node);
+  throw new CoreError(
+    'INVALID_VALUE',
+    `${node.id} is a layer inside the component instance ${owner?.id ?? ''} and cannot be ${verb}.`,
+    `${hint} Or detach the instance first: update ${owner?.id ?? 'the instance'} set { "instanceOf": null }.`,
+  );
 }
 
 /** Deep-copies a node. Returns the new root id; all new ids are appended to `d.created`. */
@@ -432,6 +778,9 @@ export function draftDuplicate(
   const targetId = parentRef === undefined ? node.parentId : resolveRef(d, parentRef, 'parentId');
   const target = getNode(d, targetId);
   assertContainer(target);
+  guardLayerOfInstance(d, node, 'duplicated', 'Duplicate the whole instance instead.');
+  guardParentNotInstance(d, targetId);
+  guardNoNesting(d, id, false, targetId);
   if (isInSubtree(d.nodes, targetId, id)) {
     throw new CoreError(
       'CYCLE',
@@ -440,7 +789,9 @@ export function draftDuplicate(
       'parentId',
     );
   }
-  const copyId = copySubtree(d, id, targetId);
+  const idMap = new Map<string, string>();
+  const copyId = copySubtree(d, id, targetId, idMap);
+  remapComponentStates(d, idMap);
   if (offset !== undefined) {
     const copy = getNode(d, copyId);
     put(d, { ...copy, x: copy.x + offset.x, y: copy.y + offset.y });

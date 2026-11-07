@@ -23,6 +23,7 @@ export const COMMON_PROPS = [
   'shadow',
   'blur',
   'backdropBlur',
+  'effects',
   'role',
   'href',
   'props',
@@ -52,6 +53,17 @@ export const TEXT_PROPS = [
 
 export const IMAGE_PROPS = ['assetId', 'fit'] as const satisfies readonly NodePropKey[];
 
+/** `color` is the icon's ink, like text colour. */
+export const ICON_PROPS = ['icon', 'color'] as const satisfies readonly NodePropKey[];
+
+/** A master has `component`; an instance has `instanceOf` (and its `state` and `overrides`). Frames only. */
+export const COMPONENT_PROPS = [
+  'component',
+  'instanceOf',
+  'state',
+  'overrides',
+] as const satisfies readonly NodePropKey[];
+
 /** Properties that must always have a value, so `null` ("remove") is rejected for them. */
 export const REQUIRED_PROPS: ReadonlySet<string> = new Set([
   'name',
@@ -71,11 +83,13 @@ export function propsFor(type: NodeType): readonly string[] {
       // The page is only a container; it keeps the base geometry/visibility keys the schema stores.
       return ['name', 'x', 'y', 'w', 'h', 'visible', 'locked', 'opacity'];
     case 'frame':
-      return [...COMMON_PROPS, ...FRAME_PROPS];
+      return [...COMMON_PROPS, ...FRAME_PROPS, ...COMPONENT_PROPS];
     case 'text':
       return [...COMMON_PROPS, ...TEXT_PROPS];
     case 'image':
       return [...COMMON_PROPS, ...IMAGE_PROPS];
+    case 'icon':
+      return [...COMMON_PROPS, ...ICON_PROPS];
     case 'rect':
     case 'ellipse':
     case 'line':
@@ -86,6 +100,9 @@ export function propsFor(type: NodeType): readonly string[] {
 /** Which node types a property belongs to, for hints ("`fontSize` only applies to text nodes"). */
 export function ownersOf(prop: string): string | null {
   if ((FRAME_PROPS as readonly string[]).includes(prop)) return 'frame';
+  if ((COMPONENT_PROPS as readonly string[]).includes(prop)) return 'frame';
+  if (prop === 'color') return 'text and icon';
+  if ((ICON_PROPS as readonly string[]).includes(prop)) return 'icon';
   if ((TEXT_PROPS as readonly string[]).includes(prop)) return 'text';
   if ((IMAGE_PROPS as readonly string[]).includes(prop)) return 'image';
   return null;
@@ -99,6 +116,7 @@ export const NODE_TYPES: readonly NodeType[] = [
   'line',
   'text',
   'image',
+  'icon',
 ];
 export const CREATABLE_TYPES: readonly NodeType[] = [
   'frame',
@@ -107,5 +125,6 @@ export const CREATABLE_TYPES: readonly NodeType[] = [
   'line',
   'text',
   'image',
+  'icon',
 ];
 export const CONTAINER_TYPES: readonly NodeType[] = ['page', 'frame'];

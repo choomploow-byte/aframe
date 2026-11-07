@@ -1,3 +1,6 @@
+import { fontInfo, supportsWeight } from './fonts';
+import { isPatternFill } from './fill';
+import { effectShadows, n, NOISE_URL_RE, patternCss, px } from './paint';
 import { resolveColor, resolveFont, resolveRadius, type TokenIssue } from './tokens';
 import type { Node, Tokens } from './types';
 
@@ -28,14 +31,6 @@ export function fontStack(family: string): string {
   if (MONO.has(name)) return `"${name}", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
   return `"${name}", system-ui, -apple-system, "Segoe UI", sans-serif`;
 }
-
-function n(value: number): string {
-  // At most 3 decimals, no trailing zeros, no "-0".
-  const rounded = Math.round(value * 1000) / 1000;
-  return String(Object.is(rounded, -0) ? 0 : rounded);
-}
-
-const px = (value: number): string => `${n(value)}px`;
 
 const ALIGN_ITEMS = {
   start: 'flex-start',
@@ -111,13 +106,22 @@ function frameLayout(node: Node, out: CssRecord): void {
 }
 
 function appearance(node: Node, tokens: Tokens, issues: TokenIssue[], out: CssRecord): void {
-  const fill = resolveColor(node.fill, tokens, issues);
+  const pattern = isPatternFill(node.fill) ? node.fill : undefined;
+  // A pattern's own base colour stands in for "the fill colour" where a single colour is needed.
+  const fill = resolveColor(
+    pattern === undefined ? (node.fill as string | undefined) : pattern.background,
+    tokens,
+    issues,
+  );
   const stroke = resolveColor(node.stroke, tokens, issues);
 
   if (node.type === 'line') {
     // A line is a bar: w is its length, h its thickness, stroke (or fill) its colour.
-    const colour = stroke ?? fill;
+    const colour =
+      stroke ?? (pattern === undefined ? fill : resolveColor(pattern.color, tokens, issues));
     if (colour) out.backgroundColor = colour;
+  } else if (pattern !== undefined) {
+    Object.assign(out, patternCss(pattern, tokens, issues));
   } else if (fill) {
     if (/^(?:linear|radial)-gradient\(/.test(fill)) out.backgroundImage = fill;
     else out.backgroundColor = fill;
@@ -144,15 +148,26 @@ function appearance(node: Node, tokens: Tokens, issues: TokenIssue[], out: CssRe
     else if (align === 'center') out.outlineOffset = px(-strokeWidth / 2);
   }
 
-  if (node.shadow && node.shadow.length > 0) {
+  if (node.type === 'text') {
+    // A box-shadow on a text node would draw a visible box around the text, so a text node's
+    // shadows follow the glyphs instead (text-shadow has no spread or inset), and effect presets,
+    // which are box recipes, are not drawn (lint and apply_changes say so).
     const parts: string[] = [];
-    for (const s of node.shadow) {
+    for (const s of node.shadow ?? []) {
+      const colour = s.inset ? undefined : resolveColor(s.color, tokens, issues);
+      if (colour) parts.push(`${px(s.x)} ${px(s.y)} ${px(s.blur)} ${colour}`);
+    }
+    if (parts.length > 0) out.textShadow = parts.join(', ');
+  } else {
+    const parts: string[] = [];
+    for (const s of node.shadow ?? []) {
       const colour = resolveColor(s.color, tokens, issues);
       if (!colour) continue;
       parts.push(
         `${s.inset ? 'inset ' : ''}${px(s.x)} ${px(s.y)} ${px(s.blur)} ${px(s.spread)} ${colour}`,
       );
     }
+    parts.push(...effectShadows(node.effects, fill, tokens, issues));
     if (parts.length > 0) out.boxShadow = parts.join(', ');
   }
   if (node.blur) out.filter = `blur(${px(node.blur)})`;
@@ -170,11 +185,21 @@ function appearance(node: Node, tokens: Tokens, issues: TokenIssue[], out: CssRe
 }
 
 function typography(node: Node, tokens: Tokens, issues: TokenIssue[], out: CssRecord): void {
+  if (node.type === 'icon') {
+    // The icon's ink: the SVG inside draws with currentColor.
+    const ink = resolveColor(node.color, tokens, issues);
+    if (ink) out.color = ink;
+    return;
+  }
   if (node.type !== 'text') return;
   const family = resolveFont(node.fontFamily, tokens, issues);
   if (family) out.fontFamily = fontStack(family);
   if (node.fontSize !== undefined) out.fontSize = px(node.fontSize);
-  if (node.fontWeight !== undefined) out.fontWeight = n(node.fontWeight);
+  if (node.fontWeight !== undefined) {
+    out.fontWeight = n(node.fontWeight);
+    // A single-weight display face asked for a weight it lacks would be smeared into a fake bold.
+    if (fontInfo(family) && !supportsWeight(family, node.fontWeight)) out.fontSynthesis = 'none';
+  }
   if (node.lineHeight !== undefined) out.lineHeight = n(node.lineHeight);
   if (node.letterSpacing) out.letterSpacing = `${n(node.letterSpacing)}em`;
   if (node.textAlign) out.textAlign = node.textAlign;
@@ -221,8 +246,11 @@ export function cssPropertyName(key: string): string {
  */
 export function cssToString(css: CssRecord, options: { separator?: string } = {}): string {
   const separator = options.separator ?? ' ';
-  return Object.entries(css)
-    .filter(([, value]) => !UNSAFE_VALUE_RE.test(value))
-    .map(([key, value]) => `${cssPropertyName(key)}: ${value};`)
-    .join(separator);
+  return (
+    Object.entries(css)
+      // The one `url()` allowed is the data-URL image a noise pattern is made of (see NOISE_URL_RE).
+      .filter(([, value]) => !UNSAFE_VALUE_RE.test(value.replace(NOISE_URL_RE, 'none')))
+      .map(([key, value]) => `${cssPropertyName(key)}: ${value};`)
+      .join(separator)
+  );
 }

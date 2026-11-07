@@ -13,12 +13,14 @@ const TYPE_LABEL: Record<NodeType, string> = {
   line: 'Line',
   text: 'Text',
   image: 'Image',
+  icon: 'Icon',
 };
 
 const NAME_SNIPPET = 30;
 
 /** The name a node gets when none is given; text nodes are named after their content. */
-export function deriveName(type: NodeType, text: string | undefined): string {
+export function deriveName(type: NodeType, text: string | undefined, icon?: string): string {
+  if (type === 'icon' && icon) return `Icon ${icon}`;
   if (type === 'text' && text) {
     const oneLine = text.replace(/\s+/g, ' ').trim();
     if (oneLine)
@@ -37,6 +39,8 @@ function defaultSize(type: NodeType, layout: Node['layout']): Pick<Node, 'w' | '
       return layout === 'row' || layout === 'column' ? { w: 'hug', h: 'hug' } : { w: 100, h: 100 };
     case 'line':
       return { w: 100, h: 1 };
+    case 'icon':
+      return { w: 24, h: 24 };
     case 'rect':
     case 'ellipse':
     case 'image':
@@ -53,7 +57,7 @@ export function normalizeNode(input: LooseNode): Node {
   const node: Record<string, unknown> = {
     id: input.id,
     type: input.type,
-    name: input.name ?? deriveName(input.type, input.text),
+    name: input.name ?? deriveName(input.type, input.text, input.icon),
     parentId: input.parentId ?? null,
     children: input.children ?? [],
     x: input.x ?? 0,

@@ -3,7 +3,10 @@
  * document alone, so every finding is something the document says. The full rule set and the eval
  * harness arrive in Phase 9; these are the rules an agent needs to catch its own obvious mistakes.
  */
-import { resolveColor } from './tokens';
+import { fillBase } from './fill';
+import { fontInfo, supportsWeight } from './fonts';
+import { getIcon, suggestIcons } from './icons';
+import { resolveColor, resolveFont } from './tokens';
 import type { Doc, Node } from './types';
 
 export type Severity = 'error' | 'warning' | 'info';
@@ -72,8 +75,10 @@ function backgroundOf(doc: Doc, node: Node): Rgb | null {
   let cur: Node | undefined = node.parentId === null ? undefined : doc.nodes[node.parentId];
   while (cur) {
     if (cur.type === 'image') return null;
-    if (cur.fill !== undefined && cur.fill !== '') {
-      const resolved = resolveColor(cur.fill, doc.tokens);
+    // A pattern counts through its own background; one without a background lets the next ancestor show.
+    const base = fillBase(cur.fill);
+    if (base !== undefined && base !== '') {
+      const resolved = resolveColor(base, doc.tokens);
       const parsed = resolved === undefined ? null : parseRgb(resolved);
       if (!parsed || parsed.alpha < 1) return null; // gradient, unknown or translucent: cannot judge
       return parsed.rgb;
@@ -231,6 +236,96 @@ export function lintDesign(doc: Doc, nodeId?: string): LintResult {
           nodeId: node.id,
           message: `Fill ${node.fill} is the colour token $${token}; reference the token so theme changes reach it.`,
           fix: `update ${node.id} set fill to "$${token}"`,
+        });
+      }
+    }
+
+    // ---- the game-UI toolkit: layers inside an instance are judged through their master ----
+    const derived = node.from !== undefined;
+
+    if (node.type === 'text' && !derived && node.shadow !== undefined && node.shadow.length > 0) {
+      add({
+        severity: 'warning',
+        rule: 'text-shadow',
+        nodeId: node.id,
+        message: `Text "${node.name}" has a shadow. Text shadows are off by default: they blur small type and fight the background. Keep one only for a deliberate outline or glow on a busy picture.`,
+        fix: `update ${node.id} set shadow to null (put depth on the frame behind the text with effects instead)`,
+      });
+    }
+    if (node.type === 'text' && !derived && node.effects !== undefined && node.effects.length > 0) {
+      add({
+        severity: 'warning',
+        rule: 'effect-on-text',
+        nodeId: node.id,
+        message: `Effect presets are box recipes and are not drawn on text ("${node.name}").`,
+        fix: `move the effects from ${node.id} to the frame behind the text`,
+      });
+    }
+    if (node.type === 'icon' && !derived && getIcon(node.icon) === undefined) {
+      const near = node.icon === undefined ? [] : suggestIcons(node.icon);
+      add({
+        severity: 'warning',
+        rule: 'unknown-icon',
+        nodeId: node.id,
+        message:
+          node.icon === undefined
+            ? `Icon "${node.name}" has no icon name, so a placeholder is drawn.`
+            : `There is no icon "${node.icon}", so a labelled placeholder is drawn.${near.length > 0 ? ` Closest: ${near.join(', ')}.` : ''}`,
+        fix: `update ${node.id} set icon to a name from search_icons`,
+      });
+    }
+    if (node.type === 'text' && !derived && node.fontWeight !== undefined) {
+      const family = resolveFont(node.fontFamily, doc.tokens);
+      if (fontInfo(family) && !supportsWeight(family, node.fontWeight)) {
+        const [lo, hi] = fontInfo(family)?.weights ?? [400, 400];
+        add({
+          severity: 'info',
+          rule: 'font-weight',
+          nodeId: node.id,
+          message: `${family ?? 'This font'} has ${lo === hi ? `only weight ${lo}` : `weights ${lo}-${hi}`}; ${node.fontWeight} is drawn as ${Math.min(hi, Math.max(lo, node.fontWeight))}.`,
+          fix: `set fontWeight to ${Math.min(hi, Math.max(lo, node.fontWeight))} or pick a family that has it (list_fonts)`,
+        });
+      }
+    }
+
+    const layoutParent = node.parentId === null ? undefined : doc.nodes[node.parentId];
+    if (
+      !derived &&
+      layoutParent?.type === 'frame' &&
+      (layoutParent.layout === 'row' || layoutParent.layout === 'column') &&
+      (node.x !== 0 || node.y !== 0)
+    ) {
+      const which = [node.x !== 0 ? `x ${node.x}` : '', node.y !== 0 ? `y ${node.y}` : '']
+        .filter(Boolean)
+        .join(' and ');
+      add({
+        severity: 'warning',
+        rule: 'ignored-position',
+        nodeId: node.id,
+        message: `"${node.name}" has ${which}, which does nothing: its parent "${layoutParent.name}" uses auto-layout (${layoutParent.layout}). Position comes from the layout.`,
+        fix: `set x and y on ${node.id} back to 0, or set layout "none" on ${layoutParent.id} to place children by hand`,
+      });
+    }
+
+    const isButton = node.role === 'button' || node.component?.kind === 'button';
+    if (isButton && !derived && node.instanceOf === undefined) {
+      const states = node.component?.states ?? {};
+      const missing = (['hover', 'pressed'] as const).filter(
+        (s) => states[s] === undefined || Object.keys(states[s] ?? {}).length === 0,
+      );
+      if (missing.length > 0) {
+        add({
+          severity: 'warning',
+          rule: 'button-states',
+          nodeId: node.id,
+          message:
+            node.component === undefined
+              ? `Button "${node.name}" has no hover or pressed variant, so nothing shows that it can be pressed.`
+              : `Button component "${node.name}" has no ${missing.join(' or ')} state.`,
+          fix:
+            node.component === undefined
+              ? `define_component on ${node.id} with states hover and pressed (e.g. a lighter fill on hover, effects ["bevel-pressed"] when pressed)`
+              : `define_component on ${node.id} with states ${missing.join(' and ')}`,
         });
       }
     }
