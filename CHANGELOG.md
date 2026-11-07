@@ -11,7 +11,7 @@ All notable changes are recorded here. Format: [Keep a Changelog](https://keepac
   icons were regenerated from `app-icon.png`.
 
 ### Added
-- Game-UI toolkit (decision log #79-#95): an **icon set** (165 solid icons in one style: coins, gems,
+- Game-UI toolkit (decision log #79-#96; version 0.1.1 so installed apps refresh the MCP server): an **icon set** (165 solid icons in one style: coins, gems,
   keys, shields, stars, swords, potions, chests, arrows, close, check, settings and more; Font
   Awesome Free plus five drawn for Atelier) as a new `icon` node that takes a colour token, with
   `search_icons` and `place_icon`, and a labelled placeholder where a name is missing. **Display

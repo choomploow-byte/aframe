@@ -26,7 +26,7 @@ export default tseslint.config(
       'src-tauri/target',
       'src-tauri/gen',
       'mcp/dist',
-      '.shots',
+      '**/.shots',
       'kit',
     ],
   },

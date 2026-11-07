@@ -9,6 +9,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { MCP_VERSION } from '../../mcp/generated';
 import { HomeFs } from '../../mcp/home-fs';
 import { PNG } from 'pngjs';
 import { noisePng, startFakeApp, type FakeApp } from './fake-app';
@@ -639,7 +640,7 @@ describe('presence', () => {
     const files = (await home.list('agents')).filter((e) => e.name.endsWith('.json'));
     expect(files).toHaveLength(1);
     const first = JSON.parse((await home.read(`agents/${files[0]?.name}`)) ?? '{}');
-    expect(first).toMatchObject({ version: '0.1.0' });
+    expect(first).toMatchObject({ version: MCP_VERSION });
     await new Promise((r) => setTimeout(r, 1100));
     await ok(c, 'get_design');
     await new Promise((r) => setTimeout(r, 200));

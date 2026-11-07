@@ -100,6 +100,8 @@
 | 94 | 2026-11-07 | Six tools join the 22: `search_icons`, `place_icon`, `list_fonts`, `component_list`, `create_instance`, `define_component` (28 in all); the read-only ones are marked so hosts need not ask. A new skill `game-ui` and a prompt recipe teach the workflow | The brief asked for `search_icons`, `component_list` and `create_instance`; `define_component` is how an agent makes a master with states without knowing layer ids, `place_icon` and `list_fonts` close the loop | Make components only through `apply_changes` | Accepted |
 | 95 | 2026-11-07 | The motion preview (glow pulses, toast slides), the brief's stretch goal, is not built; state screenshots cover the look of each state | Animation needs a timeline model and a capture path that does not exist yet; a half version would mislead | A CSS-keyframe preview with no data model | Deferred |
 
+| 96 | 2026-11-07 | Version 0.1.1 (package.json, Cargo.toml, tauri.conf.json, the MCP server). The app replaces `~/.atelier/mcp/atelier-mcp.mjs` on launch only when its bundle is a newer version (decision #75), so the new tools reached nobody until the version moved; found by checking the installed file of the running app, which still had the old 22-tool server | An agent host can only use tools the installed server file has | Replace the file whenever the contents differ (would overwrite a copy the user put there on purpose) | Accepted |
+
 Template for new entries: *Decision / Context / Options / Choice / Consequences.*
 
 ## Cross-document consistency checklist (run at the end of every phase)

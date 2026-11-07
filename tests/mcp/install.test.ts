@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { runCommand } from '../../mcp/cli';
-import { ATELIER_SKILL } from '../../mcp/generated';
+import { ATELIER_SKILL, MCP_VERSION } from '../../mcp/generated';
 import {
   detectHosts,
   doctor,
@@ -380,7 +380,7 @@ describe('doctor and the command line', () => {
     const lines: string[] = [];
     const io = { out: (l: string) => void lines.push(l) };
     expect(runCommand(['--version'], makeEnv(), io)).toBe(0);
-    expect(lines.at(-1)).toBe('0.1.0');
+    expect(lines.at(-1)).toBe(MCP_VERSION);
     expect(runCommand(['bogus'], makeEnv(), io)).toBe(2);
     expect(runCommand(['install'], makeEnv(), io)).toBe(1); // no host found: prints the generic JSON
     expect(lines.join('\n')).toContain('"mcpServers"');
