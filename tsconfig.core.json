@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    // ES2022 lib only and no ambient types: `window`, `document`, `process` and `node:*`
+    // imports in src/core fail to compile. This is how the "pure core" rule is enforced.
+    "lib": ["ES2022"],
+    "types": [],
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.core.tsbuildinfo"
+  },
+  "include": ["src/core/**/*.ts"],
+  "exclude": ["src/core/**/*.test.ts"]
+}

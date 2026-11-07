@@ -1,0 +1,12 @@
+node_modules
+dist
+coverage
+src-tauri/target
+src-tauri/gen
+mcp/dist
+package-lock.json
+docs
+prompts
+skills
+fixtures
+*.md

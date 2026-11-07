@@ -1,0 +1,16 @@
+node_modules/
+dist/
+target/
+gen/
+coverage/
+.atelier-dev/
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+.env
+.env.*
+# the original build kit lives outside this repo; never copy it in
+kit/
+mcp/dist/
+src-tauri/target/
+src-tauri/gen/
