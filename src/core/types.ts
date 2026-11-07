@@ -173,6 +173,7 @@ export type ErrorCode =
   | 'APP_NOT_RUNNING'
   | 'TIMEOUT'
   | 'PATH_NOT_ALLOWED'
+  | 'NOT_IMPLEMENTED'
   | 'INTERNAL';
 
 export interface OpError {
@@ -224,6 +225,29 @@ export interface ScreenshotResult {
   pngBase64: string;
   width: number;
   height: number;
+  /** Where the PNG was also saved, for hosts that cannot show images (the agent can open the file). */
+  path?: string;
+}
+
+export interface ProjectSummary {
+  id: string;
+  name: string;
+  updatedAt: string;
+  /** Top-level frames (artboards); null when the project was not opened to count them. */
+  frames: number | null;
+}
+
+/** Project-level operations (the MCP server implements these over the files; the app does not need them). */
+export interface ToolProjects {
+  list(): Promise<ProjectSummary[]>;
+  create(name: string, template: string): Promise<ProjectSummary>;
+  /** Makes a project the current one (by id or exact name) and tells a running app to show it. */
+  open(project: string): Promise<ProjectSummary>;
+}
+
+export interface ToolSkills {
+  list(): { name: string; description: string }[];
+  load(name: string): string | null;
 }
 
 export interface Bounds {
@@ -242,12 +266,16 @@ export interface ToolContext {
   getDoc(): Doc | Promise<Doc>;
   /** Persists `next`. Implementations bump `rev`/`meta` (see `bumpRev`). */
   commit(next: Doc, meta?: CommitMeta): void | Promise<void>;
-  screenshot?(opts: ScreenshotOptions): Promise<ScreenshotResult>;
-  getSelection?(): string[] | Promise<string[]>;
+  screenshot?: (opts: ScreenshotOptions) => Promise<ScreenshotResult>;
+  getSelection?: () => string[] | Promise<string[]>;
+  /** Whether the Atelier app is running (heartbeat is fresh). Absent = unknown/not applicable. */
+  appOnline?: () => boolean | Promise<boolean>;
+  projects?: ToolProjects;
+  skills?: ToolSkills;
   /** App only: absolute bounds of a node on the canvas, if it is rendered. */
-  getNodeBounds?(nodeId: string): Promise<Bounds | null>;
+  getNodeBounds?: (nodeId: string) => Promise<Bounds | null>;
   /** MCP server only: read a user-specified image file (validated). */
-  readUserFile?(path: string): Promise<Uint8Array>;
+  readUserFile?: (path: string) => Promise<Uint8Array>;
   /** MCP server only: write files under a user-confirmed root; must refuse path escapes. */
-  writeUserFiles?(root: string, files: Record<string, string | Uint8Array>): Promise<string[]>;
+  writeUserFiles?: (root: string, files: Record<string, string | Uint8Array>) => Promise<string[]>;
 }

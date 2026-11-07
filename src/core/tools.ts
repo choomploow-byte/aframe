@@ -3,9 +3,22 @@ import { applyChanges } from './apply';
 import { CoreError } from './errors';
 import { getOutline } from './outline';
 import { CREATABLE_TYPES } from './props';
+import { defineTool, ToolFailure, type Tool, type ToolResult } from './tool-kit';
 import { mergeTokens } from './token-edit';
-import type { ErrorCode, NodePropKey, Op, OpError, ToolContext, Warning } from './types';
+import { EXTRA_TOOLS } from './tools-extra';
+import type { NodePropKey, Op, ToolContext, Warning } from './types';
 import { deepEqual } from './util';
+
+export {
+  defineTool,
+  formatZodError,
+  ToolFailure,
+  toToolError,
+  type Tool,
+  type ToolError,
+  type ToolImage,
+  type ToolResult,
+} from './tool-kit';
 
 /**
  * Tool definitions and handlers shared by the MCP server and the in-app chat (docs/03 §2, docs/05).
@@ -13,61 +26,6 @@ import { deepEqual } from './util';
  * tools plus `apply_changes`; the rest of docs/05 arrives with the phases that need an app or
  * a filesystem.
  */
-
-// ---------------------------------------------------------------------------
-// Results
-// ---------------------------------------------------------------------------
-
-export interface ToolError {
-  code: ErrorCode;
-  message: string;
-  hint?: string;
-  /** For apply_changes: index of the failing operation. */
-  op?: number;
-  path?: string;
-  /** All errors found, when there is more than one. */
-  details?: OpError[];
-}
-
-export type ToolResult = { ok: true; data: unknown } | { ok: false; error: ToolError };
-
-/** Thrown by handlers to fail with structured detail (extends `CoreError` so plain ones work too). */
-export class ToolFailure extends CoreError {
-  readonly op: number | undefined;
-  readonly details: OpError[] | undefined;
-  constructor(error: OpError, details?: OpError[]) {
-    super(error.code, error.message, error.hint, error.path);
-    this.op = error.op;
-    this.details = details;
-  }
-}
-
-function toToolError(err: unknown): ToolError {
-  if (err instanceof ToolFailure) {
-    const out: ToolError = { code: err.code, message: err.message };
-    if (err.hint !== undefined) out.hint = err.hint;
-    if (err.op !== undefined) out.op = err.op;
-    if (err.path !== undefined) out.path = err.path;
-    if (err.details !== undefined) out.details = err.details;
-    return out;
-  }
-  if (err instanceof CoreError) {
-    const out: ToolError = { code: err.code, message: err.message };
-    if (err.hint !== undefined) out.hint = err.hint;
-    if (err.path !== undefined) out.path = err.path;
-    return out;
-  }
-  return { code: 'INTERNAL', message: err instanceof Error ? err.message : String(err) };
-}
-
-function formatZodError(error: z.ZodError): string {
-  const shown = error.issues.slice(0, 3).map((i) => {
-    const path = i.path.map(String).join('.');
-    return path ? `${path}: ${i.message}` : i.message;
-  });
-  const more = error.issues.length > 3 ? ` (+${error.issues.length - 3} more)` : '';
-  return `Invalid input: ${shown.join('; ')}${more}`;
-}
 
 // ---------------------------------------------------------------------------
 // Schemas (what the model sees as JSON Schema; core validators do the deep checks)
@@ -211,49 +169,6 @@ const opSchema = z.discriminatedUnion('op', [
 ]);
 
 // ---------------------------------------------------------------------------
-// Tool plumbing
-// ---------------------------------------------------------------------------
-
-export interface Tool {
-  readonly name: string;
-  readonly description: string;
-  readonly inputSchema: z.ZodType;
-  /** Validates `rawInput` and runs the handler. Never throws. */
-  run(ctx: ToolContext, rawInput: unknown): Promise<ToolResult>;
-}
-
-function defineTool<S extends z.ZodType>(def: {
-  name: string;
-  description: string;
-  inputSchema: S;
-  handler: (ctx: ToolContext, input: z.infer<S>) => Promise<unknown>;
-}): Tool {
-  return {
-    name: def.name,
-    description: def.description,
-    inputSchema: def.inputSchema,
-    async run(ctx, rawInput) {
-      const parsed = def.inputSchema.safeParse(rawInput ?? {});
-      if (!parsed.success) {
-        return {
-          ok: false,
-          error: {
-            code: 'INVALID_VALUE',
-            message: formatZodError(parsed.error),
-            hint: `Check the input schema of ${def.name}.`,
-          },
-        };
-      }
-      try {
-        return { ok: true, data: await def.handler(ctx, parsed.data) };
-      } catch (err) {
-        return { ok: false, error: toToolError(err) };
-      }
-    },
-  };
-}
-
-// ---------------------------------------------------------------------------
 // Tools
 // ---------------------------------------------------------------------------
 
@@ -358,7 +273,14 @@ const applyChangesTool = defineTool({
   },
 });
 
-export const TOOLS: readonly Tool[] = [getDesign, getNode, getTokens, setTokens, applyChangesTool];
+export const TOOLS: readonly Tool[] = [
+  getDesign,
+  getNode,
+  getTokens,
+  setTokens,
+  applyChangesTool,
+  ...EXTRA_TOOLS,
+];
 
 export function findTool(name: string): Tool | undefined {
   return TOOLS.find((t) => t.name === name);

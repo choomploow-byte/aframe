@@ -278,13 +278,33 @@ describe('set_tokens', () => {
 
 describe('registry', () => {
   it('lists the tools and finds them by name', () => {
-    expect(TOOLS.map((t) => t.name)).toEqual([
-      'get_design',
-      'get_node',
-      'get_tokens',
-      'set_tokens',
-      'apply_changes',
-    ]);
+    // Every tool in docs/05, nothing more (the docs, SKILL.md and server instructions name these).
+    expect(TOOLS.map((t) => t.name).sort()).toEqual(
+      [
+        'add_annotation',
+        'add_reference',
+        'apply_changes',
+        'create_project',
+        'export_code',
+        'export_image',
+        'get_annotations',
+        'get_design',
+        'get_node',
+        'get_reference',
+        'get_selection',
+        'get_tokens',
+        'import_image',
+        'lint_design',
+        'list_projects',
+        'list_references',
+        'list_skills',
+        'load_skill',
+        'open_project',
+        'resolve_annotation',
+        'screenshot',
+        'set_tokens',
+      ].sort(),
+    );
     expect(findTool('get_tokens')?.name).toBe('get_tokens');
     expect(findTool('nope')).toBeUndefined();
   });
@@ -293,9 +313,7 @@ describe('registry', () => {
     const r = await runTool(ctx(), 'make_it_pop', {});
     expect(r).toMatchObject({ ok: false, error: { code: 'NOT_FOUND' } });
     if (!r.ok)
-      expect(r.error.hint).toBe(
-        'Available tools: get_design, get_node, get_tokens, set_tokens, apply_changes.',
-      );
+      expect(r.error.hint).toBe(`Available tools: ${TOOLS.map((t) => t.name).join(', ')}.`);
   });
 
   it('exports JSON Schema definitions an MCP server or LLM provider can use', () => {
