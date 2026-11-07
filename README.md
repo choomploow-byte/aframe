@@ -17,6 +17,14 @@ npm test
 npm run tauri:dev  # desktop shell (needs Rust)
 ```
 
+Checking the real desktop window on Windows (WebView2), without clicking around:
+
+```powershell
+$env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS='--remote-debugging-port=9222'
+npm run tauri:dev            # in one terminal
+node tests/e2e/tauri-window-probe.mjs   # in another
+```
+
 Specs live in [`docs/`](docs/), standing rules for contributors and coding agents in [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md).
 
 ## Licence
