@@ -14,6 +14,9 @@ fn main() {
             "app_state_set",
             "bridge_resync",
             "app_quit",
+            "export_folder",
+            "export_pick_folder",
+            "export_files",
         ]),
     ))
     .expect("failed to run the Tauri build script");

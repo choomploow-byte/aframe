@@ -6,12 +6,14 @@
 
 mod appstate;
 mod bridge;
+mod export;
 mod fsops;
 mod home;
 mod layout;
 mod lock;
 
 use appstate::SharedState;
+use export::{ExportFile, ExportRoot, WriteReport};
 use fsops::{Crash, DocWrite, Entry, Stat};
 use home::Home;
 use serde::Serialize;
@@ -106,6 +108,53 @@ async fn bridge_resync(seen: State<'_, BridgeSeen>) -> Result<(), String> {
     Ok(())
 }
 
+/// The folder the user picked for exports this session, if any (for display).
+#[tauri::command]
+async fn export_folder(root: State<'_, ExportRoot>) -> Result<Option<String>, String> {
+    Ok(root.0.lock().unwrap().as_deref().map(export::display))
+}
+
+/// Opens the system "choose a folder" dialog. The page never names a folder: whatever the user
+/// picks here is the only place `export_files` will write.
+#[tauri::command]
+async fn export_pick_folder(
+    app: tauri::AppHandle,
+    root: State<'_, ExportRoot>,
+) -> Result<Option<String>, String> {
+    use tauri_plugin_dialog::DialogExt;
+    let Some(picked) = app
+        .dialog()
+        .file()
+        .set_title("Choose a folder for the export")
+        .blocking_pick_folder()
+    else {
+        return Ok(None);
+    };
+    let path = picked.into_path().map_err(|e| e.to_string())?;
+    let real = export::check_root(&path, dirs::home_dir().as_deref())?;
+    let shown = export::display(&real);
+    *root.0.lock().unwrap() = Some(real);
+    Ok(Some(shown))
+}
+
+/// Writes an export into the folder the user picked. See `export.rs` for the rules.
+#[tauri::command]
+async fn export_files(
+    root: State<'_, ExportRoot>,
+    files: Vec<ExportFile>,
+    overwrite: bool,
+) -> Result<WriteReport, String> {
+    let chosen = root
+        .0
+        .lock()
+        .unwrap()
+        .clone()
+        .ok_or("Choose a folder first.")?;
+    // Checked again now: the folder may have changed (replaced by a link) since it was picked.
+    let real = export::check_root(&chosen, dirs::home_dir().as_deref())?;
+    export::write_files(&real, &files, overwrite)
+}
+
 /// The page has flushed its unsaved work; now the window may really close.
 #[tauri::command]
 async fn app_quit(app: tauri::AppHandle) -> Result<(), String> {
@@ -152,6 +201,8 @@ pub fn run() {
             }
         }))
         .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(tauri_plugin_dialog::init())
+        .manage(ExportRoot::default())
         .manage(BridgeSeen::default())
         .manage(Arc::new(SharedState::default()))
         .setup(|app| {
@@ -193,7 +244,10 @@ pub fn run() {
             fs_stat,
             app_state_set,
             bridge_resync,
-            app_quit
+            app_quit,
+            export_folder,
+            export_pick_folder,
+            export_files
         ])
         .run(tauri::generate_context!())
         .expect("error while running Atelier");
