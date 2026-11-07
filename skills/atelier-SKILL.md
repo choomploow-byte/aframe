@@ -32,6 +32,7 @@ Atelier is a desktop design app. You drive it through the `atelier` MCP tools (s
 | `import_image {path, as}` | bring an image in as node or reference |
 | `search_icons {query?, category?}` / `place_icon {name, ...}` | find an icon by meaning; place one in a single call |
 | `list_fonts {category?}` | the bundled fonts and their real weights |
+| `search_library {query?, category?}` / `use_library_asset {id, ...}` | the user's own textures and overlays (halftones, sunbursts, stars, particles); place one as an image |
 | `define_component / create_instance / component_list` | reusable masters with states; place instances that follow them |
 | `list_projects / open_project / create_project` | manage projects |
 

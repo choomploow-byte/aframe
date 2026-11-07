@@ -21,6 +21,7 @@ Goal: the app and any number of MCP server processes cooperate on the same proje
   mcp/atelier-mcp.mjs           bundled server (a marked placeholder until Phase 5)
   skills/*.md                   shipped + user skills (README placeholder until Phase 9)
   exports/                      default export location
+  library/                      the user's own images + index.json (created by `atelier-mcp library add`; read only by the MCP server, by id, never by a path an agent supplies)
   logs/
 ```
 Project ids match `^p_[A-Za-z0-9]{3,16}$`; they become folder names, so nothing else is accepted.

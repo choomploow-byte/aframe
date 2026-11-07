@@ -26,6 +26,7 @@ import {
   type InstallEnv,
   type Step,
 } from './install';
+import { Library } from './library';
 import { Presence } from './presence';
 
 const HELP = `Atelier MCP server v${MCP_VERSION}
@@ -37,6 +38,8 @@ Usage: node atelier-mcp.mjs [command]
   uninstall [hosts]       remove exactly what install added
   doctor                  check Node, the app, and each host's registration
   print-config            JSON for any other MCP host
+  library add <folder>    copy a folder of images into your asset library (~/.atelier/library)
+  library list            what is in it
   --version
 
 hosts: --claude --codex --cursor --all   (default: every host found on this machine)
@@ -110,6 +113,39 @@ export function runCommand(args: string[], env: InstallEnv, io: CliIo): number {
         printSteps(io.out, r.steps);
       }
       return 0;
+    }
+    case 'library': {
+      const [sub, folder] = rest;
+      const library = new Library(env.atelierHome);
+      if (sub === 'list') {
+        const all = library.list();
+        const counts = new Map<string, number>();
+        for (const e of all) counts.set(e.category, (counts.get(e.category) ?? 0) + 1);
+        io.out(`${all.length} assets in ${library.dir}`);
+        for (const [category, n] of [...counts].sort()) io.out(`  ${category}: ${n}`);
+        return 0;
+      }
+      if (sub === 'add' && folder) {
+        try {
+          const report = library.add(folder);
+          io.out(`[ok]  added ${report.added.length} to ${library.dir}`);
+          if (report.duplicates.length > 0) {
+            io.out(
+              `[i]   ${report.duplicates.length} already there (same picture): ${report.duplicates.slice(0, 5).join(', ')}${report.duplicates.length > 5 ? ', ...' : ''}`,
+            );
+          }
+          for (const s of report.skipped.slice(0, 10))
+            io.out(`[!]   skipped ${s.file}: ${s.reason}`);
+          if (report.skipped.length > 10)
+            io.out(`[!]   ... and ${report.skipped.length - 10} more skipped`);
+          return 0;
+        } catch (e) {
+          io.out(`[x]   ${e instanceof Error ? e.message : String(e)}`);
+          return 1;
+        }
+      }
+      io.out('Usage: library add <folder> | library list\n');
+      return 2;
     }
     case 'doctor': {
       const checks = doctor(env);

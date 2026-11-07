@@ -308,7 +308,9 @@ describe('registry', () => {
         'resolve_annotation',
         'screenshot',
         'search_icons',
+        'search_library',
         'set_tokens',
+        'use_library_asset',
       ].sort(),
     );
     expect(findTool('get_tokens')?.name).toBe('get_tokens');

@@ -33,6 +33,7 @@ Flat fills read as cheap. Add one of each:
   - `bevel-raised`: a control standing proud. `bevel-pressed`: pushed in; use it for slots and the pressed state.
   - `gloss-top`: soft highlight along the top edge. `inner-glow`: a lit edge (tint with `color`; use it for the selected state).
   - `hard-3d-bottom`: a solid darker ledge under the node. The classic chunky button is `["gloss-top", "hard-3d-bottom"]` on a saturated fill with a dark outline and a pill radius.
+- **The user's library** (`search_library`, then `use_library_asset`) holds richer overlays than the native patterns: halftone corners, sunbursts, sparkles, stars, flames, hexagons, studs, paper. Most are white or grey with transparency: place one over a coloured frame with `opacity` 0.1-0.4, stretched with `w`/`h`, and keep it clipped inside a rounded frame (`clip: true`). Prefer a native pattern for a plain texture; reach for the library for a specific look.
 - **Never put a shadow or effect on a text node.** Effects are box recipes and are not drawn on text. For depth behind text, put it on the frame holding the text. For an outlined title, stack two text nodes in a `layout: "none"` frame: a dark copy offset 3px behind the light one.
 
 ## 4. Components with states

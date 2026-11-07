@@ -110,7 +110,9 @@ describe('the protocol surface', () => {
         'resolve_annotation',
         'screenshot',
         'search_icons',
+        'search_library',
         'set_tokens',
+        'use_library_asset',
       ].sort(),
     );
     for (const t of tools) {
@@ -122,9 +124,9 @@ describe('the protocol surface', () => {
     const shot = tools.find((t) => t.name === 'screenshot');
     expect(shot?.annotations?.readOnlyHint).toBe(true);
     expect(tools.find((t) => t.name === 'apply_changes')?.annotations?.readOnlyHint).toBe(false);
-    for (const name of ['search_icons', 'list_fonts', 'component_list'])
+    for (const name of ['search_icons', 'list_fonts', 'component_list', 'search_library'])
       expect(tools.find((t) => t.name === name)?.annotations?.readOnlyHint, name).toBe(true);
-    for (const name of ['place_icon', 'create_instance', 'define_component'])
+    for (const name of ['place_icon', 'create_instance', 'define_component', 'use_library_asset'])
       expect(tools.find((t) => t.name === name)?.annotations?.readOnlyHint, name).toBe(false);
   });
 

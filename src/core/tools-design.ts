@@ -5,6 +5,7 @@
  */
 import * as z from 'zod/v4';
 import { applyChanges } from './apply';
+import { addAsset, imageNodeSpec, toDataUrl } from './assets';
 import {
   createInstance,
   defineComponent,
@@ -14,6 +15,7 @@ import {
 import { CoreError } from './errors';
 import { FONT_CATALOG } from './fonts';
 import { getIcon, ICON_CATEGORIES, searchIcons, suggestIcons } from './icons';
+import { describeEntry, LIBRARY_CATEGORIES, searchLibrary, type LibraryCategory } from './library';
 import { lookupId } from './ops';
 import { defineTool, ToolFailure, type Tool } from './tool-kit';
 import type { Doc, ToolContext } from './types';
@@ -228,7 +230,126 @@ const defineComponentTool = defineTool({
   },
 });
 
+const needLibrary = (ctx: ToolContext): NonNullable<ToolContext['library']> => {
+  if (!ctx.library) {
+    throw new CoreError(
+      'NOT_IMPLEMENTED',
+      'The asset library is not available in this environment.',
+      'It is part of the Atelier MCP server; add images with import_image instead.',
+    );
+  }
+  return ctx.library;
+};
+
+const searchLibraryTool = defineTool({
+  name: 'search_library',
+  description:
+    "Search the user's own asset library: textures and overlays such as halftones, sunbursts, stars, sparkles, particles, hexagons, studs and paper. Most are white or grey with transparency, made to lay over a coloured frame (set opacity, or tint the frame behind). Returns ids for use_library_asset. No query lists a category. The library is the user's, kept in their Atelier folder; add to it with `atelier-mcp library add <folder>`.",
+  inputSchema: z.object({
+    query: z.string().max(80).optional().describe('Words, e.g. "halftone corner" or "sparkle"'),
+    category: z.enum(LIBRARY_CATEGORIES as unknown as [string, ...string[]]).optional(),
+    limit: z.number().int().min(1).max(60).optional().describe('Default 24'),
+  }),
+  handler: async (ctx, { query, category, limit }) => {
+    const entries = await needLibrary(ctx).list();
+    const found = searchLibrary(entries, query, {
+      ...(category === undefined ? {} : { category: category as LibraryCategory }),
+      ...(limit === undefined ? {} : { limit }),
+    });
+    const counts: Record<string, number> = {};
+    for (const e of entries) counts[e.category] = (counts[e.category] ?? 0) + 1;
+    return {
+      total: found.total,
+      assets: found.hits.map(describeEntry),
+      categories: counts,
+      ...(entries.length === 0
+        ? {
+            hint: 'The library is empty. Add a folder of images: atelier-mcp library add <folder>.',
+          }
+        : found.total === 0
+          ? {
+              hint: `Nothing matches "${query ?? ''}". Try one word, or a category: ${Object.keys(counts).join(', ')}.`,
+            }
+          : {}),
+    };
+  },
+});
+
+const useLibraryAsset = defineTool({
+  name: 'use_library_asset',
+  description:
+    'Place an image from the asset library as an image node. The picture is stored in the project (once, however many times you place it). Give w and h to stretch it over something (fit "fill" is the default for overlays); opacity 0.1-0.4 lays a white texture softly over a colour. Returns the node id.',
+  inputSchema: z.object({
+    id: z.string().describe('An id from search_library'),
+    parentId: z.string().optional().describe('Frame to put it in (default: the first frame)'),
+    x: z.number().optional().describe('Only used in a layout "none" frame or on the page'),
+    y: z.number().optional(),
+    w: z.number().min(1).max(10000).optional(),
+    h: z.number().min(1).max(10000).optional(),
+    opacity: z.number().min(0).max(1).optional(),
+    fit: z.enum(['cover', 'contain', 'fill']).optional(),
+    name: z.string().max(120).optional().describe('Layer name (default: the asset name)'),
+  }),
+  handler: async (ctx, input) => {
+    const library = needLibrary(ctx);
+    const found = await library.read(input.id);
+    if (!found) {
+      const near = searchLibrary(await library.list(), input.id.replace(/[-_]+/g, ' '), {
+        limit: 5,
+      });
+      throw new CoreError(
+        'NOT_FOUND',
+        `There is no library asset "${input.id}".`,
+        near.hits.length > 0
+          ? `Did you mean: ${near.hits.map((h) => h.id).join(', ')}? Use search_library to browse.`
+          : 'Use search_library to find ids.',
+      );
+    }
+    const doc = await ctx.getDoc();
+    const url = toDataUrl(found.entry.mime, found.bytes);
+    const existing = Object.keys(doc.assets).find((k) => doc.assets[k] === url);
+    const added = existing === undefined ? addAsset(doc, found.bytes) : null;
+    const base = added?.doc ?? doc;
+    const assetId = added?.assetId ?? existing;
+    const info = { mime: found.entry.mime, width: found.entry.width, height: found.entry.height };
+    const root = base.nodes[base.rootId];
+    const parentId =
+      input.parentId === undefined
+        ? (root?.children[0] ?? base.rootId)
+        : lookupId(base.nodes, input.parentId);
+    const spec = imageNodeSpec(assetId, info);
+    spec.name = input.name ?? found.entry.name;
+    if (input.w !== undefined || input.h !== undefined) {
+      const ratio = (info.width ?? 1) / Math.max(1, info.height ?? 1);
+      spec.w = input.w ?? Math.max(1, Math.round((input.h as number) * ratio));
+      spec.h = input.h ?? Math.max(1, Math.round((input.w as number) / ratio));
+    }
+    spec.fit = input.fit ?? (input.w !== undefined && input.h !== undefined ? 'fill' : 'cover');
+    if (input.x !== undefined) spec.x = input.x;
+    if (input.y !== undefined) spec.y = input.y;
+    if (input.opacity !== undefined) spec.opacity = input.opacity;
+    const result = applyChanges(base, [{ op: 'create', parentId, node: spec }]);
+    if (!result.ok) {
+      const [first] = result.errors;
+      throw new ToolFailure(
+        first ?? { code: 'INTERNAL', message: 'Could not place the asset.' },
+        result.errors,
+      );
+    }
+    const rev = await commit(ctx, result.doc, `Add ${found.entry.name}`);
+    return {
+      rev,
+      nodeId: result.created[0] ?? null,
+      assetId,
+      reusedAsset: existing !== undefined,
+      warnings: result.warnings,
+    };
+  },
+});
+
 export const DESIGN_TOOLS: readonly Tool[] = [
+  searchLibraryTool,
+  useLibraryAsset,
   searchIconsTool,
   placeIcon,
   listFonts,

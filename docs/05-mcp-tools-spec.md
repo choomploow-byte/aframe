@@ -5,7 +5,7 @@ Server name: `atelier`. Transport: stdio. SDK: MCP TypeScript SDK **v2** (`@mode
 In Claude Code, tools appear as `mcp__atelier__<tool>`. Keep tool names short and verb-first.
 
 ## As built in the game-UI toolkit phase (decision log #79-#95)
-**28 tools** (the 22 below plus six): `search_icons`, `place_icon`, `list_fonts`, `component_list`, `create_instance`, `define_component`; `screenshot` gained `state`. Nothing existing was removed or renamed.
+**30 tools** (the 22 below plus eight): `search_icons`, `place_icon`, `list_fonts`, `component_list`, `create_instance`, `define_component`, `search_library`, `use_library_asset`; `screenshot` gained `state`. Nothing existing was removed or renamed.
 
 - **Icons.** `search_icons { query?, category?, limit? }` finds names in the bundled set (165 solid icons in five categories: game, commerce, ui, status, arrows; coins, gems, keys, shields, stars, swords, potions, chests, arrows, close, check, settings and more). Place one in one op with `apply_changes` `create { type: "icon", icon, w, h, color }` or in one call with `place_icon { name, parentId?, size?, color?, x?, y?, label? }` (which refuses an unknown name and lists close ones). An unknown name made through `apply_changes` draws a labelled dashed placeholder and returns an `UNKNOWN_ICON` warning.
 - **Fonts.** `list_fonts { category? }` returns each family's real weights. The display faces for game UI are Lilita One, Luckiest Guy and Bungee (weight 400 only) and Fredoka (300-700). A weight the family lacks is never faked (`FONT_WEIGHT` warning); `fontWeight` goes to 900 for families that have it.
@@ -13,6 +13,7 @@ In Claude Code, tools appear as `mcp__atelier__<tool>`. Keep tool names short an
 - **Effect presets.** `effects: ["bevel-raised"|"bevel-pressed"|"gloss-top"|"inner-glow"|"hard-3d-bottom" or { preset, intensity?, color? }]`. Not drawn on text (`EFFECT_ON_TEXT` warning); a shadow on text draws as a glyph shadow, never a box.
 - **Components.** `define_component { nodeId, kind?, name?, states? }` turns a frame into a master (button, card, tab, slot, panel, toast, custom) and defines `hover`, `pressed`, `disabled`, `selected` (only what differs, by layer name/id/`$self`). `create_instance { component, parentId?, x?, y?, name?, state?, overrides? }` places one that follows the master. `component_list { kind? }` lists masters with their layers, states and instances. Editing a layer inside an instance is stored as an override and returns an `INSTANCE_OVERRIDE` note; `update` with `instanceOf: null` detaches.
 - **`screenshot` `state`** (`default|hover|pressed|disabled|selected|all`): components in the picture show that state without changing the design; `all` stacks every state the node defines, labelled. It fails with the list of defined states when nothing defines the one asked for.
+- **Asset library.** `search_library { query?, category?, limit? }` searches the user's own images (textures, halftones, sunbursts, stars, particles, hexagons, studs, paper...), kept in `~/.atelier/library/`; `use_library_asset { id, parentId?, x?, y?, w?, h?, opacity?, fit?, name? }` places one as an image node, stored in the project once however often it is used. An agent names an id, never a path. Fill it with `atelier-mcp library add <folder>` (checked by contents, deduplicated by hash, links never followed); `library list` shows what is in it. The library is the user's data: it is not part of the app or the repository.
 - **Editing fixes.** Setting x/y on an auto-layout child returns `LAYOUT_IGNORED` naming the parent and its layout. Errors name the bad value and the correct form (`radius: "xl"` -> use `"$radius.xl"`). Node ids work with or without the `n_` prefix everywhere.
 - **Lint.** New rules: `text-shadow`, `effect-on-text`, `ignored-position`, `button-states`, `unknown-icon`, `font-weight`.
 - **Templates.** `create_project` templates are now `blank`, `landing` (product landing), `dashboard` (SaaS), `mobile`, `pricing`, `game-hud`, `game-shop`, `game-inventory`; each brings a token set, a component kit with states and built screens.
@@ -72,6 +73,8 @@ Must include, concisely:
 | `search_icons` | `{ query?, category?, limit? }` | Icon names with category and tags |
 | `place_icon` | `{ name, parentId?, size?, color?, x?, y?, label? }` | One icon node in one call |
 | `list_fonts` | `{ category? }` | Bundled fonts with real weights, plus the document's font tokens |
+| `search_library` | `{ query?, category?, limit? }` | The user's asset library: ids, names, categories, sizes |
+| `use_library_asset` | `{ id, parentId?, x?, y?, w?, h?, opacity?, fit?, name? }` | An image node from the library (the picture is stored in the project once) |
 | `define_component` | `{ nodeId, kind?, name?, states? }` | Frame becomes a master; states by layer name |
 | `create_instance` | `{ component, parentId?, x?, y?, name?, state?, overrides? }` | An instance that follows its master |
 | `component_list` | `{ kind? }` | Masters with layers, states and instances |

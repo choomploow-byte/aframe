@@ -11,6 +11,7 @@ All notable changes are recorded here. Format: [Keep a Changelog](https://keepac
   icons were regenerated from `app-icon.png`.
 
 ### Added
+- Asset library: your own folder of images (textures, halftones, sunbursts, particles...) kept in `~/.atelier/library/`, filled with `atelier-mcp library add <folder>`, searched and placed by agents with `search_library` and `use_library_asset` (a picture is stored in a project once however often it is used). Not part of the app or repository.
 - Game-UI toolkit (decision log #79-#96; version 0.1.1 so installed apps refresh the MCP server): an **icon set** (165 solid icons in one style: coins, gems,
   keys, shields, stars, swords, potions, chests, arrows, close, check, settings and more; Font
   Awesome Free plus five drawn for Atelier) as a new `icon` node that takes a colour token, with

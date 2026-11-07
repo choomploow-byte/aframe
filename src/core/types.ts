@@ -3,6 +3,8 @@
  * No DOM / Node imports allowed in src/core/.
  */
 
+import type { LibraryEntry } from './library';
+
 export const SCHEMA_VERSION = 1 as const;
 
 export type NodeType = 'page' | 'frame' | 'rect' | 'ellipse' | 'line' | 'text' | 'image' | 'icon';
@@ -314,6 +316,13 @@ export interface ToolProjects {
   open(project: string): Promise<ProjectSummary>;
 }
 
+/** The user's asset library (their own images, kept in the Atelier home; MCP server only). */
+export interface ToolLibrary {
+  list(): LibraryEntry[] | Promise<LibraryEntry[]>;
+  /** The bytes of one asset by id, or null if there is no such id. */
+  read(id: string): Promise<{ entry: LibraryEntry; bytes: Uint8Array } | null>;
+}
+
 export interface ToolSkills {
   list(): { name: string; description: string }[];
   load(name: string): string | null;
@@ -341,6 +350,7 @@ export interface ToolContext {
   appOnline?: () => boolean | Promise<boolean>;
   projects?: ToolProjects;
   skills?: ToolSkills;
+  library?: ToolLibrary;
   /** App only: absolute bounds of a node on the canvas, if it is rendered. */
   getNodeBounds?: (nodeId: string) => Promise<Bounds | null>;
   /** MCP server only: read a user-specified image file (validated). */

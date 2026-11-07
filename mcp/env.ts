@@ -30,6 +30,7 @@ import {
 import type { HomeApi } from '../src/platform/fs';
 import { BridgeClient } from './bridge';
 import { createImageReader } from './files';
+import { Library } from './library';
 import { SKILLS } from './generated';
 import type { HomeFs } from './home-fs';
 import { homeApiFromHomeFs } from './node-api';
@@ -263,6 +264,10 @@ export class McpEnv {
         return { pngBase64: r.pngBase64, width: r.width, height: r.height, path: file };
       },
       readUserFile: createImageReader({ atelierHome: this.home.root }),
+      library: {
+        list: () => new Library(this.home.root).list(),
+        read: (id) => Promise.resolve(new Library(this.home.root).read(id)),
+      },
       projects: this.projects,
       skills: {
         list: () => SKILLS.map((s) => ({ name: s.name, description: s.description })),
