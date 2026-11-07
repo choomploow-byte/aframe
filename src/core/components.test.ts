@@ -417,3 +417,53 @@ describe('listing', () => {
     );
   });
 });
+
+describe('instances stay consistent through merges and loads', () => {
+  it('a merge re-derives instance layers (an agent edits the master while the app holds an override)', async () => {
+    const { mergeDocs } = await import('./merge');
+    const { doc: base, master } = withButton();
+    const made = createInstance(base, { component: master }, rng);
+    const start = made.doc;
+    const layerId = made.layers.Label as string;
+    // the app: an override on the label (unsaved)
+    const local = apply(start, [{ op: 'update', id: layerId, set: { text: 'Mine' } }]).doc;
+    // an agent, on disk: restyles the master and adds a layer to it
+    const remote = apply(start, [
+      { op: 'update', id: master, set: { fill: '#13579B' } },
+      { op: 'create', parentId: master, node: { type: 'icon', name: 'Glyph', icon: 'star' } },
+    ]).doc;
+    const merged = mergeDocs(start, local, remote);
+    expect(merged.mode).toBe('merged');
+    const inst = merged.doc.nodes[made.instanceId];
+    expect(inst?.fill).toBe('#13579B'); // the master change reached the instance
+    const layers = descendantsOf(merged.doc.nodes, made.instanceId);
+    expect(layers.map((l) => l.name)).toEqual(['Label', 'Glyph']); // the new layer exists
+    expect(layers[0]?.text).toBe('Mine'); // and the override survived
+    // nothing is left out of step: re-deriving changes nothing
+    expect(syncAllInstances(merged.doc)).toBe(merged.doc);
+  });
+
+  it('loading a document brings stale instance layers back in step with their master', async () => {
+    const { loadDoc, serializeDoc } = await import('./doc');
+    const { doc: base, master } = withButton();
+    const made = createInstance(base, { component: master }, rng);
+    const layerId = made.layers.Label as string;
+    // simulate a hand edit that bypassed the tools: the derived layer disagrees with its master
+    const tampered = {
+      ...made.doc,
+      nodes: {
+        ...made.doc.nodes,
+        [layerId]: { ...(made.doc.nodes[layerId] as object), text: 'stale', color: '#00FF00' },
+      },
+    };
+    const loaded = loadDoc(JSON.parse(serializeDoc(tampered as Doc)));
+    expect(loaded.ok).toBe(true);
+    if (!loaded.ok) return;
+    expect(loaded.doc.nodes[layerId]).toMatchObject({ text: 'Click', color: '#FFFFFF' });
+  });
+
+  it('a document with no components is returned untouched', () => {
+    const empty = createEmptyDoc();
+    expect(syncAllInstances(empty)).toBe(empty);
+  });
+});

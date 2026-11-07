@@ -14,6 +14,7 @@
  *
  * Pure, and structure-sharing: a node nobody touched keeps its object identity.
  */
+import { syncAllInstances } from './components';
 import { deepEqual } from './util';
 import type { Annotation, Doc, Node, Reference } from './types';
 import { validateDoc } from './validate';
@@ -250,9 +251,12 @@ export function mergeDocs(base: Doc, local: Doc, remote: Doc): MergeResult {
     },
   };
 
-  const check = validateDoc(doc);
+  // Layers inside an instance are derived from their master, so after a merge (an agent edited a
+  // master while the app held an override) they are re-derived rather than trusted property by property.
+  const settled = syncAllInstances(doc);
+  const check = validateDoc(settled);
   if (!check.ok) return fallback(remote, [...conflicts]);
-  return { doc, mode: 'merged', conflicts: [...conflicts] };
+  return { doc: settled, mode: 'merged', conflicts: [...conflicts] };
 }
 
 function fallback(remote: Doc, conflicts: string[]): MergeResult {

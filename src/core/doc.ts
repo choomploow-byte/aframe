@@ -1,3 +1,4 @@
+import { syncAllInstances } from './components';
 import { generateId, type Rng } from './ids';
 import { migrate } from './migrate';
 import { normalizeDoc, normalizeNode } from './normalize';
@@ -33,7 +34,9 @@ export function loadDoc(input: unknown): LoadResult {
   }
   if (badNodes.length > 0) return { ok: false, errors: badNodes.slice(0, 50) };
 
-  const doc = normalizeDoc(migrated.doc);
+  // Instance layers are derived from their masters: a file edited by hand (or left stale by an older
+  // build) is brought back in step on load.
+  const doc = syncAllInstances(normalizeDoc(migrated.doc));
   const validation = validateDoc(doc);
   if (!validation.ok) return { ok: false, errors: validation.errors };
   return { ok: true, doc, warnings: validation.warnings, migrated: migrated.migrated };
