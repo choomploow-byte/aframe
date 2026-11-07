@@ -172,7 +172,8 @@ export type ErrorCode =
   | 'SCHEMA_NEWER'
   | 'APP_NOT_RUNNING'
   | 'TIMEOUT'
-  | 'PATH_NOT_ALLOWED';
+  | 'PATH_NOT_ALLOWED'
+  | 'INTERNAL';
 
 export interface OpError {
   /** Index of the failing op in the batch, if applicable. */

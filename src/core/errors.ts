@@ -28,7 +28,7 @@ export function toOpError(err: unknown, op?: number): OpError {
   }
   // Anything else is a bug in core, but a tool must still answer with a structured error.
   const message = err instanceof Error ? err.message : String(err);
-  const out: OpError = { code: 'INVALID_VALUE', message: `Unexpected error: ${message}` };
+  const out: OpError = { code: 'INTERNAL', message: `Unexpected error: ${message}` };
   if (op !== undefined) out.op = op;
   return out;
 }

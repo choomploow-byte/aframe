@@ -63,13 +63,13 @@ describe('applyChanges: happy path', () => {
   it('reports changed (own props or children), created and deleted nodes', () => {
     const ops: Op[] = [
       { op: 'update', id: 'n_title', set: { text: 'Hello' } },
-      { op: 'delete', id: 'n_rectB' },
+      { op: 'delete', id: 'n_rectb' },
       { op: 'create', parentId: 'n_other', node: { type: 'rect', id: 'n_new01' } },
     ];
     const res = ok(applyChanges(doc(), ops));
     expect(res.created).toEqual(['n_new01']);
-    expect(res.deleted).toEqual(['n_rectB']);
-    expect([...res.changed].sort()).toEqual(['n_other', 'n_row', 'n_title']);
+    expect(res.deleted).toEqual(['n_rectb']);
+    expect([...res.changed].sort()).toEqual(['n_other', 'n_row1', 'n_title']);
   });
 
   it('nets out nodes created and deleted in the same batch, and updates that are reverted', () => {
@@ -110,12 +110,12 @@ describe('applyChanges: happy path', () => {
   it('duplicates, and lets later ops use the original ids', () => {
     const res = ok(
       applyChanges(doc(), [
-        { op: 'duplicate', id: 'n_row', offset: { x: 5, y: 5 } },
-        { op: 'update', id: 'n_row', set: { gap: 3 } },
+        { op: 'duplicate', id: 'n_row1', offset: { x: 5, y: 5 } },
+        { op: 'update', id: 'n_row1', set: { gap: 3 } },
       ]),
     );
     expect(res.created).toHaveLength(3);
-    expect(res.doc.nodes.n_row).toMatchObject({ gap: 3 });
+    expect(res.doc.nodes.n_row1).toMatchObject({ gap: 3 });
   });
 });
 
@@ -126,8 +126,8 @@ describe('applyChanges: atomic failure', () => {
     const ops: Op[] = [
       { op: 'create', parentId: 'n_other', node: { type: 'rect', id: 'n_aaaa1' } },
       { op: 'update', id: 'n_title', set: { text: 'Changed' } },
-      { op: 'delete', id: 'n_rectB' },
-      { op: 'move', id: 'n_rectA', parentId: 'n_other' },
+      { op: 'delete', id: 'n_rectb' },
+      { op: 'move', id: 'n_recta', parentId: 'n_other' },
       { op: 'update', id: 'n_title', set: { opacity: 7 } }, // op index 4: invalid
       { op: 'create', parentId: 'n_other', node: { type: 'rect', id: 'n_zzzz1' } },
     ];
@@ -140,7 +140,7 @@ describe('applyChanges: atomic failure', () => {
   it.each<[string, Op, string]>([
     ['unknown parent', { op: 'create', parentId: 'n_gone1', node: { type: 'rect' } }, 'NOT_FOUND'],
     ['text as parent', { op: 'create', parentId: 'n_title', node: { type: 'rect' } }, 'BAD_PARENT'],
-    ['cycle', { op: 'move', id: 'n_frame', parentId: 'n_row' }, 'CYCLE'],
+    ['cycle', { op: 'move', id: 'n_frame', parentId: 'n_row1' }, 'CYCLE'],
     ['unknown node', { op: 'update', id: 'n_gone1', set: { fill: '#fff' } }, 'NOT_FOUND'],
     ['unknown tempId', { op: 'update', id: '$ghost', set: { fill: '#fff' } }, 'NOT_FOUND'],
     ['bad value', { op: 'update', id: 'n_title', set: { fill: 'url(x)' } }, 'INVALID_VALUE'],
@@ -163,8 +163,8 @@ describe('applyChanges: atomic failure', () => {
 
   it('fails when a later op depends on a node an earlier op deleted', () => {
     const ops: Op[] = [
-      { op: 'delete', id: 'n_row' },
-      { op: 'update', id: 'n_rectA', set: { fill: '#fff' } },
+      { op: 'delete', id: 'n_row1' },
+      { op: 'update', id: 'n_recta', set: { fill: '#fff' } },
     ];
     expect(failure(applyChanges(doc(), ops))[0]).toMatchObject({ op: 1, code: 'NOT_FOUND' });
   });
@@ -190,9 +190,9 @@ describe('applyChanges: malformed input and limits', () => {
     expect(
       bad({ op: 'create', parentId: 'n_other', index: 'x', node: { type: 'rect' } }),
     ).toMatchObject({ path: 'index' });
-    expect(bad({ op: 'move', id: 'n_rectA' })).toMatchObject({ path: 'parentId' });
+    expect(bad({ op: 'move', id: 'n_recta' })).toMatchObject({ path: 'parentId' });
     expect(bad({ op: 'delete' })).toMatchObject({ path: 'id' });
-    expect(bad({ op: 'duplicate', id: 'n_rectA', parentId: 5 })).toMatchObject({
+    expect(bad({ op: 'duplicate', id: 'n_recta', parentId: 5 })).toMatchObject({
       path: 'parentId',
     });
   });
@@ -251,13 +251,13 @@ describe('applyChanges: warnings', () => {
       applyChanges(locked, [
         { op: 'update', id: 'n_title', set: { text: 'a' } }, // inside a locked frame
         { op: 'update', id: 'n_title', set: { text: 'b' } },
-        { op: 'move', id: 'n_rectA', parentId: 'n_other' },
+        { op: 'move', id: 'n_recta', parentId: 'n_other' },
         { op: 'delete', id: 'n_frame' },
       ]),
     );
     expect(res.doc.nodes.n_frame).toBeUndefined();
     const nodes = res.warnings.filter((w) => w.code === 'LOCKED_NODE').map((w) => w.nodeId);
-    expect(nodes).toEqual(['n_title', 'n_rectA', 'n_frame']);
+    expect(nodes).toEqual(['n_title', 'n_recta', 'n_frame']);
     expect(res.warnings[0]?.message).toMatch(/locked in the editor/);
   });
 
@@ -271,13 +271,13 @@ describe('applyChanges: warnings', () => {
       applyChanges(withBadAlias, [
         { op: 'create', parentId: 'n_other', node: { type: 'rect', id: 'n_tok01', fill: '$nope' } },
         { op: 'update', id: 'n_title', set: { color: '$text', fontFamily: '$font.nofont' } },
-        { op: 'update', id: 'n_rectA', set: { fill: '$bad' } },
+        { op: 'update', id: 'n_recta', set: { fill: '$bad' } },
       ]),
     );
     expect(res.warnings.map((w) => [w.code, w.nodeId])).toEqual([
       ['UNKNOWN_TOKEN', 'n_tok01'],
       ['UNKNOWN_TOKEN', 'n_title'],
-      ['UNKNOWN_TOKEN', 'n_rectA'],
+      ['UNKNOWN_TOKEN', 'n_recta'],
     ]);
     expect(res.warnings[0]?.message).toMatch(/\$nope is not defined/);
     expect(res.warnings[2]?.message).toMatch(/cannot be used here \(wrong type\)/);

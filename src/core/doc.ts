@@ -1,8 +1,48 @@
 import { generateId, type Rng } from './ids';
-import { normalizeNode } from './normalize';
+import { migrate } from './migrate';
+import { normalizeDoc, normalizeNode } from './normalize';
+import { NODE_TYPES } from './props';
 import { DEFAULT_TOKENS } from './tokens';
-import type { Doc, DocMeta, Tokens } from './types';
+import type { Doc, DocMeta, NodeType, OpError, Tokens, Warning } from './types';
 import { SCHEMA_VERSION } from './types';
+import { isPlainObject } from './util';
+import { validateDoc } from './validate';
+
+export type LoadResult =
+  { ok: true; doc: Doc; warnings: Warning[]; migrated: boolean } | { ok: false; errors: OpError[] };
+
+/**
+ * The one way to turn parsed JSON (a project file, a fixture, a pasted doc) into a trusted `Doc`:
+ * migrate, normalise, validate. Never throws.
+ */
+export function loadDoc(input: unknown): LoadResult {
+  const migrated = migrate(input);
+  if (!migrated.ok) return { ok: false, errors: [migrated.error] };
+
+  // normalizeNode needs an object with a known type; anything else is reported, not crashed on.
+  const badNodes: OpError[] = [];
+  for (const [key, node] of Object.entries(migrated.doc.nodes)) {
+    const candidate: unknown = node;
+    if (!isPlainObject(candidate) || !NODE_TYPES.includes(candidate.type as NodeType)) {
+      badNodes.push({
+        code: 'INVALID_VALUE',
+        message: `Node ${key} is not an object with a known type.`,
+        path: `nodes.${key}`,
+      });
+    }
+  }
+  if (badNodes.length > 0) return { ok: false, errors: badNodes.slice(0, 50) };
+
+  const doc = normalizeDoc(migrated.doc);
+  const validation = validateDoc(doc);
+  if (!validation.ok) return { ok: false, errors: validation.errors };
+  return { ok: true, doc, warnings: validation.warnings, migrated: migrated.migrated };
+}
+
+/** Stable, diff-friendly JSON for the project file (docs/06: plain files, git-friendly). */
+export function serializeDoc(doc: Doc): string {
+  return `${JSON.stringify(doc, null, 2)}\n`;
+}
 
 export interface CreateDocOptions {
   id?: string;

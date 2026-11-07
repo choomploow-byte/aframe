@@ -31,13 +31,13 @@ describe('createNode', () => {
       visible: true,
     });
     expect(out.created).toEqual([out.rootId]);
-    expect(out.doc.nodes.n_frame!.children).toEqual(['n_title', 'n_row', out.rootId]);
+    expect(out.doc.nodes.n_frame!.children).toEqual(['n_title', 'n_row1', out.rootId]);
     // Structural sharing: only the parent and the new node are new objects.
     expect(out.doc.nodes.n_title).toBe(d.nodes.n_title);
-    expect(out.doc.nodes.n_row).toBe(d.nodes.n_row);
+    expect(out.doc.nodes.n_row1).toBe(d.nodes.n_row1);
     expect(out.doc.nodes.n_other).toBe(d.nodes.n_other);
     expect(out.doc.nodes.n_frame).not.toBe(d.nodes.n_frame);
-    expect(d.nodes.n_frame!.children).toEqual(['n_title', 'n_row']); // input untouched
+    expect(d.nodes.n_frame!.children).toEqual(['n_title', 'n_row1']); // input untouched
   });
 
   it('inserts at an index, including 0 and the end', () => {
@@ -173,17 +173,17 @@ describe('updateNode', () => {
   });
 
   it('removes optional properties with null', () => {
-    const d = updateNode(doc(), 'n_rectA', { fill: '#fff', stroke: '#000' });
-    const next = updateNode(d, 'n_rectA', { fill: null });
-    expect(next.nodes.n_rectA).not.toHaveProperty('fill');
-    expect(next.nodes.n_rectA).toHaveProperty('stroke', '#000');
+    const d = updateNode(doc(), 'n_recta', { fill: '#fff', stroke: '#000' });
+    const next = updateNode(d, 'n_recta', { fill: null });
+    expect(next.nodes.n_recta).not.toHaveProperty('fill');
+    expect(next.nodes.n_recta).toHaveProperty('stroke', '#000');
   });
 
   it('returns the same document when nothing changes', () => {
     const d = doc();
     expect(updateNode(d, 'n_title', { text: 'Title' })).toBe(d);
     expect(updateNode(d, 'n_title', {})).toBe(d);
-    expect(updateNode(d, 'n_rectA', { fill: null })).toBe(d); // removing what is not there
+    expect(updateNode(d, 'n_recta', { fill: null })).toBe(d); // removing what is not there
   });
 
   it('renames text layers that still have an auto name, but not custom names', () => {
@@ -218,8 +218,8 @@ describe('updateNode', () => {
 describe('deleteNode', () => {
   it('removes the subtree and its entry in the parent', () => {
     const d = doc();
-    const out = deleteNode(d, 'n_row');
-    expect(out.deleted).toEqual(['n_row', 'n_rectA', 'n_rectB']);
+    const out = deleteNode(d, 'n_row1');
+    expect(out.deleted).toEqual(['n_row1', 'n_recta', 'n_rectb']);
     expect(Object.keys(out.doc.nodes).sort()).toEqual(['n_frame', 'n_other', 'n_page1', 'n_title']);
     expect(out.doc.nodes.n_frame!.children).toEqual(['n_title']);
     expect(out.doc.nodes.n_title).toBe(d.nodes.n_title);
@@ -237,7 +237,7 @@ describe('deleteNode', () => {
       annotations: [
         {
           id: 'a_pin01',
-          nodeId: 'n_rectA',
+          nodeId: 'n_recta',
           x: 5,
           y: 6,
           text: 'x',
@@ -258,7 +258,7 @@ describe('deleteNode', () => {
         { id: 'a_pin03', x: 3, y: 4, text: 'z', author: 'user', status: 'open', createdAt: 't' },
       ],
     });
-    const out = deleteNode(withPins, 'n_row').doc;
+    const out = deleteNode(withPins, 'n_row1').doc;
     expect(out.annotations[0]).toEqual({
       id: 'a_pin01',
       x: 5,
@@ -277,38 +277,41 @@ describe('moveNode', () => {
   it('reorders inside the same parent', () => {
     const d = doc();
     const next = moveNode(d, 'n_title', 'n_frame', 1);
-    expect(next.nodes.n_frame!.children).toEqual(['n_row', 'n_title']);
-    expect(moveNode(d, 'n_title', 'n_frame').nodes.n_frame!.children).toEqual(['n_row', 'n_title']);
+    expect(next.nodes.n_frame!.children).toEqual(['n_row1', 'n_title']);
+    expect(moveNode(d, 'n_title', 'n_frame').nodes.n_frame!.children).toEqual([
+      'n_row1',
+      'n_title',
+    ]);
     expect(moveNode(d, 'n_title', 'n_frame', 0)).toBe(d); // already there: no change
   });
 
   it('moves between parents and updates parentId', () => {
     const d = doc();
-    const next = moveNode(d, 'n_rectA', 'n_other', 0);
-    expect(next.nodes.n_rectA!.parentId).toBe('n_other');
-    expect(next.nodes.n_other!.children).toEqual(['n_rectA']);
-    expect(next.nodes.n_row!.children).toEqual(['n_rectB']);
-    expect(next.nodes.n_rectB).toBe(d.nodes.n_rectB);
+    const next = moveNode(d, 'n_recta', 'n_other', 0);
+    expect(next.nodes.n_recta!.parentId).toBe('n_other');
+    expect(next.nodes.n_other!.children).toEqual(['n_recta']);
+    expect(next.nodes.n_row1!.children).toEqual(['n_rectb']);
+    expect(next.nodes.n_rectb).toBe(d.nodes.n_rectb);
   });
 
   it('rejects cycles, bad parents, bad indexes and the page', () => {
     const d = doc();
     expect(codeOf(() => moveNode(d, 'n_frame', 'n_frame'))).toBe('CYCLE');
-    expect(codeOf(() => moveNode(d, 'n_frame', 'n_rectA'))).toBe('BAD_PARENT');
-    expect(codeOf(() => moveNode(d, 'n_frame', 'n_row'))).toBe('CYCLE');
-    expect(codeOf(() => moveNode(d, 'n_row', 'n_title'))).toBe('BAD_PARENT');
-    expect(codeOf(() => moveNode(d, 'n_rectA', 'n_other', 5))).toBe('INVALID_VALUE');
-    expect(codeOf(() => moveNode(d, 'n_rectA', 'n_row', 2))).toBe('INVALID_VALUE'); // max is 1 after removal
+    expect(codeOf(() => moveNode(d, 'n_frame', 'n_recta'))).toBe('BAD_PARENT');
+    expect(codeOf(() => moveNode(d, 'n_frame', 'n_row1'))).toBe('CYCLE');
+    expect(codeOf(() => moveNode(d, 'n_row1', 'n_title'))).toBe('BAD_PARENT');
+    expect(codeOf(() => moveNode(d, 'n_recta', 'n_other', 5))).toBe('INVALID_VALUE');
+    expect(codeOf(() => moveNode(d, 'n_recta', 'n_row1', 2))).toBe('INVALID_VALUE'); // max is 1 after removal
     expect(codeOf(() => moveNode(d, 'n_page1', 'n_other'))).toBe('INVALID_VALUE');
     expect(codeOf(() => moveNode(d, 'n_gone1', 'n_other'))).toBe('NOT_FOUND');
-    expect(codeOf(() => moveNode(d, 'n_rectA', 'n_gone1'))).toBe('NOT_FOUND');
+    expect(codeOf(() => moveNode(d, 'n_recta', 'n_gone1'))).toBe('NOT_FOUND');
   });
 });
 
 describe('duplicateNode', () => {
   it('deep copies with fresh ids and places the copy after the original', () => {
     const d = doc();
-    const out = duplicateNode(d, 'n_row', { rng: seededRng(3) });
+    const out = duplicateNode(d, 'n_row1', { rng: seededRng(3) });
     expect(out.created).toHaveLength(3);
     expect(out.created[0]).toBe(out.rootId);
     const copy = out.doc.nodes[out.rootId]!;
@@ -316,16 +319,16 @@ describe('duplicateNode', () => {
     expect(copy.children).toHaveLength(2);
     for (const childId of copy.children) {
       expect(out.doc.nodes[childId]!.parentId).toBe(out.rootId);
-      expect(['n_rectA', 'n_rectB']).not.toContain(childId);
+      expect(['n_recta', 'n_rectb']).not.toContain(childId);
     }
-    expect(out.doc.nodes.n_frame!.children).toEqual(['n_title', 'n_row', out.rootId]);
-    expect(out.doc.nodes.n_row).toBe(d.nodes.n_row);
+    expect(out.doc.nodes.n_frame!.children).toEqual(['n_title', 'n_row1', out.rootId]);
+    expect(out.doc.nodes.n_row1).toBe(d.nodes.n_row1);
   });
 
   it('inserts right after the original, not at the end', () => {
     const d = doc();
     const out = duplicateNode(d, 'n_title');
-    expect(out.doc.nodes.n_frame!.children).toEqual(['n_title', out.rootId, 'n_row']);
+    expect(out.doc.nodes.n_frame!.children).toEqual(['n_title', out.rootId, 'n_row1']);
   });
 
   it('applies an offset to the copy only', () => {
@@ -338,16 +341,16 @@ describe('duplicateNode', () => {
   it('can copy into another parent, appended', () => {
     const out = duplicateNode(doc(), 'n_title', { parentId: 'n_other' });
     expect(out.doc.nodes.n_other!.children).toEqual([out.rootId]);
-    expect(out.doc.nodes.n_frame!.children).toEqual(['n_title', 'n_row']);
+    expect(out.doc.nodes.n_frame!.children).toEqual(['n_title', 'n_row1']);
   });
 
   it('rejects the page, cycles, bad targets and bad offsets', () => {
     const d = doc();
     expect(codeOf(() => duplicateNode(d, 'n_page1'))).toBe('INVALID_VALUE');
     expect(codeOf(() => duplicateNode(d, 'n_gone1'))).toBe('NOT_FOUND');
-    expect(codeOf(() => duplicateNode(d, 'n_frame', { parentId: 'n_row' }))).toBe('CYCLE');
+    expect(codeOf(() => duplicateNode(d, 'n_frame', { parentId: 'n_row1' }))).toBe('CYCLE');
     expect(codeOf(() => duplicateNode(d, 'n_frame', { parentId: 'n_frame' }))).toBe('CYCLE');
-    expect(codeOf(() => duplicateNode(d, 'n_title', { parentId: 'n_rectA' }))).toBe('BAD_PARENT');
+    expect(codeOf(() => duplicateNode(d, 'n_title', { parentId: 'n_recta' }))).toBe('BAD_PARENT');
     expect(codeOf(() => duplicateNode(d, 'n_title', { offset: { x: Number.NaN, y: 0 } }))).toBe(
       'INVALID_VALUE',
     );

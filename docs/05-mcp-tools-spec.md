@@ -20,7 +20,8 @@ Must include, concisely:
 - Every tool returns JSON text content; `screenshot`/`get_reference` additionally return `image` content blocks (`{type:'image', data: base64, mimeType:'image/png'}`).
 - Errors: `isError: true` with `{ code, message, hint }`. Hints are actionable ("Parent n_x1 is a text node; only frames can have children").
 - Large outputs are trimmed: `get_design` returns an outline by default (id, type, name, geometry, key style, text snippet) with `detail: 'full'` available.
-- Every mutating tool returns `{ rev, changed: [ids], created: [ids] }`.
+- Every mutating tool returns `{ rev, changed: [ids], created: [ids] }`. `apply_changes` also returns `deleted: [ids]`, `idMap` (tempId -> id) and `warnings` (`LOCKED_NODE`, `UNKNOWN_TOKEN`); `changed` is the net effect of the batch (nodes whose own props or children changed). A batch that changes nothing is not committed.
+- Failures are `{ code, message, hint?, op?, path?, details? }`: `op` is the index of the failing operation, `path` the offending field (e.g. `set.opacity`), `details` every error found. Codes: `NOT_FOUND`, `BAD_PARENT`, `CYCLE`, `INVALID_VALUE`, `LIMIT_EXCEEDED`, `SCHEMA_NEWER`, `APP_NOT_RUNNING`, `TIMEOUT`, `PATH_NOT_ALLOWED`, `INTERNAL`.
 - All tools accept optional `project` (id or name); default = the project currently open in the app (stored in `~/.atelier/state.json`), else the most recent.
 
 ## Tools
@@ -83,7 +84,10 @@ type Op =
 - `NodeSpec` = sparse node props + optional `children`. `type` required. IDs optional (generated); returned in `created`.
 - Allow `$ref` style temp ids inside one batch: `{ node: { tempId: 'hero', ... } }` then `{ parentId: '$hero' }` in later ops. Resolver maps to real ids and returns the mapping.
 - Text edits: `update` with `set: { text: '...' }`.
-- Batch limit: 500 ops. Atomic: any failure => nothing applied.
+- `update.set` takes `null` to remove an optional property (e.g. `{ "stroke": null }`); required ones (`name, x, y, w, h, visible, locked, opacity, text`) cannot be removed. Unknown properties, and properties that do not apply to the node type (`fontSize` on a rect), are errors with a hint. The page node can only be renamed.
+- `$tempId` references work in every id field (`parentId`, `id`) of ops that come after the create that defines them.
+- Limits: 500 ops per batch, 2000 nodes created per batch, nesting depth 64. Atomic: the first failing op aborts the batch and nothing is applied.
+- `get_node` returns `{ node, bounds, boundsAvailable }`; `bounds` is filled only when the app is open and the node is rendered.
 
 ## Example agent session
 ```

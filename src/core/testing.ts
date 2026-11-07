@@ -45,9 +45,9 @@ export function buildDoc(topLevel: TestSpec[]): Doc {
  * page
  * ├─ n_frame (column frame, 400 wide)
  * │  ├─ n_title (text)
- * │  └─ n_row (row frame)
- * │     ├─ n_rectA
- * │     └─ n_rectB
+ * │  └─ n_row1 (row frame)
+ * │     ├─ n_recta
+ * │     └─ n_rectb
  * └─ n_other (frame at 500,0)
  */
 export function sampleDoc(): Doc {
@@ -62,13 +62,13 @@ export function sampleDoc(): Doc {
       children: [
         { id: 'n_title', type: 'text', text: 'Title', fontSize: 24 },
         {
-          id: 'n_row',
+          id: 'n_row1',
           type: 'frame',
           name: 'Row',
           layout: 'row',
           children: [
-            { id: 'n_rectA', type: 'rect', name: 'A', w: 50, h: 50 },
-            { id: 'n_rectB', type: 'rect', name: 'B', w: 50, h: 50 },
+            { id: 'n_recta', type: 'rect', name: 'A', w: 50, h: 50 },
+            { id: 'n_rectb', type: 'rect', name: 'B', w: 50, h: 50 },
           ],
         },
       ],

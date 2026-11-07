@@ -30,7 +30,7 @@
 | 25 | 2026-11-07 | `page` node exempt from `w/h > 0` | Sample fixture page has w/h 0 | Make page w/h 1 | Accepted |
 | 26 | 2026-11-07 | Schema is `number` on load, literal `1` after normalise; migration chain | Literal type blocks a migration chain | Literal everywhere | Accepted |
 | 27 | 2026-11-07 | Id pattern `/^(n\|a\|r\|img)_[a-z0-9]{4,8}$/` | Docs say 5-6 base36, fixture uses `n_0001` | Strict 5-6 chars | Accepted |
-| 28 | 2026-11-07 | Flex sizing: fixed/hug `flex: 0 0 auto`, fill `flex: 1 1 0`, shared global reset | CSS default `flex-shrink: 1` shrinks fixed items | Leave defaults | Accepted; fill/min-size details verified in browser probe |
+| 28 | 2026-11-07 | Flex sizing: fixed/hug `flex: 0 0 auto`, fill `flex: 1 1 0`, shared global reset | CSS default `flex-shrink: 1` shrinks fixed items | Leave defaults | Accepted; verified in `scripts/css-probe.ts`: `min-height: 0` on column `fill` collapsed content, so only `min-width: 0` is emitted |
 | 29 | 2026-11-07 | Strokes via `outline`/`outline-offset` | `inset box-shadow` paints under child fills; border shifts layout | box-shadow, border | Accepted after browser probe |
 | 30 | 2026-11-07 | `locked` is UI-only; tools warn | Spec silent | Tools reject edits to locked nodes | Accepted |
 | 31 | 2026-11-07 | `line` = horizontal bar (w length, h thickness, stroke colour) | Spec has `line` without semantics | Zero-height line with border | Accepted |
