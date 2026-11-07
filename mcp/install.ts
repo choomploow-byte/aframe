@@ -80,6 +80,19 @@ export interface HostReport {
   ok: boolean;
 }
 
+/**
+ * The app's stand-in for the server marks itself in its first line. Look only there: the real server's
+ * own source mentions the marker (it is what this check looks for), so a search of the whole file
+ * would mistake the real thing for a placeholder.
+ */
+export function isPlaceholder(text: string): boolean {
+  return text
+    .split('\n', 2)
+    .some(
+      (line) => line.trimStart().startsWith('//') && line.includes('atelier-generated placeholder'),
+    );
+}
+
 const stable = (env: InstallEnv): string => path.join(env.atelierHome, 'mcp', 'atelier-mcp.mjs');
 
 // ---- small file helpers (atomic, with a one-time backup) --------------------------------------
@@ -121,7 +134,7 @@ export function ensureStableCopy(env: InstallEnv): Step[] {
   if (path.resolve(src) === path.resolve(dest))
     return [{ level: 'ok', text: `Server is at ${dest}` }];
   const existing = readText(dest);
-  const placeholder = existing !== null && existing.includes('atelier-generated placeholder');
+  const placeholder = existing !== null && isPlaceholder(existing);
   const srcMtime = fs.statSync(src).mtimeMs;
   const destMtime = existing === null ? 0 : fs.statSync(dest).mtimeMs;
   if (existing === null || placeholder || srcMtime > destMtime) {
@@ -592,7 +605,7 @@ export function doctor(env: InstallEnv): Check[] {
       detail: `${target} does not exist`,
       fix: `Run: node "${env.selfPath}" install`,
     });
-  else if (installed.includes('atelier-generated placeholder'))
+  else if (isPlaceholder(installed))
     add({
       name: 'Server file',
       status: 'fail',

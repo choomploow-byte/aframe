@@ -30,6 +30,15 @@ const SKILLS_README: &str = "<!-- atelier-generated -->\n\
 Skills are markdown files the AI agent loads on demand. Atelier's own skills are built into the MCP\n\
 server (load them with load_skill); put your own `*.md` files here too.\n";
 
+/// A stand-in marks itself in its first lines. Look only there: the real server's own source
+/// contains the marker text (the installer checks for it), so a search of the whole file would take
+/// the real server for a stand-in and overwrite it on every launch.
+pub fn is_stand_in(text: &str) -> bool {
+    text.lines()
+        .take(2)
+        .any(|l| l.trim_start().starts_with("//") && l.contains(GENERATED))
+}
+
 /// `(major, minor, patch)` from the bundle's version header, if it has one.
 pub fn bundle_version(text: &str) -> Option<(u64, u64, u64)> {
     let line = text
@@ -54,7 +63,7 @@ pub fn should_install(existing: Option<&str>, bundled: &str) -> bool {
     let bundled_is_real = bundle_version(bundled).is_some();
     match existing {
         None => true,
-        Some(text) if text.contains(GENERATED) => bundled_is_real,
+        Some(text) if is_stand_in(text) => bundled_is_real,
         Some(text) => match (bundle_version(text), bundle_version(bundled)) {
             (Some(have), Some(offered)) => offered > have,
             _ => false,
@@ -91,6 +100,20 @@ mod tests {
     const PLACEHOLDER: &str = "// atelier-generated placeholder\nconsole.error('x');\n";
     fn real(version: &str) -> String {
         format!("#!/usr/bin/env node\n// atelier-mcp-version: {version}\nconsole.log('server');\n")
+    }
+
+    #[test]
+    fn the_real_server_is_not_mistaken_for_a_stand_in_because_it_mentions_the_marker() {
+        let real_with_marker = format!(
+            "{}const MARKER = 'atelier-generated placeholder';\n",
+            real("0.1.0")
+        );
+        assert!(!is_stand_in(&real_with_marker));
+        assert!(is_stand_in(PLACEHOLDER));
+        // So a launch with the same or an older app leaves it alone.
+        assert!(!should_install(Some(&real_with_marker), &real("0.1.0")));
+        assert!(!should_install(Some(&real_with_marker), &real("0.0.9")));
+        assert!(should_install(Some(&real_with_marker), &real("0.2.0")));
     }
 
     #[test]

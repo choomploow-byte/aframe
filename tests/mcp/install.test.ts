@@ -442,3 +442,24 @@ describe.skipIf(!REAL_CLAUDE)('the real Claude Code CLI (isolated config directo
     expect(doctor(env).find((c) => c.name === 'claude registration')?.status).not.toBe('ok');
   }, 240_000);
 });
+
+describe('the real server is not mistaken for the placeholder', () => {
+  it('doctor and install look only at the first lines', () => {
+    // The real bundle's own source contains the marker text; only a file that STARTS with it is a stand-in.
+    const real = `#!/usr/bin/env node\n// atelier-mcp-version: 0.1.0\nconst a = 1;\nconst m = 'atelier-generated placeholder';\n`;
+    fs.mkdirSync(path.dirname(stableFile()), { recursive: true });
+    fs.writeFileSync(stableFile(), real);
+    expect(doctor(makeEnv()).find((c) => c.name === 'Server file')?.status).toBe('ok');
+    const dev = path.join(root, 'dev', 'atelier-mcp.mjs');
+    fs.mkdirSync(path.dirname(dev), { recursive: true });
+    fs.writeFileSync(dev, '// the dev bundle');
+    const older = new Date(Date.now() - 60_000);
+    fs.utimesSync(dev, older, older);
+    install(makeEnv({ selfPath: dev }), ['cursor']);
+    expect(fs.readFileSync(stableFile(), 'utf8')).toBe(real); // an older copy never replaces it
+    fs.writeFileSync(stableFile(), '// atelier-generated placeholder\nprocess.exit(1);\n');
+    expect(doctor(makeEnv()).find((c) => c.name === 'Server file')?.detail).toContain(
+      'placeholder',
+    );
+  });
+});
