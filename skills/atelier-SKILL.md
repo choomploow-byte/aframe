@@ -28,7 +28,8 @@ Atelier is a desktop design app. You drive it through the `atelier` MCP tools (s
 | `get_tokens / set_tokens` | colours, fonts, spacing, radii |
 | `lint_design {nodeId?}` | contrast, sizes, spacing, overflow checks |
 | `list_skills / load_skill {name}` | design knowledge |
-| `export_code {nodeId, framework, outDir}` | write HTML/React into the user's repo (ask for the folder) |
+| `export_code {nodeId, framework, outDir, overwrite?}` | write HTML/React (CSS Modules or Tailwind) into the user's repo (ask for the folder; `FILE_EXISTS` means ask before `overwrite`) |
+| `export_image {nodeId, format, outPath, scale?, transparent?}` | save a PNG or SVG file (needs the app) |
 | `import_image {path, as}` | bring an image in as node or reference |
 | `search_icons {query?, category?}` / `place_icon {name, ...}` | find an icon by meaning; place one in a single call |
 | `list_fonts {category?}` | the bundled fonts and their real weights |
@@ -72,5 +73,5 @@ Atelier is a desktop design app. You drive it through the `atelier` MCP tools (s
 - *"Rebuild this screenshot"* → structure with nested auto-layout, extract tokens, compare, fix deltas.
 - *"Address my annotations"* → `get_annotations` (each has a pin `number`, the node and the frame around it), fix each, then `screenshot` with `annotations: true` (the open pins are drawn where the person put them), then `resolve_annotation` with a one-line reply the person will read. Leave your own note with `add_annotation` when a choice needs explaining.
 - *"Make a mobile version"* → duplicate frame at 390 wide, stack, enlarge targets, reuse tokens.
-- *"Export to React"* → ask for the folder, `lint_design`, then `export_code`.
+- *"Export to React"* → ask for the folder (and whether the project uses Tailwind: look for it in its `package.json`), `lint_design`, then `export_code`. Report the files written and the warnings, and remind the person to install the fonts named in `README-atelier.md`.
 - *"Design a game HUD / shop / inventory"* → `load_skill game-ui`; start from a `game-*` template if it fits; icons via `search_icons`; buttons as components with states; check them with `screenshot` and `state: "all"`.

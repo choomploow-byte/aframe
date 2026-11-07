@@ -48,6 +48,7 @@ Each phase: **goal, deliverables, acceptance criteria, how to verify, estimate**
 **Accept:** with only an API key, "improve the selected frame" yields a visible improvement with at least one self-screenshot; Stop works; one undo reverts the entire AI turn; 401/429/network errors show human messages.
 
 ## Phase 8: Export (1-2 sessions)
+**Status: built (2026-11-08).** Verified in Chrome with Vite and Tailwind; see docs/10 for the numbers and what is not covered.
 **Goal:** designs land in the user's repo.
 **Deliver:** PNG/SVG export UI; HTML+CSS exporter; React (CSS modules) exporter; Tailwind exporter; `export_code` tool with confined output; round-trip pixel-diff test; copy-as-code in context menu.
 **Accept:** fixtures export to code that renders within 2% pixel diff; generated React compiles in a Vite template (CI check); no writes outside `outDir`.

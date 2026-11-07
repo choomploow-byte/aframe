@@ -2,6 +2,18 @@
 
 ## Export
 
+**Built (Phase 8).** One export core (`src/core/export/`) turns a node into files; the same code serves the Export dialog, the `export_code` tool and the tests. What it does, exactly:
+
+- **One intermediate form** (`ir.ts`) built from `nodeToCss`, so the app, the HTML and both React flavours cannot drift apart. Colour tokens become `var(--color-NAME)`, fonts `var(--font-NAME)`, radii `var(--radius-NAME)`, defined once in `:root` (or the Tailwind `@theme`). A noise pattern is baked from literal colours.
+- **Semantic output.** `role` picks `button`, `a`, `nav`, `section`, `ul > li`, `input`; heading text gets `h1`-`h6` by `props.level` or size rank; text inside a button or link is a `span`, other text a `p`; images are `img` with `alt` (a missing one is reported, not invented); icons are inline `svg` (`currentColor`, `aria-hidden` unless labelled). Hidden layers are not exported. Absolutely placed elements carry a comment suggesting auto-layout.
+- **Names.** Class names come from layer names (kebab-case, `card`, `card-2`... in document order) and component names are PascalCase of the frame name (`componentName` overrides). The same design always gives the same bytes, so a re-export changes only what the design changed.
+- **Three formats.** `html` (`index.html`, `styles.css`), `react-css` (`Name.tsx`, `Name.module.css`, `tokens.css`) and `react-tailwind` (`Name.tsx` with Tailwind v4 utilities, `theme.css` with `@import 'tailwindcss'` and an `@theme` from the tokens, `atelier.css` for what has no exact utility: gradients, patterns, shadows, filters). A declaration only becomes a utility when the mapping is exact; otherwise it stays verbatim in `atelier.css` on the same element, never guessed. Images are written to `assets/` and imported, never inlined. Every export carries `README-atelier.md` (files, the `@fontsource` package per font, hand-editing notes, warnings).
+- **Where it goes.** The desktop app saves into a folder the user picks in the system dialog (the page never names a path: `src-tauri/src/export.rs`); a browser build downloads the file, or a `.zip` for several (`zip.ts`, store-only, no dependency). An agent uses `export_code` / `export_image`, which write through `mcp/export-write.ts`. All three apply the same rules (`core/export/paths.ts`, mirrored in Rust): see docs/18.
+- **Image export.** PNG at 1x/2x/3x with an optional transparent background (never shrunk, unlike `screenshot`; refused above 8192 px a side) and SVG. The SVG is the same picture as markup (`foreignObject`, fonts embedded): text stays live text, shapes are not converted to editable vector paths.
+- **Proof.** `tests/e2e/export.mjs` exports the seven templates and the sample project's two screens in all three formats, builds the React ones with Vite (Tailwind v4 for that flavour) and type-checks them with `tsc` (zero errors), renders each in Chrome and pixel-diffs it against the canvas screenshot: worst difference 1.0% (the mobile template), mean 0.41%, threshold 2%. It also checks PNG size and transparency and that the SVG renders like the PNG. Not covered: a real project other than the Vite one used here, other bundlers, and macOS/Linux rendering.
+
+Not built: component splitting and `.map()` over repeated siblings, design-token files (JSON, Style Dictionary), PDF, true vector SVG.
+
 ### PNG / SVG
 - PNG: `html-to-image` `toPng` on the node's element; scale 1x/2x/3x; transparent background option.
 - SVG: `toSvg` (foreignObject-based, so fidelity matches DOM). Note limitations: not editable vector paths. True vector SVG export of shapes+text is a v0.2 option via a dedicated serializer for simple trees.

@@ -30,7 +30,7 @@ In Claude Code, tools appear as `mcp__atelier__<tool>`. Keep tool names short an
 - **`import_image` / `add_reference`** read a file the agent names: the path must be absolute, is resolved through symlinks, must be PNG, JPEG, GIF, WebP or SVG (extension, then magic bytes in core), at most 20 MB (checked before reading), and may not be inside a hidden or credential folder (`.ssh`, `.aws`, `.config`, …; the Atelier home itself is allowed). SVG is stored as data and only ever shown through `<img>`.
 - **`lint_design`** (basic rules): contrast, text size, tap targets, spacing scale, overflow, radius consistency, default layer names, missing alt text, raw colours that match a token. Each finding names the node and a fix. The full set arrives in Phase 9.
 - **`create_project`** templates: `blank`, `landing`, `dashboard`, `mobile`, built through `apply_changes` like any edit. **`list_projects`** reports `frames: null` beyond the newest 20 (it does not open them all).
-- **`export_code` / `export_image`** answer `NOT_IMPLEMENTED` with a way forward until Phase 8; nothing is written.
+- **`export_code`** writes the files into `outDir` and returns `{ outDir, framework, main, written, unchanged, warnings, preview }`. It works without the app. `outDir` must be absolute and is judged on its real path: never the home folder, a drive root, or a system, credentials or `.git`/`AppData` folder; file names are short relative paths of plain names (no `..`, drive letters, dot-files or Windows device names); links are never followed or replaced; an existing file is only replaced with `overwrite: true` (identical bytes are left alone and listed in `unchanged`), and a conflict stops the whole export with `FILE_EXISTS` before anything is written. Each file is written atomically. Limits: 200 files, 25 MB each, 80 MB in all. **`export_image`** asks the running app for a PNG (`scale` 1, 2 or 3, `transparent`) or SVG (`APP_NOT_RUNNING` otherwise) and saves it at `outPath`, which must be an absolute path whose file name ends in `.png`/`.svg` to match `format`, under the same folder rules and `overwrite` behaviour; a PNG larger than 8192 px a side or 64 megapixels is refused (use a smaller scale).
 - **Resources and prompts.** `atelier://skills/<name>`, `atelier://project/<id>/design`; prompts `improve-design`, `match-reference`, `rebuild-from-screenshot`, `critique`, `make-responsive` (from `prompts/design-agent-prompts.md`).
 - **Text from the design is data.** `get_annotations`, `list_references` and `get_reference` label annotation, layer and reference text as written by people, never instructions.
 
@@ -51,7 +51,7 @@ Must include, concisely:
 - Errors: `isError: true` with `{ code, message, hint }`. Hints are actionable ("Parent n_x1 is a text node; only frames can have children").
 - Large outputs are trimmed: `get_design` returns an outline by default (id, type, name, geometry, key style, text snippet) with `detail: 'full'` available.
 - Every mutating tool returns `{ rev, changed: [ids], created: [ids] }`. `apply_changes` also returns `deleted: [ids]`, `idMap` (tempId -> id) and `warnings` (`LOCKED_NODE`, `UNKNOWN_TOKEN`); `changed` is the net effect of the batch (nodes whose own props or children changed). A batch that changes nothing is not committed.
-- Failures are `{ code, message, hint?, op?, path?, details? }`: `op` is the index of the failing operation, `path` the offending field (e.g. `set.opacity`), `details` every error found. Codes: `NOT_FOUND`, `BAD_PARENT`, `CYCLE`, `INVALID_VALUE`, `LIMIT_EXCEEDED`, `SCHEMA_NEWER`, `APP_NOT_RUNNING`, `TIMEOUT`, `PATH_NOT_ALLOWED`, `INTERNAL`.
+- Failures are `{ code, message, hint?, op?, path?, details? }`: `op` is the index of the failing operation, `path` the offending field (e.g. `set.opacity`), `details` every error found. Codes: `NOT_FOUND`, `BAD_PARENT`, `CYCLE`, `INVALID_VALUE`, `LIMIT_EXCEEDED`, `SCHEMA_NEWER`, `APP_NOT_RUNNING`, `TIMEOUT`, `PATH_NOT_ALLOWED`, `FILE_EXISTS`, `INTERNAL`.
 - All tools accept optional `project` (id or name); default = the project currently open in the app (stored in `~/.atelier/app-state.json`), else the most recent.
 
 ## Tools
@@ -107,8 +107,8 @@ Must include, concisely:
 ### Output
 | Tool | Input | Output |
 |---|---|---|
-| `export_code` | `{ nodeId, framework: 'html'\|'react-css'\|'react-tailwind', outDir: string, componentName?: string }` | Files written (list) + preview of main file. `outDir` must be an absolute path the user has confirmed; never write outside it |
-| `export_image` | `{ nodeId, format: 'png'\|'svg', outPath, scale? }` | Needs app |
+| `export_code` | `{ nodeId, framework: 'html'\|'react-css'\|'react-tailwind', outDir: string, componentName?: string, overwrite?: boolean }` | Files written (list) + unchanged + warnings + preview of main file. `outDir` must be an absolute path the user has confirmed; never write outside it; `FILE_EXISTS` unless `overwrite` |
+| `export_image` | `{ nodeId, format: 'png'\|'svg', outPath, scale?: 1\|2\|3, transparent?: boolean, overwrite?: boolean }` | Path, size and bytes of the file written. Needs app |
 
 ## Op schema (`apply_changes`)
 ```ts
