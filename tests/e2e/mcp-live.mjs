@@ -106,7 +106,7 @@ await group('the agent sees the open project', async () => {
   );
   check('instructions arrived at connect', (client.getInstructions() ?? '').includes('screenshot'));
   const tools = (await client.listTools()).tools.length;
-  check('all 22 tools are listed', tools === 22, String(tools));
+  check('all 28 tools are listed', tools === 28, String(tools));
 });
 
 // ---------------------------------------------------------------------------------------------
@@ -376,7 +376,8 @@ await group('the agent switches projects', async () => {
     .json.project;
   check(
     'create_project makes a project from a template',
-    created?.frames === 1,
+    // A template is a screen plus the board of its component kit.
+    created?.frames === 2,
     JSON.stringify(created),
   );
   const before = (await docState()).id;
@@ -464,6 +465,283 @@ await group('the Connect dialog and the pill', async () => {
   if (copied === null) info('clipboard', 'not readable in this browser (skipped)');
   else check('Copy puts the text on the clipboard', copied.includes('install --claude'));
   await page.keyboard.press('Escape');
+});
+
+// ---------------------------------------------------------------------------------------------
+await group('the game-UI toolkit, driven by an agent', async () => {
+  const made = (await call('create_project', { name: 'Agent game shop', template: 'game-shop' }))
+    .json.project;
+  await call('open_project', { project: made.id });
+  await until(async () => (await docState()).id === made.id, { timeout: 6000 });
+  await page.evaluate(() => document.fonts.ready);
+  await settle(page);
+
+  // discovery
+  const icons = await call('search_icons', { query: 'treasure' });
+  check(
+    'search_icons finds the chest by meaning',
+    icons.json.icons?.some((i) => i.name === 'chest'),
+    icons.text.slice(0, 160),
+  );
+  const fonts = await call('list_fonts', { category: 'display' });
+  check(
+    'list_fonts lists the display faces with real weights',
+    fonts.json.fonts?.map((f) => f.name).join() === 'Lilita One,Luckiest Guy,Bungee,Fredoka',
+    fonts.text.slice(0, 200),
+  );
+  const list = await call('component_list');
+  const names = (list.json.components ?? []).map((c) => c.name);
+  check(
+    'component_list shows the kit',
+    ['Button Chunky', 'Slot', 'Tab', 'Shop Item'].every((n) => names.includes(n)),
+    names.join(),
+  );
+
+  // an instance placed by the agent appears on the open canvas, drawn like the master
+  const rev0 = (await docState()).rev;
+  const placed = await call('create_instance', {
+    component: 'Button Chunky',
+    name: 'Agent Buy Button',
+    x: 40,
+    y: 760,
+    overrides: { Label: { text: 'BUY NOW' } },
+  });
+  check('create_instance succeeds', !placed.isError, placed.text.slice(0, 240));
+  const appeared = await until(
+    async () =>
+      page.evaluate(() => {
+        const n = Object.values(window.__atelier.store.getState().doc.nodes).find(
+          (x) => x.name === 'Agent Buy Button',
+        );
+        return !!n && !!document.querySelector(`[data-node-id="${n.id}"]`);
+      }),
+    { timeout: 5000 },
+  );
+  check('the instance appears on the open canvas', appeared !== null, String(appeared));
+  await settle(page);
+  const look = await page.evaluate(() => {
+    const n = Object.values(window.__atelier.store.getState().doc.nodes).find(
+      (x) => x.name === 'Agent Buy Button',
+    );
+    const el = document.querySelector(`[data-node-id="${n.id}"]`);
+    return {
+      bg: getComputedStyle(el).backgroundColor,
+      text: el.textContent,
+      shadow: getComputedStyle(el).boxShadow !== 'none',
+    };
+  });
+  check(
+    'it is drawn like the master (gold, with its 3D ledge) and carries the override',
+    look.bg === 'rgb(255, 176, 32)' && look.shadow && look.text === 'BUY NOW',
+    JSON.stringify(look),
+  );
+  check('the agent edit reached the app as a new revision', (await docState()).rev > rev0);
+
+  // state screenshots
+  const id = placed.json.instanceId;
+  check(
+    'create_instance returns the instance id and its layers',
+    !!id && !!placed.json.layers?.Label,
+    placed.text.slice(0, 200),
+  );
+  const defaultShot = await call('screenshot', { nodeId: id.slice(2), returnImage: false });
+  check(
+    'screenshot accepts a node id without the n_ prefix',
+    !defaultShot.isError,
+    defaultShot.text.slice(0, 160),
+  );
+  const allShot = await call('screenshot', { nodeId: id, state: 'all' });
+  check(
+    'screenshot state "all" returns an image',
+    !allShot.isError && allShot.images.length === 1,
+    allShot.text.slice(0, 200),
+  );
+  const hoverShot = await call('screenshot', { nodeId: id, state: 'hover' });
+  const pngOf = (res) => PNG.sync.read(Buffer.from(res.images[0].data, 'base64'));
+  if (allShot.images[0] && hoverShot.images[0]) {
+    const allPng = pngOf(allShot);
+    check(
+      '"all" is a labelled strip of several states (much taller than one)',
+      allPng.height > defaultShot.json.height * 3,
+      `${allPng.width}x${allPng.height} vs ${defaultShot.json.width}x${defaultShot.json.height}`,
+    );
+    const mid = (png) => {
+      const i = (png.width * Math.floor(png.height / 2) + Math.floor(png.width * 0.12)) * 4;
+      return [png.data[i], png.data[i + 1], png.data[i + 2]];
+    };
+    const plain = await call('screenshot', { nodeId: id });
+    const a = mid(pngOf(plain));
+    const b = mid(pngOf(hoverShot));
+    check(
+      'state "hover" is drawn in the hover colour, not the default',
+      a.some((v, k) => Math.abs(v - b[k]) > 8),
+      `${a} vs ${b}`,
+    );
+    if (SHOT_DIR)
+      await fs.writeFile(
+        path.join(SHOT_DIR, 'agent-states-all.png'),
+        Buffer.from(allShot.images[0].data, 'base64'),
+      );
+  }
+  const missing = await call('screenshot', { nodeId: id, state: 'selected' });
+  check(
+    'a state nothing defines is explained, with what is defined',
+    missing.isError && /selected/.test(missing.text) && /hover|pressed|disabled/.test(missing.text),
+    missing.text.slice(0, 240),
+  );
+  const stored = await call('get_node', { nodeId: id });
+  check(
+    'and none of that touched the saved design',
+    stored.json.node?.state === undefined,
+    JSON.stringify(stored.json.node?.state),
+  );
+
+  // icons through the tool, and a missing one as a placeholder
+  const icon = await call('place_icon', {
+    name: 'sword',
+    size: 48,
+    color: '$gold',
+    x: 300,
+    y: 760,
+    label: 'Agent Sword',
+  });
+  check(
+    'place_icon places an icon in one call',
+    !icon.isError && icon.json.icon === 'sword',
+    icon.text.slice(0, 200),
+  );
+  const bad = await call('place_icon', { name: 'golden coin' });
+  check(
+    'place_icon refuses an unknown icon and suggests real ones',
+    bad.isError && /coins/.test(bad.text),
+    bad.text.slice(0, 200),
+  );
+  const rootId = (await call('get_design', { depth: 0 })).json.root.id;
+  const ghost = await call('apply_changes', {
+    operations: [
+      {
+        op: 'create',
+        parentId: rootId,
+        node: {
+          type: 'icon',
+          icon: 'dragon-egg',
+          x: 400,
+          y: 760,
+          w: 64,
+          h: 64,
+          name: 'Agent Ghost Icon',
+        },
+      },
+    ],
+  });
+  check(
+    'apply_changes warns about an unknown icon',
+    ghost.json.warnings?.[0]?.code === 'UNKNOWN_ICON',
+    ghost.text.slice(0, 240),
+  );
+  await until(
+    async () => page.evaluate(() => !!document.querySelector('[data-placeholder="true"]')),
+    {
+      timeout: 4000,
+    },
+  );
+  const ph = await page.evaluate(() => {
+    const e = document.querySelector('[data-placeholder="true"]');
+    return e ? [...e.querySelectorAll('text')].map((x) => x.textContent) : null;
+  });
+  check(
+    'the app draws that icon as a labelled placeholder',
+    Array.isArray(ph) && ph.includes('?'),
+    JSON.stringify(ph),
+  );
+
+  // define_component with states on something the agent builds, and lint
+  const built = await call('apply_changes', {
+    operations: [
+      {
+        op: 'create',
+        parentId: rootId,
+        node: {
+          type: 'frame',
+          name: 'Agent Button',
+          role: 'button',
+          x: 40,
+          y: 860,
+          layout: 'row',
+          padding: [12, 24, 12, 24],
+          radius: 12,
+          fill: '#5B3CB0',
+          children: [{ type: 'text', name: 'Label', text: 'Go', color: '#FFFFFF' }],
+        },
+      },
+    ],
+  });
+  const buttonId = built.json.created?.[0];
+  const before = await call('lint_design', { nodeId: buttonId });
+  check(
+    'lint warns that a button has no hover or pressed variant',
+    before.json.findings?.some((f) => f.rule === 'button-states'),
+    before.text.slice(0, 240),
+  );
+  const def = await call('define_component', {
+    nodeId: buttonId,
+    kind: 'button',
+    states: { hover: { $self: { fill: '#7C5BD9' } }, pressed: { $self: { fill: '#3C2678' } } },
+  });
+  check(
+    'define_component accepts states by layer name',
+    !def.isError && def.json.component?.states?.join() === 'hover,pressed',
+    def.text.slice(0, 240),
+  );
+  const after = await call('lint_design', { nodeId: buttonId });
+  check(
+    'and the warning goes away',
+    !after.json.findings?.some((f) => f.rule === 'button-states'),
+    after.text.slice(0, 240),
+  );
+
+  // editing fixes
+  const col = await call('apply_changes', {
+    operations: [
+      {
+        op: 'create',
+        parentId: rootId,
+        node: {
+          type: 'frame',
+          name: 'Agent Col',
+          x: 700,
+          y: 760,
+          layout: 'column',
+          children: [{ type: 'rect', name: 'Agent Item', w: 40, h: 20 }],
+        },
+      },
+    ],
+  });
+  const item = col.json.created?.[1];
+  const moved = await call('apply_changes', {
+    operations: [{ op: 'update', id: item, set: { y: 30 } }],
+  });
+  const w = moved.json.warnings?.find((x) => x.code === 'LAYOUT_IGNORED');
+  check(
+    'y on an auto-layout child warns, naming the parent layout',
+    !!w && /Agent Col/.test(w.message) && /column/.test(w.message),
+    moved.text.slice(0, 300),
+  );
+  const bare = await call('apply_changes', {
+    operations: [{ op: 'update', id: item.slice(2), set: { opacity: 0.5 } }],
+  });
+  check('ids work without the n_ prefix', !bare.isError, bare.text.slice(0, 200));
+  const hint = await call('apply_changes', {
+    operations: [{ op: 'update', id: item, set: { radius: 'xl' } }],
+  });
+  check(
+    'a bad value is named with the correct form',
+    hint.isError &&
+      hint.json.message.includes('"xl"') &&
+      (hint.json.hint ?? '').includes('"$radius.xl"'),
+    hint.text.slice(0, 300),
+  );
+  await shot('agent-toolkit');
 });
 
 // ---------------------------------------------------------------------------------------------

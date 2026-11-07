@@ -108,7 +108,11 @@ check('the window switches to the project', switched !== null);
 
 console.log('\n# screenshots under the production CSP');
 const t0 = performance.now();
-const shot = await call('screenshot', { scale: 1 });
+// A template is a screen plus the board of its component kit: photograph the screen.
+const landingId = (await call('get_design', { depth: 1 })).json.root.children.find(
+  (c) => c.name === 'Landing - Desktop',
+)?.id;
+const shot = await call('screenshot', { scale: 1, nodeId: landingId });
 info('first screenshot (cold)', `${Math.round(performance.now() - t0)} ms`);
 check(
   'screenshot returns an image',
@@ -232,6 +236,99 @@ const sel = await until(
   4000,
 );
 check('clicking a layer makes get_selection return it', sel !== null);
+
+console.log('\n# the game-UI toolkit in the real window');
+const shopProject = (await call('create_project', { name: 'Agent shop', template: 'game-shop' }))
+  .json.project;
+await call('open_project', { project: shopProject.id });
+const shopOpen = await until(async () => (await projectName()) === 'Agent shop');
+check('the window opens the game-shop template', shopOpen !== null);
+await sleep(600);
+const faces = await page.evaluate(async () => {
+  const out = {};
+  for (const f of ['Lilita One', 'Luckiest Guy', 'Bungee', 'Fredoka']) {
+    await document.fonts.load(`400 24px "${f}"`);
+    out[f] = document.fonts.check(`400 24px "${f}"`);
+  }
+  return out;
+});
+check(
+  'the display fonts load under the production CSP',
+  Object.values(faces).every(Boolean),
+  JSON.stringify(faces),
+);
+const iconInfo = await page.evaluate(() => {
+  const e = document.querySelector('[data-node-type="icon"] svg path');
+  return e ? e.getAttribute('d')?.length : 0;
+});
+check('icons draw in the window', iconInfo > 100, String(iconInfo));
+const placed = await call('create_instance', {
+  component: 'Button Chunky',
+  name: 'Desktop Buy',
+  x: 40,
+  y: 760,
+  overrides: { Label: { text: 'BUY' } },
+});
+check(
+  'create_instance works against the installed server',
+  !placed.isError,
+  placed.text.slice(0, 200),
+);
+const states = await call('screenshot', { nodeId: placed.json.instanceId, state: 'all' });
+check(
+  'screenshot state "all" works in the real window',
+  !states.isError && states.images.length === 1,
+  states.text.slice(0, 240),
+);
+if (states.images[0]) {
+  const sp = PNG.sync.read(Buffer.from(states.images[0].data, 'base64'));
+  const single = await call('screenshot', { nodeId: placed.json.instanceId });
+  const one = PNG.sync.read(Buffer.from(single.images[0]?.data ?? '', 'base64'));
+  check(
+    'and is a strip of several states',
+    sp.height > one.height * 3,
+    `${sp.width}x${sp.height} vs ${one.width}x${one.height}`,
+  );
+  const colours2 = new Set();
+  for (let i = 0; i < sp.data.length; i += 4 * 13)
+    colours2.add(`${sp.data[i] >> 3},${sp.data[i + 1] >> 3},${sp.data[i + 2] >> 3}`);
+  check('with the states drawn in different colours', colours2.size > 12, `${colours2.size}`);
+  if (SHOT_DIR)
+    await fs.writeFile(
+      path.join(SHOT_DIR, 'desktop-states-all.png'),
+      Buffer.from(states.images[0].data, 'base64'),
+    );
+}
+const rootOfShop = (await call('get_design', { depth: 0 })).json.root.id;
+const noise = await call('apply_changes', {
+  operations: [
+    {
+      op: 'create',
+      parentId: rootOfShop,
+      node: {
+        type: 'rect',
+        name: 'Desktop Noise',
+        x: 400,
+        y: 760,
+        w: 160,
+        h: 160,
+        fill: { pattern: 'noise', color: '#000000', size: 2, opacity: 0.6, background: '#CCCCCC' },
+      },
+    },
+  ],
+});
+const noiseShot = await call('screenshot', { nodeId: noise.json.created?.[0] });
+if (noiseShot.images[0]) {
+  const np = PNG.sync.read(Buffer.from(noiseShot.images[0].data, 'base64'));
+  const levels = new Set();
+  for (let y = 0; y < np.height; y += 3)
+    for (let x = 0; x < np.width; x += 3) levels.add(np.data[(np.width * y + x) * 4]);
+  check(
+    'a noise pattern shows grain in a screenshot of the real window',
+    levels.size > 12,
+    `${levels.size} grey levels`,
+  );
+} else check('a noise pattern can be photographed', false, noiseShot.text.slice(0, 200));
 
 await client.close().catch(() => undefined);
 await browser.disconnect();
