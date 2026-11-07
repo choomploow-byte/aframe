@@ -1,7 +1,7 @@
 import { Canvas } from './canvas/Canvas';
 import { AgentActivity } from './ui/AgentActivity';
 import { LeftPanel } from './panels/LeftPanel';
-import { PropertiesPanel } from './panels/PropertiesPanel';
+import { RightPanel } from './panels/RightPanel';
 import { STRINGS } from './strings';
 import { ContextMenus } from './ui/ContextMenus';
 import { Dialogs } from './ui/Dialogs';
@@ -9,7 +9,7 @@ import { useImageDropAndPaste } from './ui/image-import';
 import { TopBar } from './ui/TopBar';
 import { Toasts } from './ui/Toasts';
 
-/** App shell: top bar, left panel (Layers / Assets / Tokens), canvas, right panel (Design). */
+/** App shell: top bar, left panel (Layers / Assets / Tokens), canvas, right panel (Design / Notes). */
 export function App() {
   useImageDropAndPaste();
   return (
@@ -23,8 +23,7 @@ export function App() {
       <Canvas />
 
       <aside className="panel panel--right" aria-label={STRINGS.panels.properties}>
-        <h2 className="panel__title">{STRINGS.panels.design}</h2>
-        <PropertiesPanel />
+        <RightPanel />
       </aside>
 
       <ContextMenus />

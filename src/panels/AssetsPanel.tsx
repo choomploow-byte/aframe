@@ -1,14 +1,21 @@
 import { addReference, assetUsage, removeAsset, removeReference } from '@core/assets';
+import type { Reference } from '@core/types';
 import { ImagePlus, Trash2 } from 'lucide-react';
 import { useRef } from 'react';
 import { getCanvasApi } from '../canvas/canvas-api';
+import { annotationUi } from '../annotations/ui-state';
 import { insertAsset } from '../store/panel-commands';
 import { store, useAtelier } from '../store/store';
-import { Section, TextField } from '../ui/fields';
+import { Section, Select, TextField, type Option } from '../ui/fields';
 import { importFiles } from '../ui/image-import';
 import { showToast } from '../ui/toast';
 
 const DATA_IMAGE = /^data:image\/(png|jpeg|gif|webp|svg\+xml);/;
+const SCOPES: Option<NonNullable<Reference['scope']>>[] = [
+  { value: 'style', label: 'Take the style (colour, type, shape)' },
+  { value: 'layout', label: 'Take the layout (structure, spacing)' },
+  { value: 'everything', label: 'Take everything' },
+];
 const ACCEPT = 'image/png,image/jpeg,image/gif,image/webp,image/svg+xml';
 
 /**
@@ -29,6 +36,28 @@ export function AssetsPanel() {
   const edit = (change: (d: typeof doc) => typeof doc, label: string): void => {
     const r = store.getState().edit(change, label);
     if (!r.ok) showToast(`${r.error.message} ${r.error.hint ?? ''}`.trim(), { kind: 'error' });
+  };
+
+  const editReference = (id: string, patch: Partial<Reference>): void =>
+    edit(
+      (d) => ({
+        ...d,
+        references: d.references.map((r) => {
+          if (r.id !== id) return r;
+          const next = { ...r, ...patch };
+          if (patch.note === undefined && 'note' in patch) delete next.note;
+          return next;
+        }),
+      }),
+      'Edit reference',
+    );
+  const startCompare = (referenceId: string): void => {
+    const s = store.getState();
+    if ((s.doc.nodes[s.doc.rootId]?.children.length ?? 0) === 0) {
+      showToast('Draw a frame first, then compare it with the reference.');
+      return;
+    }
+    annotationUi.getState().setCompare({ referenceId, mode: 'overlay', opacity: 0.5 });
   };
 
   return (
@@ -123,33 +152,57 @@ export function AssetsPanel() {
             Mark an image as a reference to tell the AI "make it look like this".
           </p>
         )}
-        {doc.references.map((ref) => (
-          <div className="reference" key={ref.id} data-reference-id={ref.id}>
-            {DATA_IMAGE.test(doc.assets[ref.assetId] ?? '') && (
-              <img className="reference__thumb" src={doc.assets[ref.assetId]} alt="" />
-            )}
+        {doc.references.map((ref, i) => (
+          <div className="refcard" key={ref.id} data-reference-id={ref.id}>
+            <div className="refcard__head">
+              {DATA_IMAGE.test(doc.assets[ref.assetId] ?? '') && (
+                <img className="reference__thumb" src={doc.assets[ref.assetId]} alt="" />
+              )}
+              <div className="refcard__ident">
+                <strong>Reference {i + 1}</strong>
+                <code className="refcard__id" title="Say this id (or the number) to your AI">
+                  {ref.id}
+                </code>
+              </div>
+              <button
+                type="button"
+                className="icon-btn icon-btn--small"
+                aria-label={`Remove reference ${ref.name}`}
+                onClick={() => edit((d) => removeReference(d, ref.id), 'Remove reference')}
+              >
+                <Trash2 size={13} strokeWidth={1.75} aria-hidden="true" />
+              </button>
+            </div>
             <TextField
               ariaLabel="Reference name"
               value={ref.name}
-              onCommit={(name) =>
-                edit(
-                  (d) => ({
-                    ...d,
-                    references: d.references.map((r) =>
-                      r.id === ref.id ? { ...r, name: name.trim() || r.name } : r,
-                    ),
-                  }),
-                  'Rename reference',
+              onCommit={(name) => editReference(ref.id, { name: name.trim() || ref.name })}
+            />
+            <Select
+              ariaLabel="What to take from it"
+              field="reference-scope"
+              value={ref.scope ?? 'style'}
+              options={SCOPES}
+              onChange={(scope) => editReference(ref.id, { scope })}
+            />
+            <TextField
+              ariaLabel="Note for the AI"
+              placeholder="e.g. match spacing and type, not colours"
+              value={ref.note ?? ''}
+              onCommit={(note) =>
+                editReference(
+                  ref.id,
+                  note.trim() === '' ? { note: undefined } : { note: note.trim() },
                 )
               }
             />
             <button
               type="button"
-              className="icon-btn icon-btn--small"
-              aria-label={`Remove reference ${ref.name}`}
-              onClick={() => edit((d) => removeReference(d, ref.id), 'Remove reference')}
+              className="btn btn--secondary btn--small"
+              data-action="compare-reference"
+              onClick={() => startCompare(ref.id)}
             >
-              <Trash2 size={13} strokeWidth={1.75} aria-hidden="true" />
+              Compare with the selected frame
             </button>
           </div>
         ))}

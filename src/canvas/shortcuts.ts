@@ -76,6 +76,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
   tool('tool.rect', 'Rectangle tool', 'r', 'rect'),
   tool('tool.ellipse', 'Ellipse tool', 'o', 'ellipse'),
   tool('tool.text', 'Text tool', 't', 'text'),
+  tool('tool.annotate', 'Annotate tool', 'a', 'annotate'),
   tool('tool.hand', 'Hand tool', 'h', 'hand'),
 
   {

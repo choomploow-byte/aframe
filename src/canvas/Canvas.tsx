@@ -3,6 +3,8 @@ import { STRINGS } from '../strings';
 import { store, useAtelier } from '../store/store';
 import { setCanvasApi } from './canvas-api';
 import { unionRects, type Rect } from './geometry';
+import { AnnotationLayer } from './AnnotationLayer';
+import { CompareLayer } from './CompareLayer';
 import { Hud } from './Hud';
 import { attachInteractions } from './interactions';
 import { createMeasurer, type Measurer } from './measure';
@@ -160,6 +162,8 @@ export function Canvas() {
         <NodeView id={rootId} parentId={null} />
       </div>
       {measurer && <Overlay measurer={measurer} />}
+      {measurer && <CompareLayer measurer={measurer} />}
+      {measurer && <AnnotationLayer measurer={measurer} />}
       {empty && <Welcome />}
       <Hud />
       <Toolbar />

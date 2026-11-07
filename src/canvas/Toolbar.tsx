@@ -37,7 +37,7 @@ const TOOLS: readonly ToolDef[] = [
     label: STRINGS.toolbar.annotate,
     key: 'A',
     Icon: MessageSquare,
-    enabled: false,
+    enabled: true,
   },
   { id: 'hand', label: STRINGS.toolbar.hand, key: 'H', Icon: Hand, enabled: true },
 ];

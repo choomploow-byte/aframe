@@ -1,4 +1,5 @@
 import { isEffectivelyLocked } from '@core/tree';
+import { annotationUi } from '../annotations/ui-state';
 import { topmostIds } from '@core/clipboard';
 import type { Node, Op } from '@core/types';
 import { DEFAULT_DRAW_SIZE, drawSpec, rootsOf, type DrawKind, type Store } from '../store/commands';
@@ -34,6 +35,7 @@ const DRAW_KINDS: ReadonlySet<string> = new Set(['frame', 'rect', 'ellipse', 'te
 
 type Gesture =
   | { kind: 'pan'; origin: Point; viewport: { x: number; y: number; zoom: number } }
+  | { kind: 'annotate'; origin: Point; started: boolean }
   | {
       kind: 'marquee';
       origin: Point;
@@ -119,7 +121,8 @@ export function attachInteractions(deps: Deps): {
     let cursor = 'default';
     if (gesture?.kind === 'pan' || spaceDown || s.tool === 'hand')
       cursor = gesture?.kind === 'pan' ? 'grabbing' : 'grab';
-    else if (DRAW_KINDS.has(s.tool)) cursor = s.tool === 'text' ? 'text' : 'crosshair';
+    else if (DRAW_KINDS.has(s.tool) || s.tool === 'annotate')
+      cursor = s.tool === 'text' ? 'text' : 'crosshair';
     container.dataset.cursor = cursor;
   };
 
@@ -291,6 +294,48 @@ export function attachInteractions(deps: Deps): {
       !e.shiftKey && wasSelected && s.selection.length > 1 ? picked : null,
       e.altKey,
     );
+  };
+
+  // A note: a click drops a pin, a drag makes a region. The node under the point is remembered with
+  // the offset inside its box, so the pin follows that node (docs/07).
+  const startAnnotate = (origin: Point): void => {
+    gesture = { kind: 'annotate', origin, started: false };
+  };
+
+  const updateAnnotate = (g: Extract<Gesture, { kind: 'annotate' }>, p: Point): void => {
+    if (!g.started) {
+      if (Math.hypot(p.x - g.origin.x, p.y - g.origin.y) < DRAG_THRESHOLD) return;
+      g.started = true;
+    }
+    state().setTransient({ draw: { rect: rectFromPoints(g.origin, p), label: 'Note region' } });
+  };
+
+  const nodeUnder = (screen: Point): string | null => {
+    const r = rectOfContainer();
+    const hit = document.elementsFromPoint(r.left + screen.x, r.top + screen.y);
+    for (const el of hit) {
+      const id = (el as HTMLElement).dataset?.nodeId;
+      if (id !== undefined && id !== state().doc.rootId) return id;
+    }
+    return null;
+  };
+
+  const finishAnnotate = (g: Extract<Gesture, { kind: 'annotate' }>, p: Point): void => {
+    const a = toWorld(g.origin);
+    const rect = g.started ? rectFromPoints(a, toWorld(p)) : null;
+    if (rect && (rect.w * state().viewport.zoom < 6 || rect.h * state().viewport.zoom < 6)) return;
+    const anchor = rect ? { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 } : a;
+    const centreScreen = rect ? { x: (g.origin.x + p.x) / 2, y: (g.origin.y + p.y) / 2 } : g.origin;
+    const nodeId = nodeUnder(centreScreen);
+    const box = nodeId === null ? null : measurer.worldRect(nodeId);
+    const world = rect ? { x: rect.x, y: rect.y } : anchor;
+    annotationUi.getState().openComposer({
+      world,
+      ...(rect ? { rect } : {}),
+      ...(nodeId !== null && box
+        ? { nodeId, offset: { x: round2(world.x - box.x), y: round2(world.y - box.y) } }
+        : {}),
+    });
   };
 
   const startDraw = (e: PointerEvent, origin: Point): void => {
@@ -494,6 +539,9 @@ export function attachInteractions(deps: Deps): {
       case 'draw':
         updateDraw(g, l.p);
         break;
+      case 'annotate':
+        updateAnnotate(g, l.p);
+        break;
       case 'marquee':
         updateMarquee(g, l.p);
         break;
@@ -597,6 +645,9 @@ export function attachInteractions(deps: Deps): {
         case 'draw':
           finishDraw(g, p);
           break;
+        case 'annotate':
+          finishAnnotate(g, p);
+          break;
         case 'marquee':
           finishMarquee(g);
           break;
@@ -671,6 +722,10 @@ export function attachInteractions(deps: Deps): {
       if (e.shiftKey) s.toggleSelection(label);
       else if (!s.selection.includes(label)) s.setSelection([label]);
       startMove(p, null, e.altKey);
+      return;
+    }
+    if (s.tool === 'annotate') {
+      startAnnotate(p);
       return;
     }
     if (DRAW_KINDS.has(s.tool)) {

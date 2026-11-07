@@ -8,6 +8,7 @@
  * no selection handles, guides or panels.
  */
 import { toCanvas } from 'html-to-image';
+import { placeAnnotations } from '@core/annotations';
 import { docInState } from '@core/components';
 import { fillBase } from '@core/fill';
 import { resolveColor } from '@core/tokens';
@@ -133,12 +134,36 @@ async function imagesReady(root: HTMLElement): Promise<void> {
   );
 }
 
-function drawPins(ctx: CanvasRenderingContext2D, doc: Doc, region: Region, scale: number): void {
-  const open = doc.annotations.filter((a) => a.status === 'open');
-  open.forEach((a, i) => {
-    const px = (a.x - region.x) * scale;
-    const py = (a.y - region.y) * scale;
-    if (px < 0 || py < 0 || px > region.w * scale || py > region.h * scale) return;
+function drawPins(
+  ctx: CanvasRenderingContext2D,
+  doc: Doc,
+  region: Region,
+  scale: number,
+  zoom: number,
+): void {
+  // Where each note is NOW: on its node (found in the live canvas) plus its offset, so a pin that
+  // follows a node in the app follows it in the picture too.
+  const placed = placeAnnotations(doc.annotations, (id) => {
+    const el = find(id);
+    return el ? worldRect(el, zoom) : null;
+  });
+  for (const p of placed) {
+    if (p.number === null) continue; // resolved notes are not drawn: the agent should only see open work
+    const px = (p.x - region.x) * scale;
+    const py = (p.y - region.y) * scale;
+    if (p.rect) {
+      const w = p.rect.w * scale;
+      const h = p.rect.h * scale;
+      ctx.save();
+      ctx.fillStyle = 'rgba(91, 60, 176, 0.14)';
+      ctx.fillRect(px, py, w, h);
+      ctx.setLineDash([6 * scale, 4 * scale]);
+      ctx.lineWidth = Math.max(2, scale * 1.5);
+      ctx.strokeStyle = '#5b3cb0';
+      ctx.strokeRect(px, py, w, h);
+      ctx.restore();
+    }
+    if (px < -20 || py < -20 || px > region.w * scale + 20 || py > region.h * scale + 20) continue;
     const r = 11 * Math.max(1, scale * 0.8);
     ctx.beginPath();
     ctx.arc(px, py, r, 0, Math.PI * 2);
@@ -151,8 +176,8 @@ function drawPins(ctx: CanvasRenderingContext2D, doc: Doc, region: Region, scale
     ctx.font = `600 ${Math.round(r * 1.1)}px Inter, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(String(i + 1), px, py + 0.5);
-  });
+    ctx.fillText(String(p.number), px, py + 0.5);
+  }
 }
 
 /**
@@ -309,6 +334,7 @@ async function render(
   region: Region,
   scale: number,
   withPins: boolean,
+  zoom: number,
   background: string,
 ): Promise<HTMLCanvasElement> {
   const holder = document.createElement('div');
@@ -348,7 +374,7 @@ async function render(
     });
     if (withPins) {
       const ctx = canvas.getContext('2d');
-      if (ctx) drawPins(ctx, doc, region, scale);
+      if (ctx) drawPins(ctx, doc, region, scale, zoom);
     }
     return canvas;
   } finally {
@@ -378,7 +404,7 @@ export async function captureScreenshot(
   let scale = Math.min(wanted, maxSide / Math.max(region.w, region.h));
   for (let attempt = 0; attempt < 4; attempt += 1) {
     const canvas = await whileFramesMayNotRun(() =>
-      render(doc, region, scale, params.annotations === true, background),
+      render(doc, region, scale, params.annotations === true, zoom, background),
     );
     const dataUrl = canvas.toDataURL('image/png');
     const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
