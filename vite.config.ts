@@ -1,10 +1,11 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { atelierDevFs } from './scripts/vite-dev-fs';
 
 // Port/host are fixed because Tauri's devUrl points here (src-tauri/tauri.conf.json).
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), atelierDevFs()],
   resolve: {
     alias: { '@core': fileURLToPath(new URL('./src/core', import.meta.url)) },
   },
