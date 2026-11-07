@@ -7,7 +7,7 @@
 // executable against a throwaway ATELIER_HOME, checks the window and the product metadata, then
 // runs the uninstaller. Windows only.
 import { execFileSync, spawn } from 'node:child_process';
-import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import puppeteer from 'puppeteer-core';
@@ -17,7 +17,8 @@ if (process.platform !== 'win32') {
   console.log('SKIP  the NSIS installer test runs on Windows');
   process.exit(0);
 }
-const bundleDir = 'src-tauri/target/release/bundle/nsis';
+// NSIS_DIR points at another build's output (cargo's target dir may be elsewhere).
+const bundleDir = process.env.NSIS_DIR ?? 'src-tauri/target/release/bundle/nsis';
 const setup = existsSync(bundleDir)
   ? readdirSync(bundleDir).find((n) => n.endsWith('-setup.exe'))
   : undefined;
@@ -67,7 +68,8 @@ try {
     ),
   );
   check('the product name is Atelier', meta.name === 'Atelier', JSON.stringify(meta));
-  check('the version is 0.1.0', String(meta.version).startsWith('0.1.0'), JSON.stringify(meta));
+  const want = JSON.parse(readFileSync('package.json', 'utf8')).version;
+  check(`the version is ${want}`, String(meta.version).startsWith(want), JSON.stringify(meta));
   const icon = ps(
     `Add-Type -AssemblyName System.Drawing; $i=[System.Drawing.Icon]::ExtractAssociatedIcon('${exe}'); "$($i.Width)x$($i.Height)"`,
   );

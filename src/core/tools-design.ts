@@ -311,6 +311,7 @@ const useLibraryAsset = defineTool({
     const added = existing === undefined ? addAsset(doc, found.bytes) : null;
     const base = added?.doc ?? doc;
     const assetId = added?.assetId ?? existing;
+    if (assetId === undefined) throw new CoreError('INTERNAL', 'The asset could not be stored.');
     const info = { mime: found.entry.mime, width: found.entry.width, height: found.entry.height };
     const root = base.nodes[base.rootId];
     const parentId =
