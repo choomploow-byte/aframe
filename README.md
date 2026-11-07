@@ -2,7 +2,7 @@
 
 Open-source, local-first AI design studio. Let Claude Code, Codex, or an API-key chat design real UI on a canvas you can see, annotate and approve, then export it as code into your repo.
 
-> Status: early development. Phase 0 (foundations) only; there is nothing to install yet. See [`docs/12-roadmap-and-phases.md`](docs/12-roadmap-and-phases.md).
+> Status: early development (Phases 0-2: foundations, core library, canvas editor). There is nothing to install yet. See [`docs/12-roadmap-and-phases.md`](docs/12-roadmap-and-phases.md).
 
 ## Develop
 
@@ -17,13 +17,27 @@ npm test
 npm run tauri:dev  # desktop shell (needs Rust)
 ```
 
-Checking the real desktop window on Windows (WebView2), without clicking around:
+Browser tests (need Chrome; set `CHROME_PATH` if it is not in a standard place):
+
+```bash
+npm run test:e2e      # shell smoke + canvas interactions (real mouse and keyboard)
+npm run test:visual   # screenshot baselines; UPDATE_BASELINES=1 refreshes them deliberately
+npm run test:perf     # frame timing on a 500-node document (optimised build); PERF_NODES=2000 to scale
+npm run probe:css     # proves the nodeToCss layout contract in a real browser
+```
+
+Checking the real desktop window on Windows (WebView2), without clicking around. `npm run tauri:dev`
+loads the sample document and exposes `window.__atelier`, so the same tests can attach to it:
 
 ```powershell
 $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS='--remote-debugging-port=9222'
-npm run tauri:dev            # in one terminal
-node tests/e2e/tauri-window-probe.mjs   # in another
+npm run tauri:dev                                   # in one terminal
+$env:CDP_URL='http://127.0.0.1:9222'; npm run test:e2e   # in another (also: test:perf)
+node tests/e2e/tauri-window-probe.mjs               # minimal "does it render" probe
 ```
+
+For performance numbers use an optimised desktop build: `$env:VITE_DEVTOOLS='1'; npm run tauri:build -- --debug --no-bundle`,
+then launch `src-tauri/target/debug/atelier.exe` with the debug port as above.
 
 Specs live in [`docs/`](docs/), standing rules for contributors and coding agents in [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md).
 

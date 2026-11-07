@@ -55,7 +55,6 @@ try {
         return { w: Math.round(r.width), h: Math.round(r.height) };
       };
       return {
-        headlineFont: getComputedStyle(document.querySelector('.canvas__headline')).fontFamily,
         fontsLoaded: [...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family),
         bg: cs.backgroundColor,
         text: cs.color,
@@ -72,9 +71,9 @@ try {
       [`${scheme}: text colour`, info.text === EXPECTED[scheme].text, info.text],
       [`${scheme}: Inter font`, /Inter/.test(info.font), info.font],
       [
-        `${scheme}: Fraunces headline font actually loaded`,
-        /Fraunces/.test(info.headlineFont) && info.fontsLoaded.some((f) => f.includes('Fraunces')),
-        `${info.headlineFont} / loaded: ${info.fontsLoaded.join(', ')}`,
+        `${scheme}: Fraunces (used by the sample's headings) actually loaded`,
+        info.fontsLoaded.some((f) => f.includes('Fraunces')),
+        `loaded: ${info.fontsLoaded.join(', ')}`,
       ],
       [`${scheme}: top bar 44px`, info.topbar?.h === 44, JSON.stringify(info.topbar)],
       [`${scheme}: left panel 240px`, info.left?.w === 240, JSON.stringify(info.left)],

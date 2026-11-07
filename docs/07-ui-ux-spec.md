@@ -37,6 +37,14 @@
 - Frame presets popover: Desktop 1440x900, Laptop 1280x800, Tablet 820x1180, Mobile 390x844.
 - Right-click context menu: duplicate, delete, group-in-frame, add auto-layout, bring forward/back, copy as code, copy as image, "Ask AI about this...".
 
+### As built in Phase 2 (decision log #35-#43)
+- **Selection depth:** with nothing selected a click picks the artboard's direct child; afterwards clicks pick at the depth of the current selection (so siblings are easy to click); double-click goes one level deeper (and starts editing on text); Ctrl/Cmd+click picks the deepest node; `Esc` steps out; `Tab`/`Shift+Tab` walk siblings; `Enter` dives into a frame or edits text.
+- **Artboards** are moved by dragging their name label (or any part of an already-selected artboard). Dragging the empty background of an *unselected* artboard marquee-selects its children; a plain click selects it.
+- **Marquee** from empty canvas selects the artboards it touches; shift adds. Locked nodes can be selected but not moved, resized, nudged or deleted from the UI.
+- **Creating:** `F`/`R`/`O` drag to draw (live `W × H` readout); a click makes a default size (frame 390x844, shapes 100x100); `T` click then type, `Esc`/`Ctrl+Enter`/click-away commits; leaving it empty creates nothing. The new node goes into the frame under the pointer (no position when that frame is auto-layout). Tool returns to Select afterwards.
+- **Shortcuts as built:** `V F R O T H` tools (`I` and `A` arrive with images and annotations), `Ctrl+Z`, `Ctrl+Shift+Z`/`Ctrl+Y`, `Ctrl+C/X/V/D`, `Del`, `Ctrl+A`, `Ctrl+G` wrap in frame, `Ctrl+Alt+A` add auto-layout (infers direction, order, gap, padding, alignment), `[` `]` and `Ctrl+[` `Ctrl+]` z-order, arrows nudge, `Shift+1/2`, `Ctrl+0`, `+`/`-`, `Ctrl+Alt+D` performance HUD. One registry (`src/canvas/shortcuts.ts`) feeds the key handler and, later, the command palette.
+- **Not built yet:** reparenting by drag, multi-selection resize, resize snapping, distance labels, parent highlight while dragging, right-click menu (Phase 3), aligning/distributing, pasting from the system clipboard.
+
 ## Properties panel (context-aware sections)
 Layout (x/y/w/h with sizing mode dropdowns hug/fill/fixed, rotation later) · Auto-layout (direction, gap, padding, align, justify, wrap) · Fill · Stroke · Effects (shadow, blur) · Typography (text only) · Image (fit) · Export (PNG/SVG/code) · Role/name.
 Colour picker: swatches from tokens first, then custom; hex input; eyedropper (where supported). Number fields support drag-to-scrub, arrows, and math (`16*2`).
