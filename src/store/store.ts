@@ -1,6 +1,7 @@
 import { applyChanges } from '@core/apply';
 import { bumpRev, createEmptyDoc } from '@core/doc';
-import type { ApplyOk, ApplyResult, Doc, NodeSpec, Op } from '@core/types';
+import { toOpError } from '@core/errors';
+import type { ApplyOk, ApplyResult, Doc, NodeSpec, Op, OpError } from '@core/types';
 import { useStore } from 'zustand';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import { EMPTY_HISTORY, record, redo as redoStep, undo as undoStep, type History } from './history';
@@ -58,6 +59,8 @@ export interface DispatchOptions {
   select?: (result: ApplyOk) => string[];
 }
 
+export type EditResult = { ok: true } | { ok: false; error: OpError };
+
 export interface AtelierState {
   doc: Doc;
   selection: string[];
@@ -76,6 +79,11 @@ export interface AtelierState {
   dispatch: (ops: readonly Op[], options?: DispatchOptions) => ApplyResult;
   /** Replaces the document with one produced elsewhere (an agent, a sync merge) as one undo step. */
   commitExternal: (next: Doc, label: string) => void;
+  /**
+   * Applies a pure document change that is not a node op (tokens, assets, project name) as one
+   * undo step. `change` may throw a `CoreError`; the document is then left untouched.
+   */
+  edit: (change: (doc: Doc) => Doc, label: string, key?: string) => EditResult;
   /** Loads a document and forgets history (opening a project). */
   loadDoc: (doc: Doc) => void;
   undo: () => string | null;
@@ -165,6 +173,16 @@ export function createAtelierStore(options: StoreOptions = {}): StoreApi<Atelier
       commitExternal: (next, label) => {
         if (next === get().doc) return;
         install(next, label, undefined);
+      },
+
+      edit: (change, label, key) => {
+        try {
+          const next = change(get().doc);
+          if (next !== get().doc) install(next, label, key);
+          return { ok: true };
+        } catch (err) {
+          return { ok: false, error: toOpError(err) };
+        }
       },
 
       loadDoc: (doc) =>
