@@ -15,6 +15,7 @@ Skills are markdown documents of design knowledge that agents load on demand via
 | `reference-matching.md` | reference-matching | Style briefs and comparison loop |
 | `critique.md` | critique | Review checklist and report format |
 | `tokens.md` | tokens | Design systems and export mapping |
+| `game-ui.md` | game-ui | Game HUDs, shops, inventories, chunky buttons, icons, patterns, bevels, component states |
 
 ## File format
 ```

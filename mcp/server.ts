@@ -32,6 +32,9 @@ const READ_ONLY = new Set([
   'lint_design',
   'list_projects',
   'screenshot',
+  'search_icons',
+  'list_fonts',
+  'component_list',
 ]);
 
 type Block = { type: 'text'; text: string } | { type: 'image'; data: string; mimeType: string };

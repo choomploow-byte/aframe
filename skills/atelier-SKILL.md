@@ -9,7 +9,7 @@ Atelier is a desktop design app. You drive it through the `atelier` MCP tools (s
 
 ## The loop (never skip the last step)
 1. **Look**: `get_design`; `get_selection` if the user says "this/selected"; `get_annotations` if they mention notes/comments/pins; `list_references` if they mention a reference or example.
-2. **Learn**: `load_skill design-fundamentals` once, then others as needed (`typography`, `color`, `layout-and-spacing`, `patterns`, `accessibility`, `reference-matching`, `critique`, `tokens`).
+2. **Learn**: `load_skill design-fundamentals` once, then others as needed (`typography`, `color`, `layout-and-spacing`, `patterns`, `accessibility`, `reference-matching`, `critique`, `tokens`, and `game-ui` for games and chunky, glossy UI).
 3. **Plan**: decide structure → type → colour → detail. For references, write a short style brief first.
 4. **Edit**: `apply_changes` in a few logical, atomic batches. Use nested `create` to build whole sections.
 5. **Verify**: `screenshot` the changed frame. Critique what you see. `lint_design`. Fix. Repeat up to ~3 times.
@@ -22,7 +22,7 @@ Atelier is a desktop design app. You drive it through the `atelier` MCP tools (s
 | `get_node {nodeId}` | full node |
 | `get_selection {}` | what the user has selected (needs app) |
 | `apply_changes {operations[], label?}` | create/update/delete/move/duplicate, atomic |
-| `screenshot {nodeId?, scale?, annotations?}` | see the design (needs app open) |
+| `screenshot {nodeId?, scale?, annotations?, state?}` | see the design (needs app open); `state` shows components hover/pressed/disabled/selected, or `all` side by side |
 | `get_annotations / add_annotation / resolve_annotation` | human feedback loop |
 | `list_references / get_reference / add_reference` | style examples |
 | `get_tokens / set_tokens` | colours, fonts, spacing, radii |
@@ -30,6 +30,9 @@ Atelier is a desktop design app. You drive it through the `atelier` MCP tools (s
 | `list_skills / load_skill {name}` | design knowledge |
 | `export_code {nodeId, framework, outDir}` | write HTML/React into the user's repo (ask for the folder) |
 | `import_image {path, as}` | bring an image in as node or reference |
+| `search_icons {query?, category?}` / `place_icon {name, ...}` | find an icon by meaning; place one in a single call |
+| `list_fonts {category?}` | the bundled fonts and their real weights |
+| `define_component / create_instance / component_list` | reusable masters with states; place instances that follow them |
 | `list_projects / open_project / create_project` | manage projects |
 
 ## Building well with `apply_changes`
@@ -48,7 +51,9 @@ Atelier is a desktop design app. You drive it through the `atelier` MCP tools (s
 ] }
 ```
 - Sizes: number, `'hug'` (fit content) or `'fill'` (take available space).
-- Children of auto-layout frames ignore x/y. Only `layout: "none"` frames and top-level frames use x/y.
+- Children of auto-layout frames ignore x/y (`apply_changes` warns and `lint_design` flags it). Only `layout: "none"` frames and top-level frames use x/y.
+- Node types: `frame`, `rect`, `ellipse`, `line`, `text`, `image`, `icon`. Ids work with or without the `n_` prefix.
+- Fills can be patterns (`stripes`, `halftone`, `sunburst`, `noise`); `effects` adds `bevel-raised`, `bevel-pressed`, `gloss-top`, `inner-glow`, `hard-3d-bottom`. Not on text.
 - Use `$token` names for colours/fonts/radii. Set tokens first with `set_tokens`.
 - Name layers meaningfully ("Pricing Card", not "Frame 12"); set `role` for buttons, nav, cards, headings.
 
@@ -67,3 +72,4 @@ Atelier is a desktop design app. You drive it through the `atelier` MCP tools (s
 - *"Address my annotations"* → `get_annotations`, fix each, screenshot, `resolve_annotation`.
 - *"Make a mobile version"* → duplicate frame at 390 wide, stack, enlarge targets, reuse tokens.
 - *"Export to React"* → ask for the folder, `lint_design`, then `export_code`.
+- *"Design a game HUD / shop / inventory"* → `load_skill game-ui`; start from a `game-*` template if it fits; icons via `search_icons`; buttons as components with states; check them with `screenshot` and `state: "all"`.

@@ -85,7 +85,10 @@ describe('the protocol surface', () => {
         'add_annotation',
         'add_reference',
         'apply_changes',
+        'component_list',
+        'create_instance',
         'create_project',
+        'define_component',
         'export_code',
         'export_image',
         'get_annotations',
@@ -96,13 +99,16 @@ describe('the protocol surface', () => {
         'get_tokens',
         'import_image',
         'lint_design',
+        'list_fonts',
         'list_projects',
         'list_references',
         'list_skills',
         'load_skill',
         'open_project',
+        'place_icon',
         'resolve_annotation',
         'screenshot',
+        'search_icons',
         'set_tokens',
       ].sort(),
     );
@@ -115,6 +121,10 @@ describe('the protocol surface', () => {
     const shot = tools.find((t) => t.name === 'screenshot');
     expect(shot?.annotations?.readOnlyHint).toBe(true);
     expect(tools.find((t) => t.name === 'apply_changes')?.annotations?.readOnlyHint).toBe(false);
+    for (const name of ['search_icons', 'list_fonts', 'component_list'])
+      expect(tools.find((t) => t.name === name)?.annotations?.readOnlyHint, name).toBe(true);
+    for (const name of ['place_icon', 'create_instance', 'define_component'])
+      expect(tools.find((t) => t.name === name)?.annotations?.readOnlyHint, name).toBe(false);
   });
 
   it('serves skills and prompts, and the skills are the real ones', async () => {
@@ -180,7 +190,8 @@ describe('projects', () => {
       .project;
     await new Promise((r) => setTimeout(r, 30));
     const b = (await ok(c, 'create_project', { name: 'Scratch' })).json.project;
-    expect(a.frames).toBe(1);
+    // A template is a screen plus the board of its component kit.
+    expect(a.frames).toBe(2);
     expect(b.frames).toBe(0);
 
     const list = (await ok(c, 'list_projects')).json.projects as { id: string; name: string }[];

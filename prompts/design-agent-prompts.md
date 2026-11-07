@@ -61,3 +61,9 @@ Analyse the design and create tokens: colour roles (primary, surface, text, mute
 ```
 Confirm the target folder with me if unclear. Run lint_design first and fix errors. Then export_code (framework react-css or react-tailwind to match my project: check package.json for Tailwind). Summarise the generated files and any manual follow-ups (fonts, images, tokens).
 ```
+
+## 11. Build a game UI
+**Say:** "in atelier, design a game HUD" / "build a shop screen for my game"
+```
+Build the game interface in Atelier. Load game-ui and design-fundamentals. Start from a game template with create_project if one fits (game-hud, game-shop, game-inventory), otherwise set tokens first: a dark ground, a lighter panel, one hot action colour, and the display font. Use search_icons for icons and list_fonts for type. Make every repeated control a component with hover, pressed and disabled states (slots and tabs also selected). Add depth with a faint pattern fill and effect presets, never a shadow on text. Check each button with screenshot and state all, lint_design, and tell me what you built.
+```
