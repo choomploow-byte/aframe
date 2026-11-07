@@ -1,5 +1,5 @@
 import { Frame, MessageCircle, Sparkles } from 'lucide-react';
-import { loadSampleProject } from '../samples';
+import { createSampleProject } from '../projects/session';
 import { store } from '../store/store';
 import { STRINGS } from '../strings';
 import { openDialog } from './ui-state';
@@ -26,7 +26,7 @@ export function Welcome() {
           type="button"
           className="welcome__card"
           data-action="welcome-sample"
-          onClick={() => void loadSampleProject()}
+          onClick={() => void createSampleProject()}
         >
           <Sparkles size={20} strokeWidth={1.5} aria-hidden="true" />
           <span className="welcome__card-title">{w.sample}</span>

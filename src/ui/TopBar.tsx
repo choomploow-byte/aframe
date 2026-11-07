@@ -1,6 +1,7 @@
-import { ChevronDown, Monitor, Moon, Redo2, Sun, Undo2 } from 'lucide-react';
+import { Check, ChevronDown, FolderOpen, Monitor, Moon, Redo2, Sun, Undo2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { BRAND } from '../brand';
+import { useProjects } from '../projects/session';
 import { renameProject } from '../store/panel-commands';
 import { store, useAtelier } from '../store/store';
 import { STRINGS } from '../strings';
@@ -12,7 +13,43 @@ import { openDialog } from './ui-state';
 const THEME_ICON = { system: Monitor, light: Sun, dark: Moon } as const;
 const THEME_LABEL = { system: 'the system setting', light: 'light', dark: 'dark' } as const;
 
-/** Project name, undo/redo, export menu (a stub until Phase 8), theme and the Connect AI pill. */
+/** Whether the open project is safely on disk. Hidden while no project is attached. */
+function SaveStatus() {
+  const save = useProjects((s) => s.save);
+  const fatal = useProjects((s) => s.fatal);
+  const t = STRINGS.projects.save;
+  if (fatal !== null) {
+    return (
+      <span
+        className="save save--error"
+        role="status"
+        title={fatal}
+        data-testid="save-status"
+        data-state="error"
+      >
+        {t.unsaved}
+      </span>
+    );
+  }
+  if (save.state === 'detached') return null;
+  const state = save.state === 'dirty' ? 'saving' : save.state; // 250 ms of "dirty" is not worth flashing
+  const label = state === 'saved' ? t.saved : state === 'saving' ? t.saving : t.error;
+  return (
+    <span
+      className={`save save--${state}`}
+      role="status"
+      aria-live="polite"
+      title={save.message ?? undefined}
+      data-testid="save-status"
+      data-state={state}
+    >
+      {state === 'saved' && <Check size={12} strokeWidth={2} aria-hidden="true" />}
+      {label}
+    </span>
+  );
+}
+
+/** Projects, project name and save status, undo/redo, export menu (a stub until Phase 8), theme and Connect AI. */
 export function TopBar() {
   const canUndo = useAtelier((s) => s.history.past.length > 0);
   const canRedo = useAtelier((s) => s.history.future.length > 0);
@@ -26,6 +63,16 @@ export function TopBar() {
     <header className="topbar">
       <span className="topbar__logo" aria-hidden="true" />
       <span className="topbar__brand">{BRAND.name}</span>
+      <button
+        type="button"
+        className="icon-btn"
+        aria-label={STRINGS.projects.title}
+        title={`${STRINGS.projects.title} (Ctrl+O)`}
+        data-testid="open-projects"
+        onClick={() => openDialog('projects')}
+      >
+        <FolderOpen size={16} strokeWidth={1.75} aria-hidden="true" />
+      </button>
       <div className="topbar__project">
         <TextField
           ariaLabel="Project name"
@@ -36,6 +83,7 @@ export function TopBar() {
           onCommit={(v) => renameProject(store, v)}
         />
       </div>
+      <SaveStatus />
       <span className="topbar__group">
         <button
           type="button"

@@ -2,7 +2,12 @@ import { DEVICE_PRESETS } from '../canvas/presets';
 import { SHORTCUTS } from '../canvas/shortcuts';
 import { currentShortcutContext } from '../canvas/useShortcuts';
 import { addArtboard } from '../store/commands';
-import { loadSampleProject } from '../samples';
+import {
+  createNewProject,
+  createSampleProject,
+  exportProjectFile,
+  importProjectFile,
+} from '../projects/session';
 import { store } from '../store/store';
 import { importFiles } from './image-import';
 import { setThemePreference, type ThemePreference } from './theme';
@@ -23,6 +28,7 @@ export interface PaletteCommand {
 
 const GROUPS: Record<string, string> = {
   tool: 'Tools',
+  file: 'File',
   edit: 'Edit',
   structure: 'Structure',
   order: 'Arrange',
@@ -69,13 +75,32 @@ export function buildPaletteCommands(): PaletteCommand[] {
     run: () => setThemePreference(t),
   }));
 
+  const pickProjectFile = (): void => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (file) void importProjectFile(file);
+    };
+    input.click();
+  };
+
   const other: PaletteCommand[] = [
+    { id: 'file.new', label: 'New project', group: 'File', run: () => void createNewProject() },
+    { id: 'file.import', label: 'Import a project file…', group: 'File', run: pickProjectFile },
+    {
+      id: 'file.export',
+      label: 'Export this project as a file',
+      group: 'File',
+      run: exportProjectFile,
+    },
     { id: 'images.add', label: 'Add images…', group: 'Create', run: pickImages },
     {
       id: 'file.sample',
       label: 'Open the sample project',
       group: 'File',
-      run: () => void loadSampleProject(),
+      run: () => void createSampleProject(),
     },
     { id: 'ai.connect', label: 'Connect your AI', group: 'Help', run: () => openDialog('connect') },
   ];

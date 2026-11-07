@@ -269,6 +269,13 @@ export const SHORTCUTS: readonly Shortcut[] = [
     repeat: true,
   },
   {
+    id: 'file.projects',
+    label: 'Open a project…',
+    keys: 'Ctrl+O',
+    match: (e) => mod(e) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'o',
+    run: () => openDialog('projects'),
+  },
+  {
     id: 'help.palette',
     label: 'Command palette',
     keys: 'Ctrl+K',

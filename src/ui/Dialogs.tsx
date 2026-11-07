@@ -3,6 +3,7 @@ import { STRINGS } from '../strings';
 import { CommandPalette } from './CommandPalette';
 import { Dialog } from './Dialog';
 import { groupOf } from './palette-commands';
+import { ProjectsDialog, RecoverDialog } from './ProjectDialogs';
 import { closeDialog, useDialog } from './ui-state';
 
 function ShortcutSheet() {
@@ -61,5 +62,7 @@ export function Dialogs() {
   if (dialog === 'palette') return <CommandPalette />;
   if (dialog === 'shortcuts') return <ShortcutSheet />;
   if (dialog === 'connect') return <ConnectDialog />;
+  if (dialog === 'projects') return <ProjectsDialog />;
+  if (dialog === 'recover') return <RecoverDialog />;
   return null;
 }

@@ -723,3 +723,109 @@
   color: var(--muted);
   font-size: 12px;
 }
+
+/* ---- Projects, save status, recovery ----------------------------------------------------- */
+.btn--danger {
+  background: var(--danger);
+  color: #fff;
+}
+.btn--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 88%, #000);
+}
+.dialog__footer--split {
+  justify-content: flex-start;
+  gap: 8px;
+}
+.projects {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 44vh;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+.project {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px 2px 2px;
+  border-radius: 8px;
+}
+.project:hover,
+.project[data-current] {
+  background: var(--hover);
+}
+.project__main {
+  flex: 1;
+  min-width: 0;
+}
+.project__open {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.project__open:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.project__name {
+  max-width: 100%;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.project__meta {
+  color: var(--muted);
+  font-size: 12px;
+}
+.project__badge {
+  margin-left: 8px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 11px;
+}
+.project__actions {
+  display: inline-flex;
+  flex: none;
+}
+.project__confirm {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  max-width: 62%;
+  font-size: 12px;
+}
+.recover__details {
+  margin: 0 0 8px;
+  padding-left: 18px;
+  font-size: 12px;
+}
+.save {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 64px;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.save--error {
+  color: var(--danger);
+  font-weight: 600;
+}

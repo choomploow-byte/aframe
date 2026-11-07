@@ -2,7 +2,7 @@ import { useStore } from 'zustand';
 import { createStore } from 'zustand/vanilla';
 
 /** Which modal is open. At most one; opening another replaces it. */
-export type DialogId = 'palette' | 'shortcuts' | 'connect';
+export type DialogId = 'palette' | 'shortcuts' | 'connect' | 'projects' | 'recover';
 
 interface UiState {
   dialog: DialogId | null;

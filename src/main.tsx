@@ -7,6 +7,7 @@ import './panels/panels.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { bootProject, persistenceEnabled } from './projects/session';
 
 const rootEl = document.getElementById('root');
 if (!rootEl) throw new Error('Missing #root element');
@@ -16,6 +17,9 @@ createRoot(rootEl).render(
     <App />
   </StrictMode>,
 );
+
+// Open the last project (or make a first one); from here on every edit is saved.
+if (persistenceEnabled()) void bootProject();
 
 // Loads the sample document and exposes window.__atelier for tests. Off in every normal build:
 // it is on for `vite dev`, and for the optimised `--mode perf` build used by the perf test
