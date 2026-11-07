@@ -44,7 +44,7 @@ interface Node {
   stroke?: string;           // colour or $token
   strokeWidth?: number;
   strokeAlign?: 'inside' | 'center' | 'outside'; // default 'inside'
-  radius?: number | [number, number, number, number];
+  radius?: number | string | [number, number, number, number]; // px, '$radius.md' token, or [topLeft, topRight, bottomRight, bottomLeft]
   shadow?: Shadow[];
   blur?: number;             // layer blur px
   backdropBlur?: number;
@@ -146,5 +146,18 @@ interface Reference {
 
 ## Migration
 `doc.schema` integer + `migrate(doc)` chain on load. Never write a newer schema than the app understands: refuse and say "update Atelier".
+
+## Phase 1 decisions (resolving ambiguities in this doc; decision log #24-#34)
+1. **`radius`** accepts a `$radius.<name>` token string as well as a number or a 4-tuple. Tuple order is CSS order: top-left, top-right, bottom-right, bottom-left. `gap`/`padding` stay numeric (the spacing scale is advisory, used by lint).
+2. **`page` is exempt** from "numeric `w/h` > 0"; its `w/h` are `0` and unused.
+3. **Schema version:** `Doc.schema` is the literal `1` on a normalised doc, but loading takes `unknown` with a numeric `schema`; `migrate()` upgrades step by step and refuses newer versions (`SCHEMA_NEWER`).
+4. **Ids** match `/^(n|a|r|img)_[a-z0-9]{4,8}$/` (the fixture uses `n_0001`); generated ids are 5 base36 chars, collision-checked. `tempId`s match `/^[A-Za-z][A-Za-z0-9_-]{0,31}$/` and are referenced as `$tempId` in id fields only (`parentId`, `id`).
+5. **Sizing contract (CSS):** fixed and `hug` flex items emit `flex: 0 0 auto`; `fill` on the main axis emits `flex: 1 1 0` (+ min-size 0 where verified safe in the browser probe); a global reset (`GLOBAL_RESET_CSS`: `box-sizing: border-box; margin: 0`) is part of the contract for renderer and exporters. With parent `align: 'stretch'`, a child whose cross size is `hug` is stretched (CSS `auto`), by design: it is how equal-height card rows work. `hug` on a `layout: 'none'` frame collapses to 0 (nothing is in flow): normalisation gives such frames numeric 100x100 instead.
+6. **Strokes** are drawn with `outline` + `outline-offset` (inside: `-w`, center: `-w/2`, outside: `0`): no layout impact, painted above children, follows `border-radius`. `strokeWidth` defaults to 1 when `stroke` is set; `strokeWidth: 0` or no `stroke` means no stroke.
+7. **`locked` is UI-only.** Tools may edit locked nodes; the result carries a `LOCKED_NODE` warning.
+8. **`line`** is a horizontal bar: `w` is its length, `h` its thickness (default 1) and `stroke` (fallback `fill`) its colour. `strokeWidth` is ignored for lines.
+9. **Property applicability:** frame-only (`layout, gap, padding, align, justify, wrap, clip`), text-only (`text, fontFamily, fontSize, fontWeight, lineHeight, letterSpacing, textAlign, color, textTransform`), image-only (`assetId, fit`). Setting one on the wrong node type is an `INVALID_VALUE` error with a hint, not a silent no-op.
+10. **Defaults (`normalizeNode`)** add only these keys: every node `name, x, y, visible, locked, opacity, children, w, h`; frames also `layout:'none', gap:0, padding:[0,0,0,0], align:'start', justify:'start', clip:false`; text also `text:'', fontSize:16, fontWeight:400, lineHeight:1.4`; images `fit:'cover'`. `w/h` default to `'hug'` for text and for frames with a row/column layout, else 100 (line: 100 x 1). Normalising the sample fixture is a no-op.
+11. **`apply_changes` semantics:** stops at the first failing op and applies nothing; `update.set` accepts `null` to remove an optional property; unknown or inapplicable properties are rejected; no-op updates are not reported as changed; the result adds `deleted: string[]` and `warnings` (`LOCKED_NODE`, `UNKNOWN_TOKEN`). Unknown tokens are warnings, not errors. Deleting a node clears `nodeId` on annotations that pinned it (the pin keeps its x/y). `rev`/`meta` are bumped by the commit layer (`bumpRev`), not by ops.
 
 ## Example (abridged): see `fixtures/sample-doc.json`

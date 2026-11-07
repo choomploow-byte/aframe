@@ -26,6 +26,17 @@
 | 21 | 2026-11-07 | Windows installer target is NSIS; "Azure Trusted Signing" is now "Azure Artifact Signing" | Tauri docs: MSI needs VBSCRIPT and WiX; signing options page | `targets: "all"` | Accepted (applies from Phase 4/11) |
 | 22 | 2026-11-07 | `src/core` purity enforced by `tsconfig.core.json` (ES2022 lib, no ambient types) plus an ESLint restricted-imports/globals zone | CLAUDE.md rule 1 needs a mechanical check, not review | Convention only | Accepted |
 | 23 | 2026-11-07 | Codex skills are installed to `~/.agents/skills/atelier/SKILL.md` as well as a marked `~/.codex/AGENTS.md` block | Codex docs: user skills dir is `~/.agents/skills` | AGENTS.md block only | Accepted (applies from Phase 5) |
+| 24 | 2026-11-07 | `radius` accepts `$radius.x`; tuple order is TL,TR,BR,BL | docs/04 says tokens work on any property but typed radius as number | Numbers only | Accepted (docs/04 Phase 1 decisions 1) |
+| 25 | 2026-11-07 | `page` node exempt from `w/h > 0` | Sample fixture page has w/h 0 | Make page w/h 1 | Accepted |
+| 26 | 2026-11-07 | Schema is `number` on load, literal `1` after normalise; migration chain | Literal type blocks a migration chain | Literal everywhere | Accepted |
+| 27 | 2026-11-07 | Id pattern `/^(n\|a\|r\|img)_[a-z0-9]{4,8}$/` | Docs say 5-6 base36, fixture uses `n_0001` | Strict 5-6 chars | Accepted |
+| 28 | 2026-11-07 | Flex sizing: fixed/hug `flex: 0 0 auto`, fill `flex: 1 1 0`, shared global reset | CSS default `flex-shrink: 1` shrinks fixed items | Leave defaults | Accepted; fill/min-size details verified in browser probe |
+| 29 | 2026-11-07 | Strokes via `outline`/`outline-offset` | `inset box-shadow` paints under child fills; border shifts layout | box-shadow, border | Accepted after browser probe |
+| 30 | 2026-11-07 | `locked` is UI-only; tools warn | Spec silent | Tools reject edits to locked nodes | Accepted |
+| 31 | 2026-11-07 | `line` = horizontal bar (w length, h thickness, stroke colour) | Spec has `line` without semantics | Zero-height line with border | Accepted |
+| 32 | 2026-11-07 | Wrong-type properties are errors, `null` unsets, first error aborts the batch | Silent no-ops mislead agents | Lenient ignore | Accepted |
+| 33 | 2026-11-07 | Unknown tokens are warnings; ops never bump `rev` (commit layer does) | docs/04 "unknown token => warning"; docs/06 puts rev in the writer | Errors; rev in core | Accepted |
+| 34 | 2026-11-07 | Cross-axis `hug` under `align: stretch` stretches | Spec says hug = `auto`; fixture relies on equal-height cards | Force `align-self: flex-start` | Accepted |
 
 Template for new entries: *Decision / Context / Options / Choice / Consequences.*
 
