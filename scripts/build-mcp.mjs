@@ -4,6 +4,7 @@
 import { execFileSync } from 'node:child_process';
 import { chmodSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { build } from 'esbuild';
+import { ATTRIBUTION } from './attribution.mjs';
 
 const root = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
 execFileSync(process.execPath, [`${root}scripts/gen-mcp-data.mjs`], { stdio: 'inherit' });
@@ -23,6 +24,8 @@ await build({
     // `require` for the few CommonJS dependencies inside the bundle (ajv and friends).
     js: `#!/usr/bin/env node\n// atelier-mcp-version: ${version}\nimport { createRequire as __atelierCreateRequire } from 'node:module';\nconst require = __atelierCreateRequire(import.meta.url);`,
   },
+  // At the end, so the version header on the first lines stays where the app looks for it.
+  footer: { js: ATTRIBUTION },
   legalComments: 'none',
   logLevel: 'warning',
   minify: false,

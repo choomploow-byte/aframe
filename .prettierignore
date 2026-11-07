@@ -16,3 +16,4 @@ fixtures
 *.md
 .shots
 mcp/generated.ts
+src/core/icon-data.ts
