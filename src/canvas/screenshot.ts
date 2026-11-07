@@ -104,10 +104,13 @@ function regionFor(doc: Doc, nodeId: string | undefined, zoom: number): Region {
     items,
     x,
     y,
-    w: Math.max(1, Math.ceil(right - x)),
-    h: Math.max(1, Math.ceil(bottom - y)),
+    w: Math.max(1, ceilClean(right - x)),
+    h: Math.max(1, ceilClean(bottom - y)),
   };
 }
+
+/** `Math.ceil` that ignores float noise from dividing by the zoom (1200.0000001 is 1200, not 1201). */
+const ceilClean = (v: number): number => Math.ceil(Math.round(v * 1000) / 1000);
 
 /** What is behind a node on the canvas: the nearest ancestor fill (tokens resolved), else white. */
 function backgroundBehind(doc: Doc, nodeId: string): string {
