@@ -175,7 +175,7 @@ function productKit(b: DocBuilder, x: number, withPlan = false): void {
       align: 'center',
       padding: [8, 16, 8, 16],
       radius: '$radius.full',
-      children: [txt('Label', 'Tab', { fontSize: 15, fontWeight: 500, color: '$muted' })],
+      children: [txt('Label', 'Tab', { fontSize: 14, fontWeight: 500, color: '$muted' })],
     },
     'tab',
     {

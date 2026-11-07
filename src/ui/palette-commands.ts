@@ -124,6 +124,12 @@ export function buildPaletteCommands(): PaletteCommand[] {
       run: () => void createSampleProject(),
     },
     { id: 'ai.connect', label: 'Connect your AI', group: 'Help', run: () => openDialog('connect') },
+    {
+      id: 'design.check',
+      label: 'Check the design…',
+      group: 'Help',
+      run: () => openDialog('lint'),
+    },
     { id: 'ai.chat', label: 'Open the AI chat', group: 'Help', run: openChat },
     { id: 'ai.settings', label: 'AI settings…', group: 'Help', run: () => openDialog('settings') },
   ];

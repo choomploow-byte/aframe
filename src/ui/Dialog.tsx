@@ -36,6 +36,16 @@ export function Dialog({
     return () => previous?.focus?.();
   }, []);
 
+  // Escape also works when focus has dropped out of the dialog (its focused button was replaced or
+  // disabled): the panel's own handler stops the event, so this only sees those cases.
+  useEffect(() => {
+    const onDocumentKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape' && !e.defaultPrevented) onClose();
+    };
+    document.addEventListener('keydown', onDocumentKey);
+    return () => document.removeEventListener('keydown', onDocumentKey);
+  }, [onClose]);
+
   const onKeyDown = (e: React.KeyboardEvent): void => {
     if (e.key === 'Escape') {
       e.stopPropagation();

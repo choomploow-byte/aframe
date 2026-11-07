@@ -11,6 +11,7 @@ import { LogoMark, Wordmark } from './Brand';
 import { ContextMenu } from './ContextMenu';
 import { TextField } from './fields';
 import { nextTheme, setThemePreference, useThemePreference } from './theme';
+import { useLintCounts } from './use-lint-counts';
 import { openDialog } from './ui-state';
 
 const THEME_ICON = { system: Monitor, light: Sun, dark: Moon } as const;
@@ -54,6 +55,7 @@ function SaveStatus() {
 
 /** Projects, project name and save status, undo/redo, export menu (a stub until Phase 8), theme and Connect AI. */
 export function TopBar() {
+  const lint = useLintCounts();
   const canUndo = useAtelier((s) => s.history.past.length > 0);
   const canRedo = useAtelier((s) => s.history.future.length > 0);
   const name = useAtelier((s) => s.doc.name);
@@ -122,6 +124,28 @@ export function TopBar() {
         onClick={() => openDialog('palette')}
       >
         Ctrl K
+      </button>
+      <button
+        type="button"
+        className="btn btn--ghost btn--small"
+        data-testid="design-check"
+        title="Check the design for contrast, text size, spacing and alignment"
+        aria-label={
+          lint.problems > 0
+            ? `Design check: ${lint.problems} to look at`
+            : 'Design check: all clear'
+        }
+        onClick={() => openDialog('lint')}
+      >
+        Check
+        {lint.problems > 0 && (
+          <span
+            className={`badge${lint.errors > 0 ? ' badge--error' : ''}`}
+            data-testid="check-badge"
+          >
+            {lint.problems}
+          </span>
+        )}
       </button>
       <button
         ref={exportButton}

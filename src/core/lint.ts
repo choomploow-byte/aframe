@@ -7,7 +7,8 @@ import { fillBase } from './fill';
 import { fontInfo, supportsWeight } from './fonts';
 import { getIcon, suggestIcons } from './icons';
 import { resolveColor, resolveFont } from './tokens';
-import type { Doc, Node } from './types';
+import { attachFixOps, groupFindings, isMobileFrame } from './lint-extra';
+import type { Doc, Node, Op } from './types';
 
 export type Severity = 'error' | 'warning' | 'info';
 
@@ -18,6 +19,8 @@ export interface Finding {
   message: string;
   /** A concrete next step the agent can apply with apply_changes. */
   fix?: string;
+  /** The same fix as operations, when the right answer is unambiguous: pass them to apply_changes as they are. */
+  fixOps?: Op[];
 }
 
 export interface LintResult {
@@ -30,6 +33,7 @@ export interface LintResult {
 
 const MAX_FINDINGS = 100;
 const MIN_TEXT_PX = 12;
+const MOBILE_TEXT_PX = 14;
 const DEFAULT_NAME = /^(Frame|Rectangle|Ellipse|Image|Group)( \d+)?$/;
 const ROLES_NEEDING_TARGET = new Set(['button', 'link', 'input']);
 
@@ -71,7 +75,7 @@ export function contrastRatio(a: Rgb, b: Rgb): number {
 }
 
 /** The solid colour behind a node: the nearest ancestor fill, or null if it is a gradient/image/unknown. */
-function backgroundOf(doc: Doc, node: Node): Rgb | null {
+export function backgroundOf(doc: Doc, node: Node): Rgb | null {
   let cur: Node | undefined = node.parentId === null ? undefined : doc.nodes[node.parentId];
   while (cur) {
     if (cur.type === 'image') return null;
@@ -121,13 +125,14 @@ export function lintDesign(doc: Doc, nodeId?: string): LintResult {
 
     if (node.type === 'text') {
       const size = node.fontSize ?? 16;
-      if (size < MIN_TEXT_PX) {
+      const floor = isMobileFrame(doc, node) ? MOBILE_TEXT_PX : MIN_TEXT_PX;
+      if (size < floor) {
         add({
           severity: 'warning',
           rule: 'text-size',
           nodeId: node.id,
-          message: `Text is ${size}px; below ${MIN_TEXT_PX}px is hard to read.`,
-          fix: `update ${node.id} set fontSize to at least ${MIN_TEXT_PX}`,
+          message: `Text is ${size}px; below ${floor}px is hard to read${floor === MOBILE_TEXT_PX ? ' on a phone' : ''}.`,
+          fix: `update ${node.id} set fontSize to at least ${floor}`,
         });
       }
       const fg = parseRgbOf(doc, node.color ?? '$text');
@@ -365,6 +370,7 @@ export function lintDesign(doc: Doc, nodeId?: string): LintResult {
             nodeId: id,
             message: `Corner radius ${value} differs from other ${role}s (${groups[0]?.[0]}).`,
             fix: `use the same radius token for every ${role}`,
+            fixOps: radiusOps(doc, id, groups[0]?.[0]),
           });
         }
       }
@@ -378,6 +384,9 @@ export function lintDesign(doc: Doc, nodeId?: string): LintResult {
       message: `${distinctRadii.size} different corner radii are in use; two or three read as a system.`,
     });
   }
+
+  findings.push(...groupFindings(doc, start));
+  attachFixOps(doc, findings);
 
   const order: Record<Severity, number> = { error: 0, warning: 1, info: 2 };
   findings.sort((a, b) => order[a.severity] - order[b.severity]);
@@ -394,4 +403,13 @@ export function lintDesign(doc: Doc, nodeId?: string): LintResult {
 function parseRgbOf(doc: Doc, value: string): { rgb: Rgb; alpha: number } | null {
   const resolved = resolveColor(value, doc.tokens);
   return resolved === undefined ? null : parseRgb(resolved);
+}
+
+function radiusOps(doc: Doc, id: string, json: string | undefined): Op[] | undefined {
+  if (json === undefined || doc.nodes[id] === undefined) return undefined;
+  try {
+    return [{ op: 'update', id, set: { radius: JSON.parse(json) as unknown } } as unknown as Op];
+  } catch {
+    return undefined;
+  }
 }
