@@ -92,6 +92,11 @@ export default tseslint.config(
     languageOptions: { globals: globals.node },
   },
   {
+    // Plain scripts served as-is from public/ run in the browser (theme-init.js).
+    files: ['public/**/*.js'],
+    languageOptions: { sourceType: 'script', globals: globals.browser },
+  },
+  {
     // page.evaluate() callbacks in e2e scripts execute inside the browser.
     files: ['tests/e2e/**'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },

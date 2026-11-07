@@ -454,7 +454,7 @@ await group('resize', async () => {
       { label: 'Scratch' },
     ).idMap;
   });
-  await lookAt(300, 1600, 2);
+  await lookAt(200, 1550, 2);
   await setSelection([ids.a]);
   const handle = async (h) =>
     page.evaluate((name) => {
@@ -888,6 +888,9 @@ await group('edit commands via shortcuts', async () => {
 
   await press(page, 'Control+Shift+z');
   await setSelection([ids.a]);
+  // Tab selects the next sibling while the canvas has focus (a click gives it focus). With nothing
+  // focused it enters the interface instead, so keyboard users are never trapped on the canvas.
+  await page.focus('[data-testid="canvas"]');
   await press(page, 'Tab');
   check('Tab moves to the next sibling', (await state(page)).selection[0] !== ids.a);
 });
