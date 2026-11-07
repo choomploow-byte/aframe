@@ -1,0 +1,34 @@
+{
+  "description": "Mock agent transcript for tests (mock provider / MCP integration). Task: improve the cramped 'Pricing - Needs Work' frame in sample-doc.json. Node ids are looked up by name at test time; <Plan - Pro> etc. are placeholders resolved by the test harness.",
+  "user": "improve the pricing frame and address my annotation",
+  "steps": [
+    { "tool": "get_design", "args": { "depth": 3 } },
+    { "tool": "get_annotations", "args": { "status": "open" } },
+    { "tool": "load_skill", "args": { "name": "design-fundamentals" } },
+    { "tool": "screenshot", "args": { "nodeId": "<Pricing - Needs Work>" } },
+    { "tool": "set_tokens", "args": { "colors": { "primary": "#C96442", "surface": "#FAF9F5", "text": "#1F1E1D", "muted": "#6B6A65", "border": "#E8E6DC" } } },
+    {
+      "tool": "apply_changes",
+      "args": {
+        "label": "Improve pricing layout",
+        "operations": [
+          { "op": "update", "id": "<Pricing - Needs Work>", "set": { "fill": "$surface", "padding": [96, 64, 96, 64], "gap": 48, "align": "center" } },
+          { "op": "update", "id": "<Pricing Title>", "set": { "fontSize": 40, "color": "$text", "fontFamily": "$font.heading", "textAlign": "center" } },
+          { "op": "update", "id": "<Pricing Sub>", "set": { "fontSize": 18, "color": "$muted", "textAlign": "center" } },
+          { "op": "update", "id": "<Plans>", "set": { "gap": 24, "align": "stretch", "w": 1040 } },
+          { "op": "update", "id": "<Plan - Pro>", "set": { "stroke": "$primary", "strokeWidth": 2, "fill": "#FFFFFF" } },
+          { "op": "update", "id": "<Pro Button>", "set": { "fill": "$primary", "padding": [14, 24, 14, 24], "radius": 10, "w": "fill" } }
+        ]
+      }
+    },
+    { "tool": "screenshot", "args": { "nodeId": "<Pricing - Needs Work>" } },
+    { "tool": "lint_design", "args": { "nodeId": "<Pricing - Needs Work>" } },
+    { "tool": "resolve_annotation", "args": { "id": "a_0001", "reply": "Added spacing, highlighted Pro with an accent border and a solid button." } }
+  ],
+  "expect": {
+    "docRevIncreased": true,
+    "annotationResolved": true,
+    "noLintErrors": true,
+    "usedTokens": true
+  }
+}

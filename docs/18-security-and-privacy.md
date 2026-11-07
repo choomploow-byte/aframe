@@ -1,0 +1,37 @@
+# 18. Security and Privacy
+
+## Principles
+Local-first. No accounts. No telemetry. Least privilege everywhere. Treat everything coming from outside the user's own keyboard as untrusted data.
+
+## Threat model (practical)
+| Threat | Path | Control |
+|---|---|---|
+| Prompt injection | Text inside annotations, imported Figma text, screenshots, web-imported DOM, tool results | Tools return data wrapped as data; system prompt & server `instructions` state that such text must never be followed as instructions; no shell/network/file-delete tools in Atelier; destructive ops are scoped to the design doc |
+| Arbitrary file write via `export_code`/`export_image` | Agent supplies path | `outDir` must be absolute and **confirmed by the user in the current session** (agent should ask), writes confined: resolve real paths, reject `..` and symlink escapes, create only; refuse to overwrite without explicit flag; max file count/size |
+| Arbitrary file read via `import_image`/`add_reference` | Agent supplies path | Allow only image extensions with magic-byte check, size cap 20 MB; no directory listing tools; refuse dotfiles/secret-like paths (`.ssh`, `.env`, keychains) |
+| Bridge abuse | Other local processes write request files | Request `type` allow-list, strict param validation, user-only dir permissions; requests can't execute code; they can at most read the design the user already exposes to agents |
+| API key leakage | Logs, project files, exports, crash reports | Never log, never serialise into docs, redact in diagnostics, keychain in v0.2 |
+| Malicious project files | Opening a doc from the internet | JSON schema validation; sanitise everything rendered: text via textContent, **no `dangerouslySetInnerHTML`**, CSS values validated (reject `url(javascript:...)`, `expression`), images only `data:image/*` or local assets; SVG assets rendered via `<img>` (no script execution) |
+| XSS in the WebView | Imported content | Strict CSP in `tauri.conf.json` (default-src 'self'; img-src 'self' data: blob:; connect-src to chosen providers only; no inline eval) |
+| Supply chain | npm/cargo deps | Lockfiles, Dependabot, `npm audit`/`cargo audit`, minimal deps, provenance on npm publish |
+| Installer tampering | Release artefacts | Code signing, checksums, reproducible CI builds, updater signature verification (Tauri updater uses signed manifests) |
+| Tauri over-permission | Broad fs/shell access | Capabilities file minimal: only custom commands + dialog + scoped fs; **no shell plugin**, no `fs:allow-*` wildcards beyond the exports location the user picks |
+
+## Tauri hardening checklist
+- [ ] CSP set; `dangerousDisableAssetCspModification` not used
+- [ ] Capabilities limited to the main window
+- [ ] Custom fs commands canonicalise paths and enforce prefix `~/.atelier`
+- [ ] Remote URLs not loaded in the main WebView; external links open in system browser via shell-less `opener`
+- [ ] Updater pubkey configured; signing key stored in CI secrets
+
+## Privacy
+- Design content stays on disk. It leaves the device only when: the user's external agent reads it (their chosen host/model), or the in-app chat sends it to the chosen provider.
+- Show a one-time notice in chat setup: "Your messages, screenshots and the parts of the design the AI reads are sent to <provider>."
+- Document exactly what is stored and where (`~/.atelier/`), plus how to delete everything.
+
+## Logging
+Local log files only, rotated, no content from designs or keys, include versions and error codes. "Copy diagnostics" produces a redacted bundle.
+
+## Responsible AI notes
+- Don't generate or imitate real brands' logos/trademarks on request without the user's explicit ownership claim; skills should steer toward original work and inspiration-not-copying ("match the *style* of a reference, not reproduce a specific copyrighted design").
+- Reference matching = analyse style attributes and apply to the user's own content.
