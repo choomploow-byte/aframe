@@ -509,6 +509,95 @@ await group('the Projects dialog', async () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+await group('a new project from a template, and the toolkit survives save and reload', async () => {
+  await page.focus('[data-testid="canvas"]');
+  await press(page, 'Control+o');
+  check('the dialog offers a template picker', !!(await page.$('[data-testid="template-picker"]')));
+  const options = await page.$$eval('[data-field="new-project-template"] option', (o) =>
+    o.map((x) => x.textContent),
+  );
+  check(
+    'with every genre template',
+    [
+      'Blank',
+      'Product landing',
+      'SaaS dashboard',
+      'Mobile app',
+      'Pricing page',
+      'Game HUD',
+      'Game shop',
+      'Game inventory',
+    ].every((n) => options.includes(n)),
+    options.join(', '),
+  );
+  const before = (await docState()).id;
+  await page.select('[data-field="new-project-template"]', 'game-inventory');
+  check(
+    'choosing one shows what it is',
+    /slot grid/.test(await page.$eval('[data-testid="template-picker"]', (e) => e.textContent)),
+  );
+  await page.click('[data-action="new-project"]');
+  await page.waitForFunction((old) => window.__atelier.store.getState().doc.id !== old, {}, before);
+  await settle(page);
+  const made = await docState();
+  check('the new project is the template', made.name === 'Game inventory', made.name);
+  const live = await page.evaluate(() => {
+    const d = window.__atelier.store.getState().doc;
+    const nodes = Object.values(d.nodes);
+    return {
+      masters: nodes.filter((n) => n.component).length,
+      instances: nodes.filter((n) => n.instanceOf).length,
+      patterns: nodes.filter((n) => typeof n.fill === 'object').length,
+      icons: nodes.filter((n) => n.type === 'icon').length,
+      font: d.tokens.fonts.display,
+    };
+  });
+  check(
+    'with its kit, instances, patterns and icons',
+    live.masters >= 5 &&
+      live.instances > 20 &&
+      live.patterns > 0 &&
+      live.icons > 5 &&
+      live.font === 'Lilita One',
+    JSON.stringify(live),
+  );
+  // saved to disk with the new properties, and the file loads back
+  await until(async () => (await readProject(made.id))?.name === 'Game inventory');
+  const onDisk = await readProject(made.id);
+  const saved = Object.values(onDisk?.nodes ?? {});
+  check(
+    'the file on disk carries components, patterns, effects and icons',
+    saved.some((n) => n.component?.states?.hover) &&
+      saved.some((n) => n.instanceOf && n.from === undefined) &&
+      saved.some((n) => typeof n.fill === 'object' && n.fill.pattern) &&
+      saved.some((n) => Array.isArray(n.effects)) &&
+      saved.some((n) => n.type === 'icon' && n.icon),
+    `${saved.length} nodes`,
+  );
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForFunction(() => window.__atelier?.sync?.()?.attached === true, {
+    timeout: 30000,
+  });
+  await settle(page);
+  const again = await page.evaluate(() => {
+    const d = window.__atelier.store.getState().doc;
+    return { id: d.id, masters: Object.values(d.nodes).filter((n) => n.component).length };
+  });
+  check(
+    'after a reload the same project opens with its components',
+    again.id === made.id && again.masters === live.masters,
+    JSON.stringify(again),
+  );
+  // one undo step for an icon insert, and it persists too
+  await shot('template-project');
+  // leave things as the next group expects: the previous project open, the template one gone
+  await page.evaluate((id) => window.__atelier.projects.openById(id), before);
+  await page.waitForFunction((id) => window.__atelier.store.getState().doc.id === id, {}, before);
+  await page.evaluate((id) => window.__atelier.projects.removeProject(id), made.id);
+  await until(async () => !(await projectIds()).includes(made.id));
+  await settle(page);
+});
+
 await group('damaged files', async () => {
   // While open: truncated by something else.
   await until(async () => (await saveState()) === 'saved');
