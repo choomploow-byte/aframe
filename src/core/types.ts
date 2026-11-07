@@ -163,6 +163,11 @@ export interface Annotation {
   x: number;
   y: number;
   rect?: { x: number; y: number; w: number; h: number };
+  /**
+   * Where inside `nodeId`'s box the pin (or the region's top-left) sits, so the pin follows the node.
+   * `x`/`y`/`rect` keep the world position it was made at, used if the node is gone.
+   */
+  offset?: { x: number; y: number };
   text: string;
   author: 'user' | 'agent';
   status: 'open' | 'resolved';

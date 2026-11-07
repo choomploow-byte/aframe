@@ -529,6 +529,25 @@ function validateAnnotations(list: unknown, fail: Fail): void {
       fail("status must be 'open' or 'resolved'.", `${p}.status`);
     if (a.nodeId !== undefined && typeof a.nodeId !== 'string')
       fail('nodeId must be a string.', `${p}.nodeId`);
+    if (a.offset !== undefined) {
+      const o = a.offset;
+      if (!isPlainObject(o) || !isFiniteNumber(o.x) || !isFiniteNumber(o.y))
+        fail('offset must be { x, y } numbers.', `${p}.offset`);
+      else if (a.nodeId === undefined) fail('offset needs a nodeId.', `${p}.offset`);
+    }
+    if (a.rect !== undefined) {
+      const r = a.rect;
+      if (
+        !isPlainObject(r) ||
+        !isFiniteNumber(r.x) ||
+        !isFiniteNumber(r.y) ||
+        !isFiniteNumber(r.w) ||
+        !isFiniteNumber(r.h) ||
+        r.w < 0 ||
+        r.h < 0
+      )
+        fail('rect must be { x, y, w, h } numbers.', `${p}.rect`);
+    }
     if (a.reply !== undefined && typeof a.reply !== 'string')
       fail('reply must be a string.', `${p}.reply`);
     if (typeof a.createdAt !== 'string') fail('createdAt must be a string.', `${p}.createdAt`);
