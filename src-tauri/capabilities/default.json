@@ -18,6 +18,10 @@
     "allow-app-quit",
     "allow-export-folder",
     "allow-export-pick-folder",
-    "allow-export-files"
+    "allow-export-files",
+    "allow-ai-key-status",
+    "allow-ai-key-set",
+    "allow-ai-key-clear",
+    "allow-ai-send"
   ]
 }

@@ -4,6 +4,7 @@
 //! `home.rs`), a way to tell the native side what is open, and events for agent requests. There is
 //! no general file-system plugin and no shell: a compromised page can reach exactly these commands.
 
+mod ai;
 mod appstate;
 mod bridge;
 mod export;
@@ -155,6 +156,36 @@ async fn export_files(
     export::write_files(&real, &files, overwrite)
 }
 
+/// Whether a key is stored for a provider. The key itself never leaves the credential store.
+#[tauri::command]
+async fn ai_key_status(provider: String) -> Result<bool, String> {
+    ai::key_present(ai::Provider::parse(&provider)?)
+}
+
+#[tauri::command]
+async fn ai_key_set(provider: String, key: String) -> Result<(), String> {
+    ai::key_set(ai::Provider::parse(&provider)?, &key)
+}
+
+#[tauri::command]
+async fn ai_key_clear(provider: String) -> Result<(), String> {
+    ai::key_clear(ai::Provider::parse(&provider)?)
+}
+
+/// Sends one request body to the provider with the stored key. See `ai.rs` for what the page can
+/// and cannot influence (the address is fixed per provider; a custom one is checked).
+#[tauri::command]
+async fn ai_send(
+    provider: String,
+    base_url: Option<String>,
+    body: serde_json::Value,
+) -> Result<ai::AiReply, String> {
+    let provider = ai::Provider::parse(&provider)?;
+    tauri::async_runtime::spawn_blocking(move || ai::send(provider, base_url.as_deref(), &body))
+        .await
+        .map_err(|_| "The request was interrupted.".to_string())?
+}
+
 /// The page has flushed its unsaved work; now the window may really close.
 #[tauri::command]
 async fn app_quit(app: tauri::AppHandle) -> Result<(), String> {
@@ -247,7 +278,11 @@ pub fn run() {
             app_quit,
             export_folder,
             export_pick_folder,
-            export_files
+            export_files,
+            ai_key_status,
+            ai_key_set,
+            ai_key_clear,
+            ai_send
         ])
         .run(tauri::generate_context!())
         .expect("error while running Atelier");

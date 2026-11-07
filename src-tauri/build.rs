@@ -17,6 +17,10 @@ fn main() {
             "export_folder",
             "export_pick_folder",
             "export_files",
+            "ai_key_status",
+            "ai_key_set",
+            "ai_key_clear",
+            "ai_send",
         ]),
     ))
     .expect("failed to run the Tauri build script");

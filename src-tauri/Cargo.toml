@@ -16,18 +16,20 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 base64 = "0.23"
 dirs = "7.0.0"
+keyring = "4"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"
 tauri-plugin-single-instance = "2.5.5"
 tauri-plugin-window-state = "2.5.0"
+ureq = "3"
 
 # Added in later phases, each with a justification in its commit:
 # tauri-plugin-single-instance = "2"  (must be registered first)
 # tauri-plugin-window-state = "2"
 # tauri-plugin-opener = "2"
-# tauri-plugin-http = "2"             (AI provider calls from Rust, Phase 7)
+# AI provider calls are made by src/ai.rs with `ureq`, keys live in the OS credential store (`keyring`).
 # serde / serde_json / dirs           (confined fs commands, Phase 4)
 # NOTE: tauri-plugin-fs is deliberately not used (decision log #16).
 
