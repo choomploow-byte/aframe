@@ -156,6 +156,8 @@ function drawPins(ctx: CanvasRenderingContext2D, doc: Doc, region: Region, scale
  */
 async function whileFramesMayNotRun<T>(work: () => Promise<T>): Promise<T> {
   if (!document.hidden) return work();
+  // Only ever put back as the same function, never called detached.
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   const original = window.requestAnimationFrame;
   window.requestAnimationFrame = (callback) =>
     window.setTimeout(() => callback(performance.now()), 16);

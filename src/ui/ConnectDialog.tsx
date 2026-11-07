@@ -19,18 +19,32 @@ const t = STRINGS.connect;
 type HostTab = 'claude' | 'codex' | 'other';
 
 function CopyBlock({ label, text, id }: { label: string; text: string; id: string }) {
-  const [copied, setCopied] = useState(false);
+  const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle');
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pre = useRef<HTMLPreElement>(null);
   useEffect(() => () => void (timer.current && clearTimeout(timer.current)), []);
+  const show = (next: 'copied' | 'failed'): void => {
+    setState(next);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setState('idle'), next === 'copied' ? 2000 : 6000);
+  };
   const copy = (): void => {
     void navigator.clipboard
       .writeText(text)
-      .then(() => {
-        setCopied(true);
-        if (timer.current) clearTimeout(timer.current);
-        timer.current = setTimeout(() => setCopied(false), 2000);
-      })
-      .catch(() => undefined);
+      .then(() => show('copied'))
+      .catch(() => {
+        // The browser refused (permissions, an insecure page): select the text so Ctrl+C works.
+        const el = pre.current;
+        if (el) {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          const sel = window.getSelection();
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+          el.focus();
+        }
+        show('failed');
+      });
   };
   return (
     <div className="copyblock">
@@ -42,17 +56,28 @@ function CopyBlock({ label, text, id }: { label: string; text: string; id: strin
           data-action={`copy-${id}`}
           onClick={copy}
         >
-          {copied ? (
+          {state === 'copied' ? (
             <Check size={13} strokeWidth={2} aria-hidden="true" />
           ) : (
             <Copy size={13} strokeWidth={1.75} aria-hidden="true" />
           )}
-          {copied ? t.copied : t.copy}
+          {state === 'copied' ? t.copied : t.copy}
         </button>
       </div>
-      <pre className="copyblock__text" tabIndex={0} aria-label={label} data-testid={`text-${id}`}>
+      <pre
+        ref={pre}
+        className="copyblock__text"
+        tabIndex={0}
+        aria-label={label}
+        data-testid={`text-${id}`}
+      >
         {text}
       </pre>
+      {state === 'failed' && (
+        <p className="copyblock__note" role="status">
+          {t.copyFailed}
+        </p>
+      )}
     </div>
   );
 }

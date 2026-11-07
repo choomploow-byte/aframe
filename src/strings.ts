@@ -99,6 +99,7 @@ export const STRINGS = {
     jsonLabel: 'MCP server entry',
     copy: 'Copy',
     copied: 'Copied',
+    copyFailed: 'Your browser would not copy it. The text is selected: press Ctrl+C.',
     waiting: 'Waiting for your AI tool… ask it to "use atelier" and this turns green.',
     connectedIdle: 'Connected. Ask your AI tool something to try it.',
     heard: 'Connected: your AI tool just used Atelier.',
