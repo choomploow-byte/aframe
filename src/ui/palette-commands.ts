@@ -1,0 +1,83 @@
+import { DEVICE_PRESETS } from '../canvas/presets';
+import { SHORTCUTS } from '../canvas/shortcuts';
+import { currentShortcutContext } from '../canvas/useShortcuts';
+import { addArtboard } from '../store/commands';
+import { loadSampleProject } from '../samples';
+import { store } from '../store/store';
+import { importFiles } from './image-import';
+import { setThemePreference, type ThemePreference } from './theme';
+import { openDialog } from './ui-state';
+
+/**
+ * Everything the command palette (Ctrl+K) can run: every keyboard shortcut from the one registry,
+ * plus actions that have no key (frame sizes, theme, images, sample project).
+ */
+export interface PaletteCommand {
+  id: string;
+  label: string;
+  /** Display shortcut, if any. */
+  keys?: string;
+  group: string;
+  run: () => void;
+}
+
+const GROUPS: Record<string, string> = {
+  tool: 'Tools',
+  edit: 'Edit',
+  structure: 'Structure',
+  order: 'Arrange',
+  nudge: 'Move',
+  select: 'Select',
+  view: 'View',
+  help: 'Help',
+  debug: 'Debug',
+};
+
+export const groupOf = (id: string): string => GROUPS[id.split('.')[0] ?? ''] ?? 'Other';
+
+function pickImages(): void {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/png,image/jpeg,image/gif,image/webp,image/svg+xml';
+  input.multiple = true;
+  input.onchange = () => void importFiles([...(input.files ?? [])], { insert: true });
+  input.click();
+}
+
+export function buildPaletteCommands(): PaletteCommand[] {
+  const fromShortcuts: PaletteCommand[] = SHORTCUTS.filter((s) => !s.id.startsWith('nudge.')).map(
+    (s) => ({
+      id: s.id,
+      label: s.label,
+      keys: s.keys,
+      group: groupOf(s.id),
+      run: () => s.run(currentShortcutContext(), { shift: false }),
+    }),
+  );
+
+  const frames: PaletteCommand[] = DEVICE_PRESETS.map((p) => ({
+    id: `frame.${p.id}`,
+    label: `Add ${p.label} frame (${p.w} × ${p.h})`,
+    group: 'Create',
+    run: () => addArtboard(store, p, currentShortcutContext().api?.viewCenter() ?? { x: 0, y: 0 }),
+  }));
+
+  const themes: PaletteCommand[] = (['system', 'light', 'dark'] as ThemePreference[]).map((t) => ({
+    id: `theme.${t}`,
+    label: t === 'system' ? 'Theme: follow the system' : `Theme: ${t}`,
+    group: 'View',
+    run: () => setThemePreference(t),
+  }));
+
+  const other: PaletteCommand[] = [
+    { id: 'images.add', label: 'Add images…', group: 'Create', run: pickImages },
+    {
+      id: 'file.sample',
+      label: 'Open the sample project',
+      group: 'File',
+      run: () => void loadSampleProject(),
+    },
+    { id: 'ai.connect', label: 'Connect your AI', group: 'Help', run: () => openDialog('connect') },
+  ];
+  return [...fromShortcuts, ...frames, ...themes, ...other];
+}

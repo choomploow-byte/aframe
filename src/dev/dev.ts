@@ -1,4 +1,4 @@
-import { loadDoc } from '@core/doc';
+import { createEmptyDoc, loadDoc } from '@core/doc';
 import { getCanvasApi } from '../canvas/canvas-api';
 import * as commands from '../store/commands';
 import { store } from '../store/store';
@@ -21,6 +21,7 @@ export async function installDevTools(): Promise<void> {
     loadSample: () => {
       if (loaded.ok) store.getState().loadDoc(loaded.doc);
     },
+    loadBlank: () => store.getState().loadDoc(createEmptyDoc()),
     /** "Generate N nodes" for perf checks (docs/19). */
     loadStress: (nodes: number) => {
       store.getState().loadDoc(generateStressDoc(nodes));

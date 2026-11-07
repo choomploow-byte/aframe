@@ -8,6 +8,10 @@ import { attachInteractions } from './interactions';
 import { createMeasurer, type Measurer } from './measure';
 import { NodeView } from './NodeView';
 import { Overlay } from './Overlay';
+import { Welcome } from '../ui/Welcome';
+import { openContextMenu } from '../ui/context-menu-state';
+import { docFontFamilies, loadFonts } from './fonts';
+import { chainTo, pickTarget } from './pick';
 import { Toolbar } from './Toolbar';
 import { useShortcuts } from './useShortcuts';
 import { fitRect, nextZoomStep, screenToWorld, zoomAt } from './viewport';
@@ -94,18 +98,61 @@ export function Canvas() {
     if (all) s.setViewport(fitRect(all, measurer.size()));
   }, [measurer, empty]);
 
+  // Text is measured and screenshotted from the DOM, so the world stays hidden until the fonts the
+  // document uses have loaded (or a short timeout passes): no first paint in a fallback face.
+  const docId = useAtelier((s) => s.doc.id);
+  const [fontsReadyFor, setFontsReadyFor] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const load = (): void => {
+      const d = store.getState().doc;
+      void loadFonts(docFontFamilies(d)).then(() => {
+        if (!cancelled) setFontsReadyFor(d.id);
+      });
+    };
+    load();
+    const unsubscribe = store.subscribe((s, prev) => {
+      if (s.doc.id !== prev.doc.id) load();
+    });
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, []);
+
   const world = useMemo(
     () => ({
       transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`,
+      visibility: fontsReadyFor === docId ? ('visible' as const) : ('hidden' as const),
     }),
-    [viewport],
+    [viewport, fontsReadyFor, docId],
   );
+
+  const onContextMenu = (e: React.MouseEvent): void => {
+    if ((e.target as HTMLElement).closest('[data-ui]')) return;
+    e.preventDefault();
+    const s = store.getState();
+    const hit = (e.target as HTMLElement).closest<HTMLElement>('[data-node-id]')?.dataset.nodeId;
+    const picked = hit
+      ? pickTarget({
+          chain: chainTo(s.doc.nodes, hit),
+          selected: s.selection,
+          nodes: s.doc.nodes,
+          deep: e.ctrlKey || e.metaKey,
+        })
+      : null;
+    if (picked && !s.selection.includes(picked)) s.setSelection([picked]);
+    else if (!picked) s.setSelection([]);
+    openContextMenu(e.clientX, e.clientY, 'canvas');
+  };
 
   return (
     <main
       className="canvas"
       ref={ref}
       aria-label={STRINGS.canvas.label}
+      tabIndex={-1}
+      onContextMenu={onContextMenu}
       data-testid="canvas"
       data-cursor="default"
     >
@@ -113,12 +160,7 @@ export function Canvas() {
         <NodeView id={rootId} parentId={null} />
       </div>
       {measurer && <Overlay measurer={measurer} />}
-      {empty && (
-        <div className="canvas__empty" aria-live="polite">
-          <h1 className="canvas__headline">{STRINGS.canvas.emptyTitle}</h1>
-          <p>{STRINGS.canvas.emptyHint}</p>
-        </div>
-      )}
+      {empty && <Welcome />}
       <Hud />
       <Toolbar />
       <ZoomControl />

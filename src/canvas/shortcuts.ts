@@ -16,6 +16,7 @@ import {
   type Store,
 } from '../store/commands';
 import type { ToolId } from '../store/store';
+import { openDialog } from '../ui/ui-state';
 import type { CanvasApi } from './canvas-api';
 
 /**
@@ -34,9 +35,11 @@ export interface Shortcut {
   /** Display string, e.g. "Ctrl+Shift+Z". */
   keys: string;
   match: (e: KeyboardEvent) => boolean;
-  run: (ctx: ShortcutContext, e: KeyboardEvent) => void;
+  run: (ctx: ShortcutContext, mods: { shift: boolean }) => void;
   /** Whether holding the key repeats the action. */
   repeat?: boolean;
+  /** Runs even while a text field has focus (the command palette, the shortcut sheet). */
+  global?: boolean;
 }
 
 const mod = (e: KeyboardEvent): boolean => e.ctrlKey || e.metaKey;
@@ -55,8 +58,8 @@ const arrow = (name: string, dx: number, dy: number): Shortcut => ({
   label: `Nudge ${name}`,
   keys: `Arrow ${name}`,
   match: (e) => !mod(e) && !e.altKey && e.key === `Arrow${name}`,
-  run: ({ store }, e) => {
-    const step = e.shiftKey ? 10 : 1;
+  run: ({ store }, mods) => {
+    const step = mods.shift ? 10 : 1;
     nudgeSelection(store, dx * step, dy * step);
   },
   repeat: true,
@@ -266,6 +269,23 @@ export const SHORTCUTS: readonly Shortcut[] = [
     repeat: true,
   },
   {
+    id: 'help.palette',
+    label: 'Command palette',
+    keys: 'Ctrl+K',
+    // Also works while a text field has focus: the palette is how you reach everything else.
+    match: (e) => mod(e) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'k',
+    run: () => openDialog('palette'),
+    global: true,
+  },
+  {
+    id: 'help.shortcuts',
+    label: 'Keyboard shortcuts',
+    keys: 'Ctrl+/',
+    match: (e) => mod(e) && !e.altKey && e.key === '/',
+    run: () => openDialog('shortcuts'),
+    global: true,
+  },
+  {
     id: 'debug.hud',
     label: 'Toggle performance HUD',
     keys: 'Ctrl+Alt+D',
@@ -279,14 +299,40 @@ function isTyping(target: EventTarget | null): boolean {
   return !!el && (el.isContentEditable || /^(input|textarea|select)$/i.test(el.tagName));
 }
 
+/**
+ * Keys every focused control already uses for itself (moving between controls, activating a button,
+ * walking a tree). They only mean "canvas action" when the canvas, or nothing, has focus; otherwise
+ * Tab would never leave the canvas and the arrow keys in the Layers panel would nudge the node.
+ */
+const NAVIGATION_KEYS = new Set([
+  'Tab',
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+  'Enter',
+  ' ',
+]);
+
+function canvasHasFocus(target: EventTarget | null, key: string): boolean {
+  const el = target as HTMLElement | null;
+  // Nothing focused: Tab should walk into the interface, the other keys act on the canvas.
+  if (!el || el === document.body || el === document.documentElement) return key !== 'Tab';
+  return typeof el.matches === 'function' && el.matches('[data-testid="canvas"]');
+}
+
 /** Handles a keydown. Returns true if a shortcut ran (the caller stops the browser's default). */
 export function handleKeyDown(e: KeyboardEvent, ctx: ShortcutContext): boolean {
-  if (isTyping(e.target) || e.isComposing) return false;
+  if (e.isComposing || e.defaultPrevented) return false; // a widget already handled it
+  const typing = isTyping(e.target);
+  const navigation = NAVIGATION_KEYS.has(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey;
   for (const shortcut of SHORTCUTS) {
     if (!shortcut.match(e)) continue;
+    if (typing && !shortcut.global) continue;
+    if (navigation && !shortcut.global && !canvasHasFocus(e.target, e.key)) continue;
     if (e.repeat && !shortcut.repeat) return true;
     e.preventDefault();
-    shortcut.run(ctx, e);
+    shortcut.run(ctx, { shift: e.shiftKey });
     return true;
   }
   return false;

@@ -1,0 +1,341 @@
+/* Layers, Properties, Tokens and Assets panels. */
+
+.section {
+  border-bottom: 1px solid var(--border);
+}
+.section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px 0 6px;
+}
+.section__toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  height: 34px;
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.section__chevron {
+  color: var(--muted);
+  transition: transform 120ms var(--ease);
+}
+.section__chevron--closed {
+  transform: rotate(-90deg);
+}
+.section__actions {
+  display: inline-flex;
+  gap: 2px;
+}
+.section__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 14px 14px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.row__label {
+  width: 62px;
+  flex: none;
+  color: var(--muted);
+  font-size: 12px;
+}
+.row__controls {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.row__note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  width: 100%;
+}
+.imgprev {
+  width: 100%;
+  max-height: 140px;
+  border-radius: 8px;
+  background: var(--field);
+  object-fit: contain;
+}
+.shadow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.shadow__foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.shadow__inset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.note {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr auto;
+  gap: 6px;
+  align-items: center;
+}
+.gradient {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gradient__preview {
+  height: 18px;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
+}
+.gradient__stop {
+  display: grid;
+  grid-template-columns: 1fr 78px auto;
+  gap: 6px;
+  align-items: center;
+}
+
+/* ---- Layers ---------------------------------------------------------------------------- */
+.layers {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+.layers__search {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--panel);
+  color: var(--muted);
+}
+.layers__search input {
+  flex: 1;
+  min-width: 0;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+}
+.layers__search input:focus {
+  outline: none;
+}
+.layers__list {
+  padding: 0 6px 12px;
+  user-select: none;
+}
+.layer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding-right: 4px;
+  border-radius: 6px;
+  cursor: default;
+}
+.layer:hover {
+  background: var(--hover);
+}
+.layer--selected,
+.layer--selected:hover {
+  background: var(--accent-soft);
+}
+.layer--hidden .layer__name,
+.layer--hidden .layer__icon {
+  opacity: 0.45;
+}
+.layer--dragging {
+  opacity: 0.5;
+}
+.layer__chevron {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+.layer__chevron--none {
+  visibility: hidden;
+}
+.layer__chevron-open {
+  transform: rotate(90deg);
+}
+.layer__icon {
+  flex: none;
+  color: var(--muted);
+}
+.layer__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.layer__rename {
+  flex: 1;
+  min-width: 0;
+  height: 22px;
+  padding: 0 4px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--field);
+  color: var(--text);
+  font: inherit;
+}
+.layer__rename:focus {
+  outline: none;
+}
+.layer__flags {
+  display: flex;
+  flex: none;
+}
+.layer__flags .icon-btn {
+  opacity: 0;
+}
+.layer:hover .layer__flags .icon-btn,
+.layer:focus-within .layer__flags .icon-btn,
+.layer__flags .icon-btn--on {
+  opacity: 1;
+}
+.layer--drop-above::before,
+.layer--drop-below::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+}
+.layer--drop-above::before {
+  top: -1px;
+}
+.layer--drop-below::after {
+  bottom: -1px;
+}
+.layer--drop-inside {
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+/* ---- Tokens and assets ------------------------------------------------------------------ */
+.token {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr) 16px 22px;
+  align-items: center;
+  gap: 4px;
+}
+.token--radius {
+  grid-template-columns: 72px minmax(0, 1fr) 16px 22px;
+}
+.token__usage {
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.spacing {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.spacing__step {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+.assets__add {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px 4px;
+}
+.assets__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.asset {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.asset__thumb {
+  display: grid;
+  place-items: center;
+  height: 88px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--field);
+  cursor: pointer;
+}
+.asset__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.asset__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.asset__used {
+  flex: 1 0 100%;
+  color: var(--muted);
+  font-size: 11px;
+}
+.reference {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 6px;
+}
+.reference__thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: cover;
+}

@@ -644,6 +644,9 @@ export function attachInteractions(deps: Deps): {
     if (e.button === 2) return;
     const target = e.target as HTMLElement;
     if (target.closest('[contenteditable="plaintext-only"], [data-ui]')) return;
+    // Clicking the canvas gives it keyboard focus (even where a gesture cancels the default), so Tab
+    // and the arrow keys act on the canvas from here, and leave it again when focus moves elsewhere.
+    container.focus({ preventScroll: true });
     const s = state();
     const p = point(e);
     container.setPointerCapture(e.pointerId);

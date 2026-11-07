@@ -6,6 +6,10 @@
   --text: #1f1e1d;
   --muted: #6b6a65;
   --accent: #c96442;
+  /* Brand colour for lines, fills and icons. These two clear 4.5:1 for text: white on the strong fill,
+     and accent-coloured words on a panel. */
+  --accent-strong: #b04d2b;
+  --accent-text: #a8472a;
   --canvas-bg: #f0eee6;
   --canvas-dot: #dedbd0;
   --radius-control: 8px;
@@ -13,14 +17,38 @@
   --font-ui: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: 'Fraunces Variable', Georgia, serif;
   --topbar-h: 44px;
-  --panel-left-w: 240px;
-  --panel-right-w: 300px;
+  --panel-left-w: 264px;
+  --panel-right-w: 304px;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --hover: rgb(31 30 29 / 0.06);
+  --field: #f4f2ea;
+  --accent-soft: rgb(201 100 66 / 0.14);
+  --danger: #b3382c;
+  --shadow: 0 8px 24px rgb(0 0 0 / 0.12);
   color-scheme: light;
 }
 
+/* Dark palette. Applied by an explicit choice (data-theme="dark") or by the system when no explicit
+   light choice was made. public/theme-init.js sets data-theme before first paint: no flash. */
+:root[data-theme='dark'] {
+  --bg: #262624;
+  --panel: #30302e;
+  --border: #41403b;
+  --text: #f5f4ee;
+  --muted: #a3a29b;
+  --canvas-bg: #1f1f1d;
+  --canvas-dot: #35342f;
+  --hover: rgb(255 255 255 / 0.07);
+  --field: #272725;
+  --accent-soft: rgb(201 100 66 / 0.22);
+  --accent-text: #e8957a;
+  --danger: #e5877b;
+  --shadow: 0 8px 24px rgb(0 0 0 / 0.45);
+  color-scheme: dark;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --bg: #262624;
     --panel: #30302e;
     --border: #41403b;
@@ -28,6 +56,12 @@
     --muted: #a3a29b;
     --canvas-bg: #1f1f1d;
     --canvas-dot: #35342f;
+    --hover: rgb(255 255 255 / 0.07);
+    --field: #272725;
+    --accent-soft: rgb(201 100 66 / 0.22);
+    --accent-text: #e8957a;
+    --danger: #e5877b;
+    --shadow: 0 8px 24px rgb(0 0 0 / 0.45);
     color-scheme: dark;
   }
 }
@@ -85,7 +119,7 @@ body {
 }
 
 .topbar__project {
-  color: var(--muted);
+  width: 200px;
 }
 
 .topbar__spacer {
@@ -123,9 +157,19 @@ body {
 }
 
 .panel {
-  padding: 16px;
+  min-height: 0;
+  padding: 0;
   background: var(--panel);
   overflow: auto;
+}
+
+.panel--right > .panel__title {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 12px 14px 8px;
+  background: var(--panel);
 }
 
 .panel--left {
@@ -149,6 +193,7 @@ body {
 
 .panel__empty {
   margin: 0;
+  padding: 12px 14px;
   color: var(--muted);
 }
 
@@ -226,7 +271,7 @@ body {
   cursor: default;
 }
 .artboard-label--selected {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .ov-hover {
@@ -265,7 +310,7 @@ body {
   transform: translateX(-50%);
   padding: 1px 6px;
   border-radius: 4px;
-  background: var(--accent);
+  background: var(--accent-strong);
   color: #fff;
   font-size: 11px;
   line-height: 16px;
