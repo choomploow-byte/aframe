@@ -199,3 +199,36 @@ describe('getOutline', () => {
     }
   });
 });
+
+describe('outline shows the game-UI toolkit', () => {
+  it('icons, effects, patterns, masters and instances are visible to an agent', async () => {
+    const { createTemplateDoc } = await import('./templates');
+    const doc = createTemplateDoc('game-shop', {
+      name: 'x',
+      id: 'p_out01',
+      now: '2026-01-01T00:00:00.000Z',
+    });
+    const everything = getOutline(doc, { depth: 8, maxNodes: 1000 });
+    const flat: Record<string, unknown>[] = [];
+    const walk = (n: Record<string, unknown>): void => {
+      flat.push(n);
+      for (const c of (n.children as Record<string, unknown>[] | undefined) ?? []) walk(c);
+    };
+    walk(everything.root);
+    expect(flat.some((n) => n.type === 'icon' && n.icon === 'gem' && n.color === '$gem')).toBe(
+      true,
+    );
+    expect(flat.some((n) => Array.isArray(n.effects))).toBe(true);
+    expect(
+      flat.some(
+        (n) =>
+          typeof n.fill === 'object' && (n.fill as { pattern?: string }).pattern === 'halftone',
+      ),
+    ).toBe(true);
+    const master = flat.find((n) => n.name === 'Button Chunky' && n.component);
+    expect(master?.component).toEqual({ kind: 'button', states: ['hover', 'pressed', 'disabled'] });
+    const inst = flat.find((n) => n.name === 'Tab Featured');
+    expect(inst).toMatchObject({ instanceOf: expect.any(String) as string, state: 'selected' });
+    expect(flat.some((n) => typeof n.from === 'string')).toBe(true);
+  });
+});
