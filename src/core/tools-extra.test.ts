@@ -268,16 +268,135 @@ describe('skills, lint, projects, output', () => {
     });
   });
 
-  it('export tools say they are not built yet, with a way forward', async () => {
+  it('export tools say so where there is nowhere to write', async () => {
     const { ctx } = memory();
     expect(
       await fail(ctx, 'export_code', { nodeId: 'n_frame', framework: 'html', outDir: '/x' }),
-    ).toMatchObject({
-      code: 'NOT_IMPLEMENTED',
-      hint: expect.stringContaining('later version') as string,
-    });
+    ).toMatchObject({ code: 'NOT_IMPLEMENTED' });
     expect(
       await fail(ctx, 'export_image', { nodeId: 'n_frame', format: 'png', outPath: '/x.png' }),
     ).toMatchObject({ code: 'NOT_IMPLEMENTED' });
+  });
+});
+
+describe('export_code', () => {
+  type Write = NonNullable<ToolContext['writeUserFiles']>;
+  const recorder = () => {
+    const calls: { root: string; names: string[]; overwrite: boolean | undefined }[] = [];
+    const writeUserFiles: Write = (root, files, options) => {
+      calls.push({ root, names: Object.keys(files), overwrite: options?.overwrite });
+      return Promise.resolve({ root, written: Object.keys(files), unchanged: [] });
+    };
+    return { calls, writeUserFiles };
+  };
+
+  it('exports the frame and reports the files, warnings and a preview', async () => {
+    const { calls, writeUserFiles } = recorder();
+    const { ctx } = memory({ writeUserFiles });
+    const r = await ok(ctx, 'export_code', {
+      nodeId: 'n_frame',
+      framework: 'react-css',
+      outDir: '/proj/src/design',
+      componentName: 'hero card',
+    });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({ root: '/proj/src/design', overwrite: false });
+    expect(calls[0]?.names).toEqual(
+      expect.arrayContaining(['HeroCard.tsx', 'HeroCard.module.css']),
+    );
+    expect(r.data).toMatchObject({ framework: 'react-css', main: 'HeroCard.tsx' });
+    expect((r.data as { preview: string }).preview).toContain('export default function HeroCard');
+  });
+
+  it('passes overwrite through only when asked', async () => {
+    const { calls, writeUserFiles } = recorder();
+    const { ctx } = memory({ writeUserFiles });
+    await ok(ctx, 'export_code', {
+      nodeId: 'n_frame',
+      framework: 'html',
+      outDir: '/p',
+      overwrite: true,
+    });
+    expect(calls[0]?.overwrite).toBe(true);
+  });
+
+  it('does not write anything for a node that cannot be exported', async () => {
+    const { calls, writeUserFiles } = recorder();
+    const { ctx, doc } = memory({ writeUserFiles });
+    expect(
+      await fail(ctx, 'export_code', { nodeId: 'n_nope', framework: 'html', outDir: '/p' }),
+    ).toMatchObject({ code: 'NOT_FOUND' });
+    expect(
+      await fail(ctx, 'export_code', { nodeId: doc().rootId, framework: 'html', outDir: '/p' }),
+    ).toMatchObject({ code: 'INVALID_VALUE' });
+    expect(calls).toHaveLength(0);
+  });
+
+  it('passes the writer refusing a folder through to the agent', async () => {
+    const { CoreError } = await import('./errors');
+    const { ctx } = memory({
+      writeUserFiles: () => Promise.reject(new CoreError('PATH_NOT_ALLOWED', 'No.', 'Ask.')),
+    });
+    expect(
+      await fail(ctx, 'export_code', { nodeId: 'n_frame', framework: 'html', outDir: '/etc' }),
+    ).toMatchObject({ code: 'PATH_NOT_ALLOWED', hint: 'Ask.' });
+  });
+});
+
+describe('export_image', () => {
+  const image = { bytes: PNG, width: 1, height: 1 };
+
+  it('renders in the app and writes the file next to its folder', async () => {
+    const written: { root: string; name: string }[] = [];
+    const asked: unknown[] = [];
+    const { ctx } = memory({
+      exportImage: (o) => {
+        asked.push(o);
+        return Promise.resolve(image);
+      },
+      writeUserFiles: (root, files) => {
+        written.push({ root, name: Object.keys(files)[0] ?? '' });
+        return Promise.resolve({ root, written: Object.keys(files), unchanged: [] });
+      },
+    });
+    const r = await ok(ctx, 'export_image', {
+      nodeId: 'n_frame',
+      format: 'png',
+      outPath: 'C:\\Users\\me\\app\\public\\hero.png',
+      scale: 2,
+      transparent: true,
+    });
+    expect(asked).toEqual([{ nodeId: 'n_frame', format: 'png', scale: 2, transparent: true }]);
+    expect(written).toEqual([{ root: 'C:\\Users\\me\\app\\public', name: 'hero.png' }]);
+    expect(r.data).toMatchObject({ format: 'png', width: 1, height: 1, bytes: PNG.byteLength });
+    expect((r.data as { path: string }).path).toBe('C:\\Users\\me\\app\\public\\hero.png');
+  });
+
+  it('refuses a name that does not match the format, before rendering anything', async () => {
+    let rendered = 0;
+    const { ctx } = memory({
+      exportImage: () => {
+        rendered += 1;
+        return Promise.resolve(image);
+      },
+      writeUserFiles: (root) => Promise.resolve({ root, written: [], unchanged: [] }),
+    });
+    for (const outPath of ['/p/hero.svg', '/p/.hidden.png', 'hero.png', '/p/a:b.png']) {
+      expect(
+        await fail(ctx, 'export_image', { nodeId: 'n_frame', format: 'png', outPath }),
+      ).toMatchObject({ code: 'PATH_NOT_ALLOWED' });
+    }
+    expect(rendered).toBe(0);
+  });
+
+  it('passes the app-closed error through', async () => {
+    const { CoreError } = await import('./errors');
+    const { ctx } = memory({
+      exportImage: () => Promise.reject(new CoreError('APP_NOT_RUNNING', 'Closed.', 'Open it.')),
+      writeUserFiles: (root) => Promise.resolve({ root, written: [], unchanged: [] }),
+    });
+    expect(
+      await fail(ctx, 'export_image', { nodeId: 'n_frame', format: 'png', outPath: '/p/a.png' }),
+    ).toMatchObject({ code: 'APP_NOT_RUNNING' });
   });
 });

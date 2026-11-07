@@ -79,6 +79,19 @@ export async function startFakeApp(home: HomeFs, project: string | null): Promis
         });
       } else if (req.type === 'screenshot') {
         await respond(req.id, { ok: true, result: { pngBase64: noisePng(), width: 8, height: 6 } });
+      } else if (req.type === 'export_image') {
+        const svg = req.params?.format === 'svg';
+        await respond(req.id, {
+          ok: true,
+          result: {
+            dataBase64: svg
+              ? Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>').toString('base64')
+              : noisePng(),
+            mime: svg ? 'image/svg+xml' : 'image/png',
+            width: 8,
+            height: 6,
+          },
+        });
       } else if (req.type === 'get_node_bounds') {
         await respond(req.id, {
           ok: true,

@@ -7,6 +7,7 @@ import { applyChanges } from './apply';
 import { addAnnotation as addAnnotationTo, openAnnotations } from './annotations';
 import { addAsset, addReference, assetInfo, imageNodeSpec } from './assets';
 import { CoreError } from './errors';
+import { exportDesign } from './export';
 import { lintDesign } from './lint';
 import { getOutline } from './outline';
 import { lookupId } from './ops';
@@ -435,44 +436,117 @@ const openProject = defineTool({
   }),
 });
 
+const PREVIEW_CHARS = 4000;
+
 const exportCode = defineTool({
   name: 'export_code',
   description:
-    'Export a frame as HTML, React + CSS or React + Tailwind into a folder the user has confirmed. Not available yet in this version of Atelier.',
+    'Export a frame (or any node) as code into a folder the user has confirmed: framework "html" (index.html + styles.css), "react-css" (a TSX component + CSS Module) or "react-tailwind" (Tailwind v4 utilities + a @theme from the tokens). Colours, fonts and radii that came from tokens become CSS variables; images are written to assets/. Files are only ever written inside outDir; if files already exist with different content nothing is written and you get FILE_EXISTS (ask the user, then pass overwrite: true). Returns the files written, warnings (missing alt text, absolute positioning, unknown icons) and the start of the main file.',
   inputSchema: z.object({
     nodeId: z.string(),
     framework: z.enum(['html', 'react-css', 'react-tailwind']),
     outDir: z.string().describe('Absolute folder the user confirmed'),
-    componentName: z.string().optional(),
+    componentName: z
+      .string()
+      .optional()
+      .describe('React component name (default: from the frame name)'),
+    overwrite: z
+      .boolean()
+      .optional()
+      .describe('Replace existing files; only after the user agrees'),
   }),
-  handler: () =>
-    Promise.reject(
-      new CoreError(
-        'NOT_IMPLEMENTED',
-        'Code export is not available yet.',
-        'It arrives in a later version of Atelier. Tell the user, and describe the design in your own words meanwhile.',
-      ),
-    ),
+  handler: async (ctx, input) => {
+    const write = need(ctx.writeUserFiles, 'Writing export files');
+    const doc = await ctx.getDoc();
+    const result = exportDesign(doc, input.nodeId, input.framework, {
+      ...(input.componentName === undefined ? {} : { componentName: input.componentName }),
+    });
+    const files: Record<string, string | Uint8Array> = {};
+    for (const f of result.files) files[f.path] = f.content;
+    const report = await write(input.outDir, files, {
+      overwrite: input.overwrite === true,
+    });
+    const main = result.files.find((f) => f.path === result.main);
+    const mainText = typeof main?.content === 'string' ? main.content : '';
+    return {
+      outDir: report.root,
+      framework: result.format,
+      main: result.main,
+      written: report.written,
+      unchanged: report.unchanged,
+      warnings: result.warnings,
+      preview:
+        mainText.length > PREVIEW_CHARS
+          ? `${mainText.slice(0, PREVIEW_CHARS)}\n... (${mainText.length - PREVIEW_CHARS} more characters in ${result.main})`
+          : mainText,
+      next: 'Tell the user which files were written and any warnings; fonts need installing (see README-atelier.md).',
+    };
+  },
 });
+
+const IMAGE_NAME = /^[A-Za-z0-9_][A-Za-z0-9._ -]*$/;
+
+/** Splits an absolute file path into its folder and file name, on either kind of separator. */
+function splitFilePath(p: string): { dir: string; name: string } {
+  const i = Math.max(p.lastIndexOf('/'), p.lastIndexOf('\\'));
+  if (i < 0) return { dir: '', name: p };
+  const dir = p.slice(0, i);
+  const root = /^[A-Za-z]:$/.test(dir) ? `${dir}\\` : dir === '' ? '/' : dir;
+  return { dir: root, name: p.slice(i + 1) };
+}
 
 const exportImage = defineTool({
   name: 'export_image',
   description:
-    'Export a node as a PNG or SVG file. Not available yet in this version of Atelier; use screenshot to look at it.',
+    'Save a node as a PNG or SVG file at an absolute path the user confirmed (the Atelier app must be open). PNG: scale 1, 2 or 3; transparent:true leaves the area behind the design clear. SVG: scalable, text stays live text. The file name must end in .png or .svg to match. Refuses to replace an existing file unless overwrite is true.',
   inputSchema: z.object({
     nodeId: z.string(),
     format: z.enum(['png', 'svg']),
-    outPath: z.string(),
-    scale: z.number().optional(),
+    outPath: z.string().describe('Absolute path of the file to create, ending in .png or .svg'),
+    scale: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional(),
+    transparent: z.boolean().optional(),
+    overwrite: z.boolean().optional(),
   }),
-  handler: () =>
-    Promise.reject(
-      new CoreError(
-        'NOT_IMPLEMENTED',
-        'Image export is not available yet.',
-        'Use screenshot to look at the design; it also saves a PNG file.',
-      ),
-    ),
+  handler: async (ctx, input) => {
+    const write = need(ctx.writeUserFiles, 'Writing export files');
+    const render = need(ctx.exportImage, 'Image export');
+    const { dir, name } = splitFilePath(input.outPath);
+    if (dir === '' || !IMAGE_NAME.test(name) || !name.toLowerCase().endsWith(`.${input.format}`)) {
+      throw new CoreError(
+        'PATH_NOT_ALLOWED',
+        `outPath must be an absolute path to a file whose name ends in .${input.format}.`,
+        'For example C:\\Users\\me\\app\\public\\hero.png',
+      );
+    }
+    const doc = await ctx.getDoc();
+    const node = doc.nodes[lookupId(doc.nodes, input.nodeId)];
+    if (!node || node.type === 'page') {
+      throw new CoreError(
+        'NOT_FOUND',
+        `Node ${input.nodeId} cannot be exported.`,
+        'Pass a frame id.',
+      );
+    }
+    const image = await render({
+      nodeId: node.id,
+      format: input.format,
+      scale: input.scale ?? 1,
+      transparent: input.transparent === true,
+    });
+    const report = await write(
+      dir,
+      { [name]: image.bytes },
+      { overwrite: input.overwrite === true },
+    );
+    return {
+      path: `${report.root.replace(/[\\/]$/, '')}${report.root.includes('\\') ? '\\' : '/'}${name}`,
+      format: input.format,
+      width: image.width,
+      height: image.height,
+      bytes: image.bytes.byteLength,
+      replaced: report.written.length > 0 && input.overwrite === true,
+    };
+  },
 });
 
 export const EXTRA_TOOLS: readonly Tool[] = [

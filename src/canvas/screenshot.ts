@@ -7,7 +7,7 @@
  * and `html-to-image` rasterises that container. What the agent sees is what `nodeToCss` says, with
  * no selection handles, guides or panels.
  */
-import { toCanvas } from 'html-to-image';
+import { toCanvas, toSvg } from 'html-to-image';
 import { placeAnnotations } from '@core/annotations';
 import { docInState } from '@core/components';
 import { fillBase } from '@core/fill';
@@ -331,15 +331,13 @@ async function rasteriseSvgBackgrounds(root: HTMLElement): Promise<void> {
   }
 }
 
-/** One render at one pixel ratio. */
-async function render(
+/** Builds the detached stage for a region, waits for fonts and images, and runs `paint` on it. */
+async function withStage<T>(
   doc: Doc,
   region: Region,
-  scale: number,
-  withPins: boolean,
-  zoom: number,
   background: string,
-): Promise<HTMLCanvasElement> {
+  paint: (stage: HTMLElement) => Promise<T>,
+): Promise<T> {
   const holder = document.createElement('div');
   holder.setAttribute('aria-hidden', 'true');
   holder.style.cssText = `position:fixed;left:-100000px;top:0;width:${region.w}px;height:${region.h}px;overflow:hidden;pointer-events:none;`;
@@ -366,6 +364,22 @@ async function render(
     await document.fonts.ready;
     await imagesReady(stage);
     await rasteriseSvgBackgrounds(stage);
+    return await paint(stage);
+  } finally {
+    holder.remove();
+  }
+}
+
+/** One render at one pixel ratio. */
+function render(
+  doc: Doc,
+  region: Region,
+  scale: number,
+  withPins: boolean,
+  zoom: number,
+  background: string,
+): Promise<HTMLCanvasElement> {
+  return withStage(doc, region, background, async (stage) => {
     const canvas = await toCanvas(stage, {
       pixelRatio: scale,
       width: region.w,
@@ -380,9 +394,7 @@ async function render(
       if (ctx) drawPins(ctx, doc, region, scale, zoom);
     }
     return canvas;
-  } finally {
-    holder.remove();
-  }
+  });
 }
 
 export async function captureScreenshot(
@@ -433,5 +445,69 @@ export function nodeBounds(
     y: Math.round(r.y * 100) / 100,
     width: r.w,
     height: r.h,
+  };
+}
+
+export interface ExportImageParams {
+  nodeId: string;
+  format: 'png' | 'svg';
+  scale: 1 | 2 | 3;
+  transparent: boolean;
+}
+
+export interface ExportImageOutput {
+  dataBase64: string;
+  mime: 'image/png' | 'image/svg+xml';
+  width: number;
+  height: number;
+}
+
+const MAX_EXPORT_SIDE = 8192;
+const MAX_EXPORT_PIXELS = 64_000_000;
+
+/**
+ * A node as a file: PNG at 1x to 3x (never shrunk, unlike a screenshot), optionally with a clear
+ * background, or SVG (the same picture as scalable markup; text stays live text, so the fonts are
+ * embedded in the file).
+ */
+export async function captureExport(
+  doc: Doc,
+  zoom: number,
+  params: ExportImageParams,
+): Promise<ExportImageOutput> {
+  if (![1, 2, 3].includes(params.scale)) {
+    throw new ScreenshotError('INVALID_VALUE', 'scale must be 1, 2 or 3.');
+  }
+  const region = regionFor(doc, params.nodeId, zoom);
+  const background = params.transparent ? 'transparent' : backgroundBehind(doc, params.nodeId);
+  if (params.format === 'svg') {
+    const svg = await withStage(doc, region, background, async (stage) => {
+      const url = await toSvg(stage, { width: region.w, height: region.h, cacheBust: false });
+      return decodeURIComponent(url.slice(url.indexOf(',') + 1));
+    });
+    const bytes = new TextEncoder().encode(svg);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    }
+    return { dataBase64: btoa(binary), mime: 'image/svg+xml', width: region.w, height: region.h };
+  }
+  const w = region.w * params.scale;
+  const h = region.h * params.scale;
+  if (w > MAX_EXPORT_SIDE || h > MAX_EXPORT_SIDE || w * h > MAX_EXPORT_PIXELS) {
+    throw new ScreenshotError(
+      'INVALID_VALUE',
+      `${w}x${h} pixels is too large to render; use a smaller scale.`,
+    );
+  }
+  const canvas = await whileFramesMayNotRun(() =>
+    render(doc, region, params.scale, false, zoom, background),
+  );
+  const dataUrl = canvas.toDataURL('image/png');
+  return {
+    dataBase64: dataUrl.slice(dataUrl.indexOf(',') + 1),
+    mime: 'image/png',
+    width: canvas.width,
+    height: canvas.height,
   };
 }

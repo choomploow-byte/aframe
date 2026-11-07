@@ -398,11 +398,11 @@ await group('agent requests are answered', async () => {
       Buffer.from(shotReq.res.result.pngBase64, 'base64').subarray(1, 4).toString() === 'PNG',
     JSON.stringify(shotReq.res).slice(0, 160),
   );
-  const planned = await request('req_e2eexp', { type: 'export_image' });
+  const badExport = await request('req_e2eexp', { type: 'export_image' });
   check(
-    'a request type that is planned but not built says so instead of timing out',
-    planned.res?.ok === false && planned.res.error.code === 'NOT_IMPLEMENTED',
-    JSON.stringify(planned.res),
+    'an export request without its params is refused with a clear error instead of timing out',
+    badExport.res?.ok === false && badExport.res.error.code === 'BAD_REQUEST',
+    JSON.stringify(badExport.res),
   );
   const wrong = await request('req_e2ewrng', { type: 'screenshot', project: 'p_notmine' });
   check(

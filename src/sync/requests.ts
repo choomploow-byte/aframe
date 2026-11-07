@@ -21,11 +21,12 @@ export const LIVE_TYPES = [
   'open_project',
   'screenshot',
   'get_node_bounds',
+  'export_image',
 ] as const;
-/** Allowed, but built in a later phase (image export: Phase 8). */
-export const PLANNED_TYPES = ['export_image'] as const;
+/** Allowed, but built in a later phase. */
+export const PLANNED_TYPES: readonly string[] = [];
 /** Request types that are about the project open on screen (a request for another one is refused). */
-const PROJECT_BOUND = new Set(['get_selection', 'screenshot', 'get_node_bounds']);
+const PROJECT_BOUND = new Set(['get_selection', 'screenshot', 'get_node_bounds', 'export_image']);
 export const REQUEST_TYPES: readonly string[] = [...LIVE_TYPES, ...PLANNED_TYPES];
 
 export type BridgeResult =
@@ -42,6 +43,13 @@ export interface BridgeHandlers {
   screenshot?(
     params: Record<string, unknown>,
   ): Promise<{ pngBase64: string; width: number; height: number }>;
+  /** Renders a node to the bytes of a PNG or SVG file (needs the canvas on screen). */
+  exportImage?(params: Record<string, unknown>): Promise<{
+    dataBase64: string;
+    mime: string;
+    width: number;
+    height: number;
+  }>;
   /** A node's rectangle on the canvas in world units, or null if it is not drawn. */
   nodeBounds?(
     nodeId: string,
@@ -216,6 +224,10 @@ export class BridgeService {
       case 'screenshot': {
         if (!this.handlers.screenshot) return notBuilt(type);
         return { ok: true, result: await this.handlers.screenshot(params) };
+      }
+      case 'export_image': {
+        if (!this.handlers.exportImage) return notBuilt(type);
+        return { ok: true, result: await this.handlers.exportImage(params) };
       }
       case 'get_node_bounds': {
         const nodeId = params.nodeId;

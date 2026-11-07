@@ -20,6 +20,7 @@ import { build } from 'vite';
 import { exportDesign } from '../../src/core/export/index.ts';
 import { loadDoc } from '../../src/core/doc.ts';
 import { createTemplateDoc, TEMPLATES } from '../../src/core/templates.ts';
+import { buildDoc } from '../../src/core/testing.ts';
 import { reporter, settle, start } from './harness.mjs';
 
 const ROOT = resolve('.');
@@ -56,7 +57,8 @@ const server = createServer((req, res) => {
 });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const PORT = server.address().port;
-const urlOf = (file) => `http://127.0.0.1:${PORT}/${file.replace(ROOT, '').replace(/\\/g, '/').replace(/^\//, '')}`;
+const urlOf = (file) =>
+  `http://127.0.0.1:${PORT}/${file.replace(ROOT, '').replace(/\\/g, '/').replace(/^\//, '')}`;
 
 // ---- fixtures ------------------------------------------------------------------------------------------
 const fixtures = [];
@@ -71,7 +73,11 @@ for (const t of TEMPLATES.filter((x) => x !== 'blank')) {
   const loaded = loadDoc(JSON.parse(readFileSync('fixtures/sample-doc.json', 'utf8')));
   if (!loaded.ok) throw new Error('the sample fixture does not load');
   for (const id of loaded.doc.nodes[loaded.doc.rootId].children) {
-    fixtures.push({ name: `sample-${loaded.doc.nodes[id].name}`.replace(/[^A-Za-z0-9]+/g, '-'), doc: loaded.doc, nodeId: id });
+    fixtures.push({
+      name: `sample-${loaded.doc.nodes[id].name}`.replace(/[^A-Za-z0-9]+/g, '-'),
+      doc: loaded.doc,
+      nodeId: id,
+    });
   }
 }
 
@@ -111,7 +117,10 @@ async function canvasShot(doc, nodeId) {
 async function buildReact(dir, result, tailwindFlavour) {
   const src = join(dir, 'src');
   write(src, result.files);
-  writeFileSync(join(dir, 'index.html'), '<!doctype html><html><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>');
+  writeFileSync(
+    join(dir, 'index.html'),
+    '<!doctype html><html><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>',
+  );
   writeFileSync(
     join(src, 'main.tsx'),
     `import { createRoot } from 'react-dom/client';\nimport ${result.componentName} from './${result.componentName}';\ncreateRoot(document.getElementById('root') as HTMLElement).render(<${result.componentName} />);\n`,
@@ -163,8 +172,14 @@ for (const fx of fixtures) {
       } else {
         const built = await buildReact(dir, result, format === 'react-tailwind');
         pageFile = built.page;
-        const errors = built.diagnostics.map((d) => ts.flattenDiagnosticMessageText(d.messageText, ' '));
-        check(`${label}: type-checks with zero errors`, errors.length === 0, errors.slice(0, 2).join(' | '));
+        const errors = built.diagnostics.map((d) =>
+          ts.flattenDiagnosticMessageText(d.messageText, ' '),
+        );
+        check(
+          `${label}: type-checks with zero errors`,
+          errors.length === 0,
+          errors.slice(0, 2).join(' | '),
+        );
       }
     } catch (e) {
       check(`${label}: builds`, false, String(e?.message ?? e).slice(0, 300));
@@ -178,7 +193,18 @@ for (const fx of fixtures) {
     await page.addStyleTag({ url: `http://127.0.0.1:${PORT}/src/canvas/fonts.css` });
     await page.evaluate(async () => {
       await document.fonts.ready;
-      for (const f of ['Inter', 'DM Sans', 'Fraunces', 'Playfair Display', 'Space Grotesk', 'JetBrains Mono', 'Lilita One', 'Fredoka', 'Bungee', 'Luckiest Guy']) {
+      for (const f of [
+        'Inter',
+        'DM Sans',
+        'Fraunces',
+        'Playfair Display',
+        'Space Grotesk',
+        'JetBrains Mono',
+        'Lilita One',
+        'Fredoka',
+        'Bungee',
+        'Luckiest Guy',
+      ]) {
         await document.fonts.load(`400 16px "${f}"`).catch(() => undefined);
         await document.fonts.load(`600 16px "${f}"`).catch(() => undefined);
       }
@@ -189,23 +215,146 @@ for (const fx of fixtures) {
     await page.close();
 
     if (exported.width !== reference.width || exported.height !== reference.height) {
-      check(`${label}: same size as the canvas`, false, `${exported.width}x${exported.height} vs ${reference.width}x${reference.height}`);
+      check(
+        `${label}: same size as the canvas`,
+        false,
+        `${exported.width}x${exported.height} vs ${reference.width}x${reference.height}`,
+      );
       continue;
     }
     const diff = new PNG({ width: reference.width, height: reference.height });
-    const bad = pixelmatch(reference.data, exported.data, diff.data, reference.width, reference.height, { threshold: 0.1 });
+    const bad = pixelmatch(
+      reference.data,
+      exported.data,
+      diff.data,
+      reference.width,
+      reference.height,
+      { threshold: 0.1 },
+    );
     const percent = (bad / (reference.width * reference.height)) * 100;
     numbers.push({ label, percent });
-    check(`${label}: renders within ${THRESHOLD}% of the canvas (${percent.toFixed(3)}%)`, percent <= THRESHOLD, `${percent.toFixed(2)}%`);
+    check(
+      `${label}: renders within ${THRESHOLD}% of the canvas (${percent.toFixed(3)}%)`,
+      percent <= THRESHOLD,
+      `${percent.toFixed(2)}%`,
+    );
     if (SHOT_DIR && percent > 0.2) {
       writeFileSync(join(SHOT_DIR, `diff-${fx.name}-${format}.png`), PNG.sync.write(diff));
     }
   }
 }
 
+// ---- image export from the canvas: PNG at 1x/2x/3x, transparent background, SVG ------------------------
+{
+  const doc = buildDoc([
+    { id: 'n_round', type: 'frame', name: 'Round', w: 200, h: 100, radius: 40, fill: '#ff0000' },
+  ]);
+  await appPage.evaluate((d) => {
+    window.__atelier.projects.detachForTests();
+    window.__atelier.store.getState().loadDoc(d);
+  }, doc);
+  await settle(appPage);
+  const run = (params) =>
+    appPage.evaluate(async (pr) => {
+      const { captureExport } = await import('/src/canvas/screenshot.ts');
+      const s = window.__atelier.store.getState();
+      try {
+        return await captureExport(s.doc, s.viewport.zoom, pr);
+      } catch (e) {
+        return { error: String(e.message ?? e), code: e.code };
+      }
+    }, params);
+  const png = (out) => PNG.sync.read(Buffer.from(out.dataBase64, 'base64'));
+  const alphaAt = (img, x, y) => img.data[(y * img.width + x) * 4 + 3];
+
+  for (const scale of [1, 2, 3]) {
+    const out = await run({ nodeId: 'n_round', format: 'png', scale, transparent: false });
+    const img = png(out);
+    check(
+      `PNG at ${scale}x is ${200 * scale}x${100 * scale}`,
+      img.width === 200 * scale && img.height === 100 * scale && out.width === img.width,
+      `${img.width}x${img.height}`,
+    );
+  }
+  const opaque = png(await run({ nodeId: 'n_round', format: 'png', scale: 1, transparent: false }));
+  const clear = png(await run({ nodeId: 'n_round', format: 'png', scale: 1, transparent: true }));
+  check(
+    'opaque PNG fills the area behind the rounded corner',
+    alphaAt(opaque, 1, 1) === 255,
+    String(alphaAt(opaque, 1, 1)),
+  );
+  check(
+    'transparent PNG leaves the area behind the rounded corner clear',
+    alphaAt(clear, 1, 1) === 0,
+    String(alphaAt(clear, 1, 1)),
+  );
+  check(
+    'transparent PNG keeps the design opaque',
+    alphaAt(clear, 100, 50) === 255,
+    String(alphaAt(clear, 100, 50)),
+  );
+  const tooBig = await run({ nodeId: 'n_round', format: 'png', scale: 4, transparent: false });
+  check(
+    'a scale outside 1 to 3 is refused',
+    tooBig.error !== undefined && /scale/.test(tooBig.error),
+    JSON.stringify(tooBig).slice(0, 120),
+  );
+  const missing = await run({ nodeId: 'n_nope', format: 'png', scale: 1, transparent: false });
+  check(
+    'an unknown node is refused',
+    missing.code === 'NOT_FOUND',
+    JSON.stringify(missing).slice(0, 120),
+  );
+
+  // SVG: valid markup that draws the same picture when opened on its own.
+  const svgOut = await run({ nodeId: 'n_round', format: 'svg', scale: 1, transparent: true });
+  const svgText = Buffer.from(svgOut.dataBase64, 'base64').toString('utf8');
+  check(
+    'SVG export is an svg document of the right size',
+    /^<svg[^>]*width="200"[^>]*height="100"/.test(svgText) ||
+      (svgText.startsWith('<svg') && svgText.includes('viewBox="0 0 200 100"')),
+    svgText.slice(0, 120),
+  );
+  const svgPath = join(WORK, 'round.svg');
+  writeFileSync(svgPath, svgText);
+  const sp = await browser.newPage();
+  await sp.setViewport({ width: 400, height: 300 });
+  await sp.setContent(
+    `<body style="margin:0;background:transparent"><img id="i" src="data:image/svg+xml;base64,${svgOut.dataBase64}"></body>`,
+  );
+  await sp.evaluate(
+    () =>
+      new Promise((r) =>
+        document.getElementById('i').complete ? r() : (document.getElementById('i').onload = r),
+      ),
+  );
+  const svgShot = PNG.sync.read(
+    await (await sp.$('#i')).screenshot({ type: 'png', omitBackground: true }),
+  );
+  await sp.close();
+  check(
+    'SVG renders at the design size',
+    svgShot.width === 200 && svgShot.height === 100,
+    `${svgShot.width}x${svgShot.height}`,
+  );
+  const svgDiff =
+    (pixelmatch(clear.data, svgShot.data, null, 200, 100, { threshold: 0.1 }) / 200 / 100) * 100;
+  check(
+    `SVG renders like the PNG (${svgDiff.toFixed(3)}% different)`,
+    svgDiff <= THRESHOLD,
+    `${svgDiff.toFixed(2)}%`,
+  );
+}
+
 numbers.sort((a, b) => b.percent - a.percent);
-info('worst five', numbers.slice(0, 5).map((n) => `${n.label} ${n.percent.toFixed(3)}%`));
-info('mean diff', `${(numbers.reduce((s, n) => s + n.percent, 0) / Math.max(1, numbers.length)).toFixed(3)}%`);
+info(
+  'worst five',
+  numbers.slice(0, 5).map((n) => `${n.label} ${n.percent.toFixed(3)}%`),
+);
+info(
+  'mean diff',
+  `${(numbers.reduce((s, n) => s + n.percent, 0) / Math.max(1, numbers.length)).toFixed(3)}%`,
+);
 check('no console errors in the app', t.errors.length === 0, t.errors.slice(0, 2).join(' | '));
 await t.close();
 server.close();

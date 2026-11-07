@@ -248,9 +248,26 @@ describe('screenshots and bounds', () => {
     });
   });
 
-  it('export_image is still planned', async () => {
-    await send(req('req_exp01', { type: 'export_image' }));
+  it('export_image hands its params to the app and returns the bytes', async () => {
+    const seen: Record<string, unknown>[] = [];
+    handlers.exportImage = (params) => {
+      seen.push(params);
+      return Promise.resolve({ dataBase64: 'AAAA', mime: 'image/png', width: 2, height: 3 });
+    };
+    await send(
+      req('req_exp01', { type: 'export_image', params: { nodeId: 'n_a', format: 'png' } }),
+    );
     expect(await response('req_exp01')).toMatchObject({
+      ok: true,
+      result: { dataBase64: 'AAAA', width: 2, height: 3 },
+    });
+    expect(seen).toEqual([{ nodeId: 'n_a', format: 'png' }]);
+  });
+
+  it('export_image answers NOT_IMPLEMENTED when the app has no renderer', async () => {
+    delete handlers.exportImage;
+    await send(req('req_exp02', { type: 'export_image' }));
+    expect(await response('req_exp02')).toMatchObject({
       ok: false,
       error: { code: 'NOT_IMPLEMENTED' },
     });

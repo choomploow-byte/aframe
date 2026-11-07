@@ -29,6 +29,7 @@ import {
 } from '../src/projects/projects';
 import type { HomeApi } from '../src/platform/fs';
 import { BridgeClient } from './bridge';
+import { writeUserFiles } from './export-write';
 import { createImageReader } from './files';
 import { Library } from './library';
 import { SKILLS } from './generated';
@@ -264,6 +265,26 @@ export class McpEnv {
         return { pngBase64: r.pngBase64, width: r.width, height: r.height, path: file };
       },
       readUserFile: createImageReader({ atelierHome: this.home.root }),
+      writeUserFiles: (root, files, options) => writeUserFiles(root, files, options ?? {}),
+      exportImage: async (opts) => {
+        const r = (await this.bridge.request(
+          'export_image',
+          { ...opts },
+          { project: await id(), timeoutMs: 60_000 },
+        )) as { dataBase64?: unknown; width?: unknown; height?: unknown } | null;
+        if (
+          typeof r?.dataBase64 !== 'string' ||
+          typeof r.width !== 'number' ||
+          typeof r.height !== 'number'
+        ) {
+          throw new CoreError('INTERNAL', 'The app returned an unreadable image.');
+        }
+        return {
+          bytes: new Uint8Array(Buffer.from(r.dataBase64, 'base64')),
+          width: r.width,
+          height: r.height,
+        };
+      },
       library: {
         list: () => new Library(this.home.root).list(),
         read: (id) => Promise.resolve(new Library(this.home.root).read(id)),

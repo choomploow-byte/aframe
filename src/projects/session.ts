@@ -176,6 +176,26 @@ function ensureSession(): Promise<Session> {
           throw e;
         }
       },
+      exportImage: async (params) => {
+        const { captureExport, ScreenshotError } = await import('../canvas/screenshot');
+        const p: Record<string, unknown> = params;
+        if (typeof p.nodeId !== 'string' || (p.format !== 'png' && p.format !== 'svg')) {
+          throw new RequestError('BAD_REQUEST', 'params.nodeId and params.format are required.');
+        }
+        const scale = p.scale === 2 || p.scale === 3 ? p.scale : 1;
+        try {
+          const state = store.getState();
+          return await captureExport(state.doc, state.viewport.zoom, {
+            nodeId: p.nodeId,
+            format: p.format,
+            scale,
+            transparent: p.transparent === true,
+          });
+        } catch (e) {
+          if (e instanceof ScreenshotError) throw new RequestError(e.code, e.message);
+          throw e;
+        }
+      },
       nodeBounds: async (nodeId) => {
         const { nodeBounds } = await import('../canvas/screenshot');
         return nodeBounds(nodeId, store.getState().viewport.zoom);

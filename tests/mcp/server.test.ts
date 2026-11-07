@@ -352,15 +352,137 @@ describe('editing', () => {
     expect(lint.counts.error).toBeGreaterThan(0);
   });
 
-  it('export tools are present but say they are not built yet', async () => {
-    const { c } = await setup();
-    const r = await call(c, 'export_code', {
-      nodeId: 'n_x',
-      framework: 'html',
-      outDir: path.join(dir, 'out'),
+  describe('export', () => {
+    // The system temp folder lives under AppData, which exports refuse: use a folder in the repo.
+    let out: string;
+    let app: FakeApp | null = null;
+    beforeEach(async () => {
+      await fs.mkdir(path.resolve('.shots'), { recursive: true });
+      out = await fs.mkdtemp(path.resolve('.shots', 'export-srv-'));
     });
-    expect(r.json).toMatchObject({ code: 'NOT_IMPLEMENTED' });
-    await expect(fs.access(path.join(dir, 'out'))).rejects.toBeTruthy(); // nothing was written
+    afterEach(async () => {
+      await app?.stop();
+      app = null;
+      await fs.rm(out, { recursive: true, force: true });
+    });
+
+    async function frameIn(c: Client, page: string): Promise<string> {
+      const r = await ok(c, 'apply_changes', {
+        operations: [
+          {
+            op: 'create',
+            parentId: page,
+            node: {
+              type: 'frame',
+              name: 'Hero Card',
+              w: 300,
+              h: 'hug',
+              layout: 'column',
+              fill: '#ffffff',
+              children: [{ type: 'text', name: 'Headline', text: 'Hello' }],
+            },
+          },
+        ],
+      });
+      return (r.json.created as string[])[0] as string;
+    }
+
+    it('export_code writes the files into the folder, and says so', async () => {
+      const { c, page } = await setup();
+      const frame = await frameIn(c, page);
+      const r = await ok(c, 'export_code', {
+        nodeId: frame,
+        framework: 'react-css',
+        outDir: path.join(out, 'design'),
+      });
+      expect(r.json.written).toEqual(
+        expect.arrayContaining(['HeroCard.tsx', 'HeroCard.module.css', 'tokens.css']),
+      );
+      const tsx = await fs.readFile(path.join(out, 'design', 'HeroCard.tsx'), 'utf8');
+      expect(tsx).toContain('export default function HeroCard');
+      expect(String(r.json.preview)).toContain('HeroCard');
+    });
+
+    it('stops on files that already exist, unless told to overwrite, and re-exports are quiet', async () => {
+      const { c, page } = await setup();
+      const frame = await frameIn(c, page);
+      const args = { nodeId: frame, framework: 'html', outDir: out };
+      await ok(c, 'export_code', args);
+      const again = await ok(c, 'export_code', args);
+      expect(again.json.written).toEqual([]); // identical bytes: nothing to do
+      expect(again.json.unchanged).toEqual(expect.arrayContaining(['index.html', 'styles.css']));
+
+      await fs.writeFile(path.join(out, 'styles.css'), '/* my edits */');
+      const blocked = await call(c, 'export_code', args);
+      expect(blocked.json).toMatchObject({ code: 'FILE_EXISTS' });
+      expect(await fs.readFile(path.join(out, 'styles.css'), 'utf8')).toBe('/* my edits */');
+
+      const forced = await ok(c, 'export_code', { ...args, overwrite: true });
+      expect(forced.json.written).toContain('styles.css');
+      expect(await fs.readFile(path.join(out, 'styles.css'), 'utf8')).toContain(':root');
+    });
+
+    it('refuses folders it must not write into, and writes nothing', async () => {
+      const { c, page } = await setup();
+      const frame = await frameIn(c, page);
+      const args = { nodeId: frame, framework: 'html' };
+      for (const outDir of [
+        'relative/out',
+        path.join(out, '..', '..', '.git', 'x'),
+        path.join(out, '.ssh'),
+        os.homedir(),
+        path.parse(out).root,
+        process.platform === 'win32' ? 'C:\\Windows\\Temp\\atelier' : '/etc/atelier',
+      ]) {
+        const r = await call(c, 'export_code', { ...args, outDir });
+        expect(r.json.code, outDir).toBe('PATH_NOT_ALLOWED');
+      }
+      expect(await fs.readdir(out)).toEqual([]);
+    });
+
+    it('export_image asks the app, then saves the PNG where the user said', async () => {
+      const c = await connect();
+      const p = (await ok(c, 'create_project', { name: 'Img', template: 'landing' })).json.project;
+      app = await startFakeApp(home, p.id);
+      const frame = (await ok(c, 'get_design')).json.root.children[0].id as string;
+      const file = path.join(out, 'hero.png');
+      const r = await ok(c, 'export_image', {
+        nodeId: frame,
+        format: 'png',
+        outPath: file,
+        scale: 2,
+        transparent: true,
+      });
+      expect(r.json).toMatchObject({ format: 'png', width: 8, height: 6 });
+      expect(app.seen.at(-1)).toMatchObject({
+        type: 'export_image',
+        params: { nodeId: frame, format: 'png', scale: 2, transparent: true },
+      });
+      expect(PNG.sync.read(await fs.readFile(file)).width).toBe(8);
+      const same = await ok(c, 'export_image', { nodeId: frame, format: 'png', outPath: file });
+      expect(same.json.replaced).toBe(false); // identical picture: nothing to do
+      await fs.writeFile(file, 'not the same picture');
+      const again = await call(c, 'export_image', { nodeId: frame, format: 'png', outPath: file });
+      expect(again.json.code).toBe('FILE_EXISTS');
+      const svg = await ok(c, 'export_image', {
+        nodeId: frame,
+        format: 'svg',
+        outPath: path.join(out, 'hero.svg'),
+      });
+      expect(svg.json.format).toBe('svg');
+      expect(await fs.readFile(path.join(out, 'hero.svg'), 'utf8')).toContain('<svg');
+    });
+
+    it('export_image without the app is the usual actionable error', async () => {
+      const { c, page } = await setup();
+      const frame = await frameIn(c, page);
+      const r = await call(c, 'export_image', {
+        nodeId: frame,
+        format: 'png',
+        outPath: path.join(out, 'a.png'),
+      });
+      expect(r.json.code).toBe('APP_NOT_RUNNING');
+    });
   });
 
   it('two server processes editing the same project at once lose nothing', async () => {

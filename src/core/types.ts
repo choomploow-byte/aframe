@@ -239,6 +239,7 @@ export type ErrorCode =
   | 'APP_NOT_RUNNING'
   | 'TIMEOUT'
   | 'PATH_NOT_ALLOWED'
+  | 'FILE_EXISTS'
   | 'NOT_IMPLEMENTED'
   | 'INTERNAL';
 
@@ -305,6 +306,20 @@ export interface ScreenshotResult {
   path?: string;
 }
 
+export interface ExportImageOptions {
+  nodeId: string;
+  format: 'png' | 'svg';
+  scale: 1 | 2 | 3;
+  /** PNG only: leave the area behind the design transparent instead of filling it. */
+  transparent: boolean;
+}
+
+export interface ExportImageResult {
+  bytes: Uint8Array;
+  width: number;
+  height: number;
+}
+
 export interface ProjectSummary {
   id: string;
   name: string;
@@ -360,6 +375,15 @@ export interface ToolContext {
   getNodeBounds?: (nodeId: string) => Promise<Bounds | null>;
   /** MCP server only: read a user-specified image file (validated). */
   readUserFile?: (path: string) => Promise<Uint8Array>;
-  /** MCP server only: write files under a user-confirmed root; must refuse path escapes. */
-  writeUserFiles?: (root: string, files: Record<string, string | Uint8Array>) => Promise<string[]>;
+  /**
+   * MCP server only: write files under a user-confirmed root; must refuse path escapes, links and
+   * (without `overwrite`) any file that exists with different content.
+   */
+  writeUserFiles?: (
+    root: string,
+    files: Record<string, string | Uint8Array>,
+    options?: { overwrite?: boolean },
+  ) => Promise<{ root: string; written: string[]; unchanged: string[] }>;
+  /** Renders a node to PNG or SVG bytes in the running app (the app must be open). */
+  exportImage?: (opts: ExportImageOptions) => Promise<ExportImageResult>;
 }
