@@ -21,6 +21,9 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::{Emitter, Manager, State, WindowEvent};
 
+/// The MCP server this app carries (see build.rs); installed into the home on launch when newer.
+const BUNDLED_MCP: &str = include_str!(concat!(env!("OUT_DIR"), "/atelier-mcp.mjs"));
+
 const REQUEST_EVENT: &str = "atelier://request";
 const CLOSE_EVENT: &str = "atelier://close-requested";
 /// If the page does not confirm it has saved within this time, quit anyway.
@@ -153,7 +156,7 @@ pub fn run() {
         .manage(Arc::new(SharedState::default()))
         .setup(|app| {
             let home = Home::from_env()?;
-            layout::ensure_layout(&home)?;
+            layout::ensure_layout(&home, BUNDLED_MCP)?;
             appstate::spawn_heartbeat(
                 home.clone(),
                 Arc::clone(&app.state::<Arc<SharedState>>()),
