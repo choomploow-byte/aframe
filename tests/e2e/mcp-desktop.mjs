@@ -153,7 +153,10 @@ if (SHOT_DIR)
 
 // The headline is set in the bundled heading font; if the font failed to embed, the glyph shapes (and so
 // the text width) would be those of the fallback. Compare against the same frame from the live canvas.
-const head = (await call('get_design', { depth: 4 })).json.root.children[0];
+// (The template's first top-level frame is now the component board, so pick the screen by name.)
+const head = (await call('get_design', { depth: 4 })).json.root.children.find(
+  (c) => c.name === 'Landing - Desktop',
+);
 const headline = JSON.stringify(head).match(
   /"id":"(n_[a-z0-9]+)","type":"text","name":"Headline"/,
 )?.[1];
@@ -317,6 +320,15 @@ const noise = await call('apply_changes', {
     },
   ],
 });
+// The app picks an agent's edit up from the file on its next poll; wait until it has the node.
+await until(
+  async () =>
+    await page.evaluate(
+      (id) => !!document.querySelector(`[data-node-id="${id}"]`),
+      noise.json.created?.[0],
+    ),
+  6000,
+);
 const noiseShot = await call('screenshot', { nodeId: noise.json.created?.[0] });
 if (noiseShot.images[0]) {
   const np = PNG.sync.read(Buffer.from(noiseShot.images[0].data, 'base64'));
