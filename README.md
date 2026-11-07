@@ -68,6 +68,8 @@ node mcp/dist/atelier-mcp.mjs doctor               # checks Node, the app, each 
 node mcp/dist/atelier-mcp.mjs uninstall            # removes exactly what install added
 ```
 
+What an agent can do with it, beyond frames and text: place icons (`search_icons`), set type in display fonts (`list_fonts`), fill with patterns, add bevel and gloss presets, build reusable components with hover and pressed states (`define_component`, `create_instance`) and check them with `screenshot` and a `state`. New projects can start from a game HUD, shop or inventory, a product landing, a SaaS dashboard, a mobile app or a pricing page. Third-party licences: [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
+
 The desktop app carries the same file and puts it in `~/.atelier/mcp/` on launch, which is the path
 the AI tools are pointed at. Working on the server: `npm run test:mcp` (the built file driven by the
 real MCP client, the installers, and the real `claude` CLI if present) and `npm run test:e2e:mcp` (an

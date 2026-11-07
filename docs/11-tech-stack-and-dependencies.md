@@ -21,6 +21,8 @@
 | `@modelcontextprotocol/server`, `@modelcontextprotocol/client` | Phase 5 | The MCP SDK v2 (stable line, Node 20+, zod 4): the server is bundled into `atelier-mcp.mjs`; the client is a dev dependency used by the integration and live tests (it is the same code hosts use). Verified by a spike before anything was built on it |
 | `esbuild` (dev) | Phase 5 | Bundles the server and its dependencies into one file |
 | `html-to-image` | Phase 5 | Rasterises cloned artboards for the `screenshot` tool. Last released April 2025: a known risk, mitigated by cloning into a controlled container, a timer for animation frames, and the real-window test; a native capture is the documented fallback |
+| `@fontsource/lilita-one`, `@fontsource/luckiest-guy`, `@fontsource/bungee`, `@fontsource-variable/fredoka` | Game-UI toolkit | The display families for game UI (SIL OFL 1.1, except Luckiest Guy which is Apache 2.0), registered as plain-name aliases by `scripts/gen-fonts-css.mjs` (woff2 only for the static ones) |
+| `@fortawesome/free-solid-svg-icons` (dev) | Game-UI toolkit | Build-time source of the icon paths: `scripts/gen-icons.mjs` copies a curated selection into `src/core/icon-data.ts`; nothing from it is imported at run time. Icons CC BY 4.0, attributed in `THIRD-PARTY-NOTICES.md` |
 | `tsx` (dev, already present) | Phase 4 | Also runs the persistence e2e and the writer child process, which import the TypeScript file module directly |
 
 Versions below are the *intended major versions at time of writing*. Claude Code must run `npm view <pkg> version` / check docs and pin what's current and compatible; don't blindly trust these numbers.

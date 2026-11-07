@@ -11,6 +11,22 @@ All notable changes are recorded here. Format: [Keep a Changelog](https://keepac
   icons were regenerated from `app-icon.png`.
 
 ### Added
+- Game-UI toolkit (decision log #79-#95): an **icon set** (165 solid icons in one style: coins, gems,
+  keys, shields, stars, swords, potions, chests, arrows, close, check, settings and more; Font
+  Awesome Free plus five drawn for Atelier) as a new `icon` node that takes a colour token, with
+  `search_icons` and `place_icon`, and a labelled placeholder where a name is missing. **Display
+  fonts** Lilita One, Luckiest Guy, Bungee and Fredoka with `list_fonts`; weights go to 900 where a
+  family has them and a missing weight is never faked. **Pattern fills** (stripes, halftone,
+  sunburst, noise) that follow the node's radius and clipping. **Effect presets** (`bevel-raised`,
+  `bevel-pressed`, `gloss-top`, `inner-glow`, `hard-3d-bottom`, each with an intensity); text never
+  gets a box shadow. **Reusable components** with `hover`, `pressed`, `disabled` and `selected`
+  states, per-instance overrides, `define_component`, `create_instance` and `component_list`, and
+  `screenshot` with a `state` (including `all`) so an agent can check every state. **Eight
+  templates** (product landing, SaaS dashboard, mobile app, pricing page, game HUD, game shop, game
+  inventory, blank), each with a token set and a component kit, in the New project dialog. Editing
+  fixes: x/y on an auto-layout child now warns and names the parent layout, errors name the bad
+  value and the correct form, ids work without `n_`. Six new lint rules. A `game-ui` skill. The
+  motion preview (stretch goal) is not built.
 - Phase 5: the MCP server and its installers. A single-file server (`mcp/dist/atelier-mcp.mjs`, MCP
   SDK v2, Node 20+) exposes 22 tools, resources and prompts: read and edit designs atomically
   (compare-and-write, safe beside the app and other agents), take screenshots of the live canvas

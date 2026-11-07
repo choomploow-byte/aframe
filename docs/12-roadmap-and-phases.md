@@ -23,6 +23,10 @@ Each phase: **goal, deliverables, acceptance criteria, how to verify, estimate**
 **Deliver:** Layers tree (rename/hide/lock/reorder by drag), Properties panel (all sections in doc 07), token editor + colour picker with token swatches, assets panel (image import via picker/drop/paste), device presets, light/dark theme, command palette, Claude-like styling pass.
 **Accept:** a user can build a landing-page hero by hand from scratch in < 5 min; every property in doc 04 is editable; theme toggle works with no unstyled flashes.
 
+## Game-UI toolkit (built between Phases 5 and 6; decision log #79-#95)
+**Goal:** make Atelier good at chunky, glossy game interfaces.
+**Delivered:** an icon set and `icon` nodes, four display fonts and `list_fonts`, pattern fills, effect presets, reusable components with states and overrides, state screenshots, seven genre templates with token sets and component kits, editing fixes and lint rules. Details: `docs/04`, `docs/05`. Not built: the motion preview (stretch goal).
+
 ## Phase 4: Persistence, Tauri shell and sync (2 sessions)
 **Goal:** a real desktop app that saves and syncs.
 **Deliver:** `platform/fs.ts` with Tauri + dev-HTTP adapters; Rust commands (confined fs); project open/create/recent; autosave with `.bak`; sync service (mtime polling, rev merge, dirty-node merge); native heartbeat (`app-state.json`); project lock and compare-and-write; property-level merge; `.exe/.app/.AppImage` build via `tauri build`; app icons; single-instance + window-state.

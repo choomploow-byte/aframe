@@ -73,6 +73,13 @@ Colour picker: swatches from tokens first, then custom; hex input; eyedropper (w
 - **Top-bar pill** shows a green dot while an agent's server is running (its presence file is fresh), grey otherwise.
 - **While an agent edits:** an "An AI is editing…" chip for a few seconds after each of its saves (only for changes that arrive while the project is open), a pulse on the nodes it changed, and a toast "The AI changed the design." with Undo. The whole agent change is one undo step labelled "AI change".
 
+### As built in the game-UI toolkit (decision log #79-#95)
+- **Left panel** gains **Icons** (search box and a grid of the whole set; one click places the icon in the selected frame, or on the page at the centre of the view, as one undo step) and **Components** (each master with its kind, number of instances and defined states; select it, or **Add** an instance).
+- **Layers** shows a master with a component glyph and an instance with a hollow diamond; the layers inside an instance are listed under it.
+- **Design panel** gains: Fill **Pattern** (pattern, ink, size, gap, angle, opacity, base) · **Presets** (the five effect presets as switches, each with an intensity and, for inner glow and the 3D ledge, a colour; not offered for text) · **Icon** (name picker with search, colour) · **Component** (a plain frame: *Create component*; a master: kind, instance count, defined states, *Remove component*; an instance: its master, a state switch, *Go to master*, *Reset overrides*, *Detach*; a layer inside an instance says its changes are overrides).
+- **New project** (Ctrl+O, then New project) has a *Start from* picker with the eight templates and a one-line description; the palette lists each template as `New project: ...`.
+- **Icons on the canvas** draw as SVG in the node's colour; an unknown name draws a dashed placeholder with a `?` and the requested name.
+
 ## Annotations (the "point at it" feature)
 - Tool `A`: click to drop a numbered pin, or drag for a region. Inline popover to type the comment. Enter to save.
 - Pins render in an overlay (not part of the design, excluded from exports and screenshots unless `annotations:true`).
