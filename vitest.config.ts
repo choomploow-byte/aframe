@@ -7,7 +7,14 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts', 'tests/unit/**/*.test.ts', 'tests/node/**/*.test.ts'],
+    include: [
+      'src/**/*.test.ts',
+      'tests/unit/**/*.test.ts',
+      'tests/node/**/*.test.ts',
+      'tests/mcp/**/*.test.ts',
+    ],
+    // Builds mcp/dist/atelier-mcp.mjs once: the integration tests run the file that ships.
+    globalSetup: ['tests/mcp/global-setup.ts'],
     coverage: {
       provider: 'v8',
       include: ['src/core/**/*.ts'],

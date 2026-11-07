@@ -147,6 +147,14 @@ export class HomeFs {
     });
   }
 
+  /** Atomic write of binary data (screenshots). */
+  async writeBytes(rel: string, bytes: Uint8Array): Promise<FileStat> {
+    const full = this.confine(rel, { target: true });
+    await writeAtomic(full, bytes);
+    const st = await fs.stat(full);
+    return { mtimeMs: Math.floor(st.mtimeMs), size: st.size };
+  }
+
   /** Plain atomic write (state files, responses). */
   async write(rel: string, content: string): Promise<FileStat> {
     const full = this.confine(rel, { target: true });
@@ -219,7 +227,11 @@ export function parseRev(text: string): number | null {
 }
 
 /** temp file + fsync + rename, with a retry for Windows (a scanner or sync client holding the file). */
-export async function writeAtomic(target: string, content: string, crash?: Crash): Promise<void> {
+export async function writeAtomic(
+  target: string,
+  content: string | Uint8Array,
+  crash?: Crash,
+): Promise<void> {
   const dir = path.dirname(target);
   await fs.mkdir(dir, { recursive: true });
   const tmp = path.join(dir, `.${path.basename(target)}.${process.pid}.${tmpCounter++}.tmp`);

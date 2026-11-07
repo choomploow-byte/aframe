@@ -12,6 +12,7 @@
     "scripts",
     "mcp",
     "tests/e2e",
-    "tests/node"
+    "tests/node",
+    "tests/mcp"
   ]
 }

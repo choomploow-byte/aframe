@@ -26,6 +26,7 @@ export default tseslint.config(
       'src-tauri/target',
       'src-tauri/gen',
       'mcp/dist',
+      '.shots',
       'kit',
     ],
   },
@@ -95,6 +96,18 @@ export default tseslint.config(
     // Plain scripts served as-is from public/ run in the browser (theme-init.js).
     files: ['public/**/*.js'],
     languageOptions: { sourceType: 'script', globals: globals.browser },
+  },
+  {
+    // Integration tests read JSON the servers under test produced: loosely typed on purpose.
+    files: ['tests/mcp/**'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+    },
   },
   {
     // page.evaluate() callbacks in e2e scripts execute inside the browser.
