@@ -1,6 +1,6 @@
 import { Plus, Upload, X } from 'lucide-react';
 import { useRef } from 'react';
-import type { Node, Role, Shadow } from '@core/types';
+import type { Node, PatternFill, PatternName, Role, Shadow } from '@core/types';
 import { resolveColor } from '@core/tokens';
 import { addAutoLayout } from '../store/commands';
 import { importImages, updateProps } from '../store/panel-commands';
@@ -386,22 +386,149 @@ export function AutoLayoutSection({ ctx }: { ctx: PropCtx }) {
 // Fill (solid, linear, radial, none)
 // ---------------------------------------------------------------------------
 
-type FillKind = 'none' | 'solid' | 'linear' | 'radial';
+type FillKind = 'none' | 'solid' | 'linear' | 'radial' | 'pattern';
 const FILL_KINDS: Option<FillKind>[] = [
   { value: 'none', label: 'None' },
   { value: 'solid', label: 'Solid' },
   { value: 'linear', label: 'Linear' },
   { value: 'radial', label: 'Radial' },
+  { value: 'pattern', label: 'Pattern' },
 ];
 
-const fillKind = (v: string | undefined): FillKind =>
+const fillKind = (v: Node['fill']): FillKind =>
   v === undefined
     ? 'none'
-    : isGradient(v)
-      ? v.startsWith('radial')
-        ? 'radial'
-        : 'linear'
-      : 'solid';
+    : typeof v === 'object'
+      ? 'pattern'
+      : isGradient(v)
+        ? v.startsWith('radial')
+          ? 'radial'
+          : 'linear'
+        : 'solid';
+
+/** The single colour (or gradient) a fill stands for: a pattern's base, else its ink. */
+const flatFill = (v: Node['fill']): string | undefined =>
+  typeof v === 'object' ? (v.background ?? v.color) : v;
+
+const PATTERNS: Option<PatternName>[] = [
+  { value: 'stripes', label: 'Stripes' },
+  { value: 'halftone', label: 'Halftone dots' },
+  { value: 'sunburst', label: 'Sunburst rays' },
+  { value: 'noise', label: 'Noise' },
+];
+
+const PATTERN_UNITS: Record<PatternName, { size: string; spacing: string | null; angle: boolean }> =
+  {
+    stripes: { size: 'px', spacing: 'px', angle: true },
+    halftone: { size: 'px', spacing: 'px', angle: false },
+    sunburst: { size: 'deg', spacing: 'deg', angle: true },
+    noise: { size: 'px', spacing: null, angle: false },
+  };
+
+function PatternEditor({
+  fill,
+  disabled,
+  onChange,
+}: {
+  fill: PatternFill;
+  disabled: boolean;
+  onChange: (next: PatternFill) => void;
+}) {
+  const units = PATTERN_UNITS[fill.pattern];
+  const set = (patch: Partial<PatternFill>): void => onChange({ ...fill, ...patch });
+  const without = (key: keyof PatternFill): void => {
+    const next = { ...fill };
+    delete next[key];
+    onChange(next);
+  };
+  return (
+    <div className="pattern" data-testid="pattern-editor">
+      <Select
+        ariaLabel="Pattern"
+        field="pattern"
+        value={fill.pattern}
+        options={PATTERNS}
+        disabled={disabled}
+        onChange={(v) => set({ pattern: v })}
+      />
+      <Row label="Ink">
+        <ColorField
+          ariaLabel="Pattern colour"
+          field="pattern-color"
+          value={fill.color}
+          disabled={disabled}
+          onChange={(v) => v !== undefined && set({ color: v })}
+        />
+      </Row>
+      <div className="grid2">
+        <NumberField
+          label="S"
+          ariaLabel="Pattern size"
+          field="pattern-size"
+          title={fill.pattern === 'sunburst' ? 'Ray width' : 'Dot or stripe size'}
+          value={fill.size}
+          placeholder="auto"
+          min={0.5}
+          precision={1}
+          unit={units.size}
+          disabled={disabled}
+          onChange={(v) => set({ size: Math.max(0.5, v) })}
+        />
+        {units.spacing !== null && (
+          <NumberField
+            label="G"
+            ariaLabel="Pattern spacing"
+            field="pattern-spacing"
+            title={fill.pattern === 'halftone' ? 'Distance between dot centres' : 'Gap'}
+            value={fill.spacing}
+            placeholder="auto"
+            min={0.5}
+            precision={1}
+            unit={units.spacing}
+            disabled={disabled}
+            onChange={(v) => set({ spacing: Math.max(0.5, v) })}
+          />
+        )}
+        {units.angle && (
+          <NumberField
+            label="A"
+            ariaLabel="Pattern angle"
+            field="pattern-angle"
+            value={fill.angle}
+            placeholder="auto"
+            precision={1}
+            unit="deg"
+            disabled={disabled}
+            onChange={(v) => set({ angle: v })}
+          />
+        )}
+        <NumberField
+          label="O"
+          ariaLabel="Pattern opacity"
+          field="pattern-opacity"
+          title="Strength of the ink"
+          value={Math.round((fill.opacity ?? 1) * 100)}
+          min={0}
+          max={100}
+          precision={0}
+          unit="%"
+          disabled={disabled}
+          onChange={(v) => set({ opacity: Math.min(1, Math.max(0, v / 100)) })}
+        />
+      </div>
+      <Row label="Base">
+        <ColorField
+          ariaLabel="Pattern background"
+          field="pattern-background"
+          value={fill.background}
+          allowNone
+          disabled={disabled}
+          onChange={(v) => (v === undefined ? without('background') : set({ background: v }))}
+        />
+      </Row>
+    </div>
+  );
+}
 
 export function FillSection({ ctx }: { ctx: PropCtx }) {
   const fill = ctx.get('fill');
@@ -409,17 +536,30 @@ export function FillSection({ ctx }: { ctx: PropCtx }) {
   const setKind = (next: FillKind): void =>
     ctx.setEach((n) => {
       if (next === 'none') return { fill: null };
-      const current = n.fill ? (resolveColor(n.fill, ctx.tokens) ?? undefined) : undefined;
-      const base = current && !isGradient(n.fill) ? n.fill : undefined;
+      const flat = flatFill(n.fill);
+      if (next === 'pattern') {
+        if (typeof n.fill === 'object') return null;
+        return {
+          fill: {
+            pattern: 'stripes',
+            color: '#FFFFFF',
+            size: 6,
+            opacity: 0.25,
+            ...(flat === undefined ? {} : { background: flat }),
+          },
+        };
+      }
+      const current = flat ? (resolveColor(flat, ctx.tokens) ?? undefined) : undefined;
+      const base = current && !isGradient(flat) ? flat : undefined;
       if (next === 'solid')
         return {
           fill:
             base ??
-            (isGradient(n.fill)
-              ? (parseGradient(n.fill ?? '')?.stops[0]?.color ?? '#D9D9D9')
+            (isGradient(flat)
+              ? (parseGradient(flat ?? '')?.stops[0]?.color ?? '#D9D9D9')
               : '#D9D9D9'),
         };
-      const model = parseGradient(n.fill ?? '') ?? DEFAULT_GRADIENT;
+      const model = parseGradient(flat ?? '') ?? DEFAULT_GRADIENT;
       const stops = base
         ? [
             { color: base, at: 0 },
@@ -430,6 +570,7 @@ export function FillSection({ ctx }: { ctx: PropCtx }) {
         : model.stops;
       return { fill: buildGradient({ ...model, kind: next, stops }) };
     }, 'Change fill type');
+  const value = fill.value;
   return (
     <Section title="Fill">
       <Segmented
@@ -441,21 +582,28 @@ export function FillSection({ ctx }: { ctx: PropCtx }) {
         disabled={ctx.locked}
         onChange={setKind}
       />
-      {!fill.mixed && kind === 'solid' && (
+      {!fill.mixed && kind === 'solid' && typeof value === 'string' && (
         <ColorField
           ariaLabel="Fill colour"
           field="fill"
-          value={fill.value}
+          value={value}
           allowNone
           disabled={ctx.locked}
           onChange={(v) => ctx.set({ fill: v ?? null }, 'Change fill', 'prop:fill')}
         />
       )}
-      {!fill.mixed && (kind === 'linear' || kind === 'radial') && fill.value && (
+      {!fill.mixed && (kind === 'linear' || kind === 'radial') && typeof value === 'string' && (
         <GradientEditor
-          value={fill.value}
+          value={value}
           disabled={ctx.locked}
           onChange={(v) => ctx.set({ fill: v }, 'Edit gradient', 'prop:fill')}
+        />
+      )}
+      {!fill.mixed && kind === 'pattern' && typeof value === 'object' && (
+        <PatternEditor
+          fill={value}
+          disabled={ctx.locked}
+          onChange={(next) => ctx.set({ fill: next }, 'Edit pattern', 'prop:fill-pattern')}
         />
       )}
       {fill.mixed && (

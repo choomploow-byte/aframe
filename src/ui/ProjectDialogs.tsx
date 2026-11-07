@@ -1,5 +1,6 @@
 import { FilePlus2, Pencil, Trash2, Upload } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { TEMPLATE_INFO, TEMPLATES, type TemplateName } from '@core/templates';
 import { formatBytes, relativeTime } from '../projects/format';
 import {
   createNewProject,
@@ -13,10 +14,15 @@ import {
 } from '../projects/session';
 import { STRINGS } from '../strings';
 import { Dialog } from './Dialog';
-import { TextField } from './fields';
+import { Select, TextField, type Option } from './fields';
 import { closeDialog } from './ui-state';
 
 const t = STRINGS.projects;
+
+const TEMPLATE_OPTIONS: Option<TemplateName>[] = TEMPLATES.map((name) => ({
+  value: name,
+  label: TEMPLATE_INFO[name].label,
+}));
 
 function ProjectRow({
   id,
@@ -118,6 +124,7 @@ export function ProjectsDialog() {
   const loading = useProjects((s) => s.loading);
   const currentId = useProjects((s) => s.save.projectId);
   const input = useRef<HTMLInputElement>(null);
+  const [template, setTemplate] = useState<TemplateName>('blank');
 
   useEffect(() => {
     void refreshProjects();
@@ -135,13 +142,26 @@ export function ProjectsDialog() {
             ))}
           </ul>
         )}
+        <div className="template" data-testid="template-picker">
+          <label className="template__label" htmlFor="new-project-template">
+            {t.template}
+          </label>
+          <Select
+            ariaLabel={t.template}
+            field="new-project-template"
+            value={template}
+            options={TEMPLATE_OPTIONS}
+            onChange={setTemplate}
+          />
+          <p className="dialog__muted">{TEMPLATE_INFO[template].description}</p>
+        </div>
         <div className="dialog__footer dialog__footer--split">
           <button
             type="button"
             className="btn btn--primary"
             data-autofocus
             data-action="new-project"
-            onClick={() => void createNewProject()}
+            onClick={() => void createNewProject(template)}
           >
             <FilePlus2 size={14} strokeWidth={1.75} aria-hidden="true" />
             {t.newProject}

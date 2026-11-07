@@ -12,6 +12,8 @@ export interface LayerRow {
   depth: number;
   name: string;
   type: NodeType;
+  /** Master component, instance of one, or a layer inside an instance. */
+  component: 'master' | 'instance' | 'layer' | null;
   visible: boolean;
   locked: boolean;
   hasChildren: boolean;
@@ -49,6 +51,14 @@ export function buildRows(doc: Doc, expanded: ReadonlySet<string>, filter = ''):
         depth,
         name: node.name,
         type: node.type,
+        component:
+          node.component !== undefined
+            ? 'master'
+            : node.instanceOf !== undefined
+              ? 'instance'
+              : node.from !== undefined
+                ? 'layer'
+                : null,
         visible: node.visible,
         locked: node.locked,
         hasChildren: node.children.length > 0,

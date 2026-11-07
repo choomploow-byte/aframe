@@ -959,3 +959,15 @@
   color: var(--muted);
   font-size: 12px;
 }
+
+.template {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+.template__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}

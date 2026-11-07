@@ -339,3 +339,99 @@
   border-radius: 6px;
   object-fit: cover;
 }
+
+/* ---- icon set, pattern and preset editors, components (the game-UI toolkit) ---- */
+.kit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  overflow: auto;
+  min-height: 0;
+}
+.kit__item {
+  display: grid;
+  grid-template-columns: 16px 1fr auto;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2, transparent);
+}
+.kit__name {
+  min-width: 0;
+  overflow: hidden;
+  text-align: left;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+.kit__meta {
+  grid-column: 2 / 4;
+  color: var(--muted);
+  font-size: 11px;
+}
+.icongrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-height: 0;
+}
+.icongrid__search {
+  width: 100%;
+  padding: 6px 8px;
+  font: inherit;
+  color: inherit;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.icongrid__cells {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+  gap: 4px;
+  max-height: 320px;
+  overflow: auto;
+}
+.icongrid__cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  padding: 7px;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.icongrid__cell:hover {
+  background: var(--hover, rgba(0, 0, 0, 0.06));
+  border-color: var(--border);
+}
+.icongrid__cell--on {
+  border-color: var(--accent);
+  background: var(--accent-soft, rgba(91, 60, 176, 0.12));
+}
+.pattern,
+.preset {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+.row__value {
+  font-weight: 600;
+}
+.row__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}

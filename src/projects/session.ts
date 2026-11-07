@@ -6,7 +6,8 @@
  * One session per app. Everything below is async and never throws into the UI: failures become
  * toasts or the recovery dialog.
  */
-import { serializeDoc } from '@core/doc';
+import { loadDoc, serializeDoc } from '@core/doc';
+import { createTemplateDoc, TEMPLATE_INFO, type TemplateName } from '@core/templates';
 import type { Doc } from '@core/types';
 import { useStore } from 'zustand';
 import { createStore } from 'zustand/vanilla';
@@ -162,6 +163,13 @@ function ensureSession(): Promise<Session> {
             ...(p.scale === 1 || p.scale === 2 ? { scale: p.scale } : {}),
             ...(typeof p.maxWidth === 'number' ? { maxWidth: p.maxWidth } : {}),
             ...(p.annotations === true ? { annotations: true } : {}),
+            ...(typeof p.state === 'string' &&
+            ['default', 'hover', 'pressed', 'disabled', 'selected', 'all'].includes(p.state)
+              ? {
+                  state: p.state as
+                    'default' | 'hover' | 'pressed' | 'disabled' | 'selected' | 'all',
+                }
+              : {}),
           });
         } catch (e) {
           if (e instanceof ScreenshotError) throw new RequestError(e.code, e.message);
@@ -301,13 +309,18 @@ async function createAndOpen(name: string, from?: Doc): Promise<string | null> {
   }
 }
 
-export async function createNewProject(): Promise<void> {
-  if ((await createAndOpen('Untitled')) !== null) closeDialog();
+/** A new project, blank or from one of the genre templates (token set, component kit, screens). */
+export async function createNewProject(template: TemplateName = 'blank'): Promise<void> {
+  if (template === 'blank') {
+    if ((await createAndOpen('Untitled')) !== null) closeDialog();
+    return;
+  }
+  const doc = createTemplateDoc(template, { name: TEMPLATE_INFO[template].label });
+  if ((await createAndOpen(doc.name, doc)) !== null) closeDialog();
 }
 
 /** The sample, as a project of its own. An empty untitled project in the way is replaced by it. */
 export async function createSampleProject(): Promise<boolean> {
-  const { loadDoc } = await import('@core/doc');
   const raw = (await import('../../fixtures/sample-doc.json')).default as unknown;
   const loaded = loadDoc(raw);
   if (!loaded.ok) {

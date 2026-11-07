@@ -15,6 +15,7 @@ import {
   StrokeSection,
   TypographySection,
 } from './property-sections';
+import { ComponentSection, EffectPresetsSection, IconSection } from './toolkit-sections';
 
 /** The Design tab: sections for whatever is selected, with "Mixed" where a multi-selection differs. */
 export function PropertiesPanel() {
@@ -37,6 +38,8 @@ export function PropertiesPanel() {
   const hasText = types.has('text');
   const hasFrame = types.has('frame');
   const hasImage = types.has('image');
+  const hasIcon = types.has('icon');
+  const presetsApply = ctx.nodes.some((n) => n.type !== 'text' && n.type !== 'line');
   const radiusApplies = ctx.nodes.some((n) => n.type !== 'ellipse' && n.type !== 'line');
 
   return (
@@ -45,11 +48,14 @@ export function PropertiesPanel() {
       <LayoutSection ctx={ctx} />
       {hasFrame && <AutoLayoutSection ctx={ctx} />}
       {hasText && <TypographySection ctx={ctx} />}
+      {hasIcon && <IconSection ctx={ctx} />}
       {hasImage && <ImageSection ctx={ctx} />}
       <FillSection ctx={ctx} />
       <StrokeSection ctx={ctx} />
       {radiusApplies && <RadiusSection ctx={ctx} />}
       <EffectsSection ctx={ctx} />
+      {presetsApply && <EffectPresetsSection ctx={ctx} />}
+      {hasFrame && <ComponentSection ctx={ctx} />}
       <NotesSection ctx={ctx} />
     </div>
   );

@@ -29,6 +29,16 @@ export async function installDevTools(): Promise<void> {
       projects.detachForTests();
       if (loaded.ok) store.getState().loadDoc(loaded.doc);
     },
+    /** A genre template as the open document (never saved). */
+    loadTemplate: async (name: string) => {
+      const { createTemplateDoc, TEMPLATES } = await import('@core/templates');
+      if (!(TEMPLATES as readonly string[]).includes(name)) throw new Error(`no template ${name}`);
+      projects.detachForTests();
+      store
+        .getState()
+        .loadDoc(createTemplateDoc(name as (typeof TEMPLATES)[number], { name, id: 'p_tpl00' }));
+      getCanvasApi()?.fitAll();
+    },
     loadBlank: () => {
       projects.detachForTests();
       store.getState().loadDoc(createEmptyDoc());

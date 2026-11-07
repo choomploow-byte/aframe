@@ -1,6 +1,8 @@
 import {
   ChevronRight,
   Circle,
+  Component,
+  Diamond,
   Eye,
   EyeOff,
   Frame,
@@ -8,6 +10,7 @@ import {
   Lock,
   Minus,
   Search,
+  Shapes,
   Square,
   Type,
   Unlock,
@@ -38,6 +41,7 @@ const TYPE_ICON: Record<NodeType, LucideIcon> = {
   line: Minus,
   text: Type,
   image: ImageIcon,
+  icon: Shapes,
 };
 
 interface DragState {
@@ -269,7 +273,13 @@ export function LayersPanel() {
       >
         {rows.length === 0 && <p className="panel__empty">{STRINGS.panels.noLayersMatch}</p>}
         {rows.map((row, index) => {
-          const Icon = TYPE_ICON[row.type];
+          // A master is a diamond-in-diamond, an instance a hollow diamond; everything else its type.
+          const Icon =
+            row.component === 'master'
+              ? Component
+              : row.component === 'instance'
+                ? Diamond
+                : TYPE_ICON[row.type];
           const selected = selection.includes(row.id);
           const dropClass = target?.id === row.id ? ` layer--drop-${target.position}` : '';
           const draggingClass = drag?.active && drag.ids.includes(row.id) ? ' layer--dragging' : '';

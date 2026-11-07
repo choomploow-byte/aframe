@@ -96,6 +96,11 @@ export function tokenFromSelection(
   if (!node) return { ok: false, message: 'Select one layer first.' };
   const prop: 'fill' | 'color' = node.type === 'text' ? 'color' : 'fill';
   const current = node[prop];
+  if (typeof current === 'object')
+    return {
+      ok: false,
+      message: 'A pattern fill is made of colours; turn those into tokens instead.',
+    };
   if (!current)
     return {
       ok: false,

@@ -2,6 +2,7 @@ import { nodeToCss } from '@core/style';
 import { memo, useCallback, useMemo, type CSSProperties, type KeyboardEvent } from 'react';
 import { commitTextEdit } from '../store/text-edit';
 import { store, useAtelier } from '../store/store';
+import { IconSvg } from './IconSvg';
 
 interface Props {
   id: string;
@@ -84,6 +85,21 @@ export const NodeView = memo(function NodeView({ id, parentId }: Props) {
   if (!node) return null;
 
   if (node.type === 'text') return <TextBody id={id} text={node.text ?? ''} css={css} />;
+
+  if (node.type === 'icon') {
+    return (
+      <div
+        data-node-id={id}
+        data-node-type="icon"
+        data-icon-name={node.icon}
+        role="img"
+        aria-label={node.icon ?? 'icon'}
+        style={css}
+      >
+        <IconSvg name={node.icon} w={node.w} h={node.h} />
+      </div>
+    );
+  }
 
   if (node.type === 'image') {
     // Only embedded raster/SVG data URLs are ever shown (docs/18); SVG is safe because <img> never runs scripts.

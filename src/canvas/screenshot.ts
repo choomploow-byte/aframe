@@ -8,15 +8,20 @@
  * no selection handles, guides or panels.
  */
 import { toCanvas } from 'html-to-image';
-import { docFontFamilies, loadFonts } from './fonts';
+import { docInState } from '@core/components';
+import { fillBase } from '@core/fill';
 import { resolveColor } from '@core/tokens';
-import type { Doc } from '@core/types';
+import type { ComponentState, Doc } from '@core/types';
+import { docFontFamilies, loadFonts } from './fonts';
+import { renderSubtree } from './static-render';
 
 export interface ScreenshotParams {
   nodeId?: string;
   scale?: 1 | 2;
   annotations?: boolean;
   maxWidth?: number;
+  /** Show components in this state (nothing is saved); 'all' lays every state out, labelled. */
+  state?: ComponentState | 'all';
 }
 
 export interface ScreenshotOutput {
@@ -39,7 +44,7 @@ const PAGE_BACKGROUND = '#f0eee6';
 
 interface Region {
   /** The elements to draw, with their world rectangle. */
-  items: { el: HTMLElement; x: number; y: number; w: number; h: number }[];
+  items: { id: string; el: HTMLElement; x: number; y: number; w: number; h: number }[];
   /** World rectangle of everything. */
   x: number;
   y: number;
@@ -89,7 +94,7 @@ function regionFor(doc: Doc, nodeId: string | undefined, zoom: number): Region {
         'The design is empty: there is nothing to photograph.',
       );
   }
-  const items = targets.map((el) => ({ el, ...worldRect(el, zoom) }));
+  const items = targets.map((el) => ({ id: el.dataset.nodeId ?? '', el, ...worldRect(el, zoom) }));
   const x = Math.min(...items.map((i) => i.x));
   const y = Math.min(...items.map((i) => i.y));
   const right = Math.max(...items.map((i) => i.x + i.w));
@@ -109,7 +114,8 @@ function backgroundBehind(doc: Doc, nodeId: string): string {
   while (cur !== null) {
     const node = doc.nodes[cur];
     if (!node) break;
-    const fill = node.fill === undefined ? undefined : resolveColor(node.fill, doc.tokens);
+    const base = fillBase(node.fill);
+    const fill = base === undefined ? undefined : resolveColor(base, doc.tokens);
     if (fill) return fill;
     cur = node.parentId;
   }
@@ -168,6 +174,135 @@ async function whileFramesMayNotRun<T>(work: () => Promise<T>): Promise<T> {
   }
 }
 
+const STATE_ORDER: readonly ComponentState[] = [
+  'default',
+  'hover',
+  'pressed',
+  'disabled',
+  'selected',
+];
+
+/** The states any component at or below `rootId` (or the master of an instance) defines. */
+function statesIn(doc: Doc, rootId: string): Set<ComponentState> {
+  const found = new Set<ComponentState>(['default']);
+  const visit = (id: string): void => {
+    const node = doc.nodes[id];
+    if (!node) return;
+    const master = node.component !== undefined ? node : doc.nodes[node.instanceOf ?? ''];
+    for (const s of Object.keys(master?.component?.states ?? {})) found.add(s as ComponentState);
+    if (node.instanceOf === undefined) node.children.forEach(visit);
+  };
+  visit(rootId);
+  return found;
+}
+
+const LABEL_W = 110;
+const ROW_GAP = 24;
+
+/**
+ * The picture for `state`: the same artboards, drawn from a copy of the document in which the
+ * components show that state. 'all' stacks one labelled row per state the node defines.
+ */
+function regionForState(doc: Doc, params: ScreenshotParams, zoom: number): Region {
+  const state = params.state as ComponentState | 'all';
+  const base = regionFor(doc, params.nodeId, zoom);
+  const ids = base.items.map((i) => i.id);
+  const available = new Set<ComponentState>();
+  for (const id of ids) for (const s of statesIn(doc, id)) available.add(s);
+
+  if (state !== 'all') {
+    if (state !== 'default' && !available.has(state)) {
+      throw new ScreenshotError(
+        'INVALID_VALUE',
+        `Nothing in this picture defines a "${state}" state, so it would look like the default. States defined here: ${[...available].filter((s) => s !== 'default').join(', ') || 'none'}. Add one with define_component.`,
+      );
+    }
+    const shown = docInState(doc, state, ids);
+    return {
+      ...base,
+      items: base.items.map((i) => ({ ...i, el: renderSubtree(shown, i.id) ?? i.el })),
+    };
+  }
+
+  const target = base.items[0];
+  if (params.nodeId === undefined || !target || base.items.length !== 1) {
+    throw new ScreenshotError(
+      'INVALID_VALUE',
+      'state "all" needs a nodeId: the button, card or frame to show in every state.',
+    );
+  }
+  const states = STATE_ORDER.filter((s) => available.has(s));
+  if (states.length < 2) {
+    throw new ScreenshotError(
+      'INVALID_VALUE',
+      'Nothing in this picture defines hover, pressed, disabled or selected states. Add them with define_component.',
+    );
+  }
+  const items: Region['items'] = [];
+  let y = 0;
+  let width = 0;
+  for (const s of states) {
+    const shown = docInState(doc, s, [target.id]);
+    const el = renderSubtree(shown, target.id);
+    if (!el) continue;
+    const label = document.createElement('div');
+    label.textContent = s;
+    label.style.cssText =
+      'font:600 12px ui-monospace,Consolas,monospace;color:#6b6a65;display:flex;align-items:center;padding-left:8px;box-sizing:border-box;';
+    items.push({ id: '', el: label, x: 0, y, w: LABEL_W, h: Math.max(20, target.h) });
+    items.push({ id: target.id, el, x: LABEL_W, y, w: target.w, h: target.h });
+    y += target.h + ROW_GAP;
+    width = Math.max(width, LABEL_W + target.w);
+  }
+  return { items, x: 0, y: 0, w: Math.ceil(width), h: Math.max(1, Math.ceil(y - ROW_GAP)) };
+}
+
+const SVG_URL_RE = /url\("(data:image\/svg\+xml,[^"]*)"\)/g;
+
+/**
+ * `html-to-image` draws the page inside an SVG, and an SVG filter used as a background image (the
+ * noise pattern) does not survive being nested like that: it comes out flat. Before capture, every
+ * such background in the clone is drawn to a canvas and swapped for a PNG of the same tile.
+ */
+async function rasteriseSvgBackgrounds(root: HTMLElement): Promise<void> {
+  const cache = new Map<string, Promise<string>>();
+  const toPng = (url: string): Promise<string> => {
+    let hit = cache.get(url);
+    if (!hit) {
+      hit = new Promise<string>((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || 160;
+          canvas.height = img.naturalHeight || 160;
+          canvas.getContext('2d')?.drawImage(img, 0, 0);
+          try {
+            resolve(canvas.toDataURL('image/png'));
+          } catch {
+            resolve(url);
+          }
+        };
+        img.onerror = () => resolve(url);
+        img.src = url;
+      });
+      cache.set(url, hit);
+    }
+    return hit;
+  };
+  const elements = [root, ...root.querySelectorAll<HTMLElement>('*')];
+  for (const el of elements) {
+    const bg = el.style.backgroundImage;
+    if (!bg.includes('data:image/svg+xml')) continue;
+    const urls = [...bg.matchAll(SVG_URL_RE)].map((m) => m[1] as string);
+    let next = bg;
+    for (const url of urls) {
+      const png = await toPng(url);
+      next = next.split(`url("${url}")`).join(`url("${png}")`);
+    }
+    el.style.backgroundImage = next;
+  }
+}
+
 /** One render at one pixel ratio. */
 async function render(
   doc: Doc,
@@ -201,6 +336,7 @@ async function render(
     await loadFonts(docFontFamilies(doc), 3000);
     await document.fonts.ready;
     await imagesReady(stage);
+    await rasteriseSvgBackgrounds(stage);
     const canvas = await toCanvas(stage, {
       pixelRatio: scale,
       width: region.w,
@@ -232,7 +368,10 @@ export async function captureScreenshot(
   if (!Number.isInteger(maxSide) || maxSide < 64 || maxSide > 4096) {
     throw new ScreenshotError('INVALID_VALUE', 'maxWidth must be a whole number from 64 to 4096.');
   }
-  const region = regionFor(doc, params.nodeId, zoom);
+  const region =
+    params.state === undefined
+      ? regionFor(doc, params.nodeId, zoom)
+      : regionForState(doc, params, zoom);
   const background =
     params.nodeId === undefined ? PAGE_BACKGROUND : backgroundBehind(doc, params.nodeId);
   // The longest side is capped at maxWidth, whatever the scale asks for.

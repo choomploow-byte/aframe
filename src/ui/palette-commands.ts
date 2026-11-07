@@ -1,3 +1,4 @@
+import { TEMPLATE_INFO, TEMPLATES } from '@core/templates';
 import { DEVICE_PRESETS } from '../canvas/presets';
 import { SHORTCUTS } from '../canvas/shortcuts';
 import { currentShortcutContext } from '../canvas/useShortcuts';
@@ -88,6 +89,12 @@ export function buildPaletteCommands(): PaletteCommand[] {
 
   const other: PaletteCommand[] = [
     { id: 'file.new', label: 'New project', group: 'File', run: () => void createNewProject() },
+    ...TEMPLATES.filter((tpl) => tpl !== 'blank').map((tpl): PaletteCommand => ({
+      id: `file.new.${tpl}`,
+      label: `New project: ${TEMPLATE_INFO[tpl].label}`,
+      group: 'File',
+      run: () => void createNewProject(tpl),
+    })),
     { id: 'file.import', label: 'Import a project file…', group: 'File', run: pickProjectFile },
     {
       id: 'file.export',
