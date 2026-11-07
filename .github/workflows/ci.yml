@@ -22,10 +22,9 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run build:mcp
-      # Includes tests/node: the file protocol (confinement, locks, crashes, concurrent processes),
-      # projects, sync and the agent bridge, against real temp directories.
+      # Includes tests/node (the file protocol, projects, sync, the agent bridge) and tests/mcp (the
+      # built MCP server driven by the real SDK client, and the installers), against temp directories.
       - run: npm run test:unit
-      - run: node scripts/test-mcp.mjs
       # Chrome is preinstalled on ubuntu-latest; the browser suites run headless. The suites use a
       # throwaway ATELIER_HOME each, never a real projects folder.
       - run: npm run test:e2e

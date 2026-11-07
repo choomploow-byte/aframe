@@ -6,6 +6,7 @@ import {
   BridgeService,
   parseRequest,
   REQUEST_TYPES,
+  RequestError,
   type BridgeHandlers,
 } from '../../src/sync/requests';
 import { createTestAdapter, type TestAdapter } from './helpers/node-adapter';
@@ -174,6 +175,85 @@ describe('requests', () => {
     fsx.emitRequest(req('req_live2', { type: 'ping' }));
     await new Promise((r) => setTimeout(r, 50));
     expect(await response('req_live2')).toBeNull();
+  });
+});
+
+describe('screenshots and bounds', () => {
+  it('answers a screenshot with the PNG the handler produced, after saving', async () => {
+    handlers.screenshot = (params) => {
+      order.push(`shot ${JSON.stringify(params)}`);
+      return Promise.resolve({ pngBase64: 'AAAA', width: 10, height: 20 });
+    };
+    await send(
+      req('req_shot2', {
+        type: 'screenshot',
+        project: 'p_open1',
+        params: { nodeId: 'n_a', scale: 2 },
+      }),
+    );
+    expect(order).toEqual(['flush', 'shot {"nodeId":"n_a","scale":2}']);
+    expect(await response('req_shot2')).toMatchObject({
+      ok: true,
+      result: { pngBase64: 'AAAA', width: 10, height: 20 },
+    });
+  });
+
+  it('refuses a request for a project that is not the open one', async () => {
+    handlers.screenshot = () => Promise.reject(new Error('must not run'));
+    await send(req('req_wrong', { type: 'screenshot', project: 'p_other9' }));
+    expect(await response('req_wrong')).toMatchObject({
+      ok: false,
+      error: { code: 'PROJECT_NOT_OPEN' },
+    });
+    await send(req('req_wsel1', { type: 'get_selection', project: 'p_other9' }));
+    expect(await response('req_wsel1')).toMatchObject({
+      ok: false,
+      error: { code: 'PROJECT_NOT_OPEN' },
+    });
+    // No project named: the open one is meant.
+    handlers.screenshot = () => Promise.resolve({ pngBase64: 'B', width: 1, height: 1 });
+    await send(req('req_nopro', { type: 'screenshot' }));
+    expect(await response('req_nopro')).toMatchObject({ ok: true });
+  });
+
+  it('passes a handler’s own error code through (a node that is not drawn)', async () => {
+    handlers.screenshot = () =>
+      Promise.reject(new RequestError('NOT_FOUND', 'Node n_x is not drawn.'));
+    await send(req('req_nf001', { type: 'screenshot', params: { nodeId: 'n_x' } }));
+    expect(await response('req_nf001')).toMatchObject({
+      ok: false,
+      error: { code: 'NOT_FOUND', message: 'Node n_x is not drawn.' },
+    });
+  });
+
+  it('get_node_bounds returns the rectangle, and refuses a missing or oversized id', async () => {
+    handlers.nodeBounds = (id) =>
+      Promise.resolve(id === 'n_a' ? { x: 1, y: 2, width: 3, height: 4 } : null);
+    await send(req('req_bnd01', { type: 'get_node_bounds', params: { nodeId: 'n_a' } }));
+    expect(await response('req_bnd01')).toMatchObject({
+      ok: true,
+      result: { bounds: { x: 1, y: 2, width: 3, height: 4 } },
+    });
+    await send(req('req_bnd02', { type: 'get_node_bounds', params: { nodeId: 'n_none' } }));
+    expect(await response('req_bnd02')).toMatchObject({ ok: true, result: { bounds: null } });
+    await send(req('req_bnd03', { type: 'get_node_bounds', params: { nodeId: 'x'.repeat(200) } }));
+    expect(await response('req_bnd03')).toMatchObject({
+      ok: false,
+      error: { code: 'BAD_REQUEST' },
+    });
+    await send(req('req_bnd04', { type: 'get_node_bounds', params: {} }));
+    expect(await response('req_bnd04')).toMatchObject({
+      ok: false,
+      error: { code: 'BAD_REQUEST' },
+    });
+  });
+
+  it('export_image is still planned', async () => {
+    await send(req('req_exp01', { type: 'export_image' }));
+    expect(await response('req_exp01')).toMatchObject({
+      ok: false,
+      error: { code: 'NOT_IMPLEMENTED' },
+    });
   });
 });
 

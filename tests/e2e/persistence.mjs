@@ -390,11 +390,25 @@ await group('agent requests are answered', async () => {
     JSON.stringify(gs.res?.result?.selection) === JSON.stringify(sel),
     JSON.stringify(gs.res),
   );
-  const shotReq = await request('req_e2eshot', { type: 'screenshot' });
+  const shotReq = await request('req_e2eshot', { type: 'screenshot', params: { maxWidth: 400 } });
   check(
-    'screenshot says it is not built yet instead of timing out',
-    shotReq.res?.ok === false && shotReq.res.error.code === 'NOT_IMPLEMENTED',
-    JSON.stringify(shotReq.res),
+    'screenshot returns a PNG of the design (the agent tool builds on this)',
+    shotReq.res?.ok === true &&
+      shotReq.res.result.width > 0 &&
+      Buffer.from(shotReq.res.result.pngBase64, 'base64').subarray(1, 4).toString() === 'PNG',
+    JSON.stringify(shotReq.res).slice(0, 160),
+  );
+  const planned = await request('req_e2eexp', { type: 'export_image' });
+  check(
+    'a request type that is planned but not built says so instead of timing out',
+    planned.res?.ok === false && planned.res.error.code === 'NOT_IMPLEMENTED',
+    JSON.stringify(planned.res),
+  );
+  const wrong = await request('req_e2ewrng', { type: 'screenshot', project: 'p_notmine' });
+  check(
+    'a request for a project that is not the open one is refused',
+    wrong.res?.ok === false && wrong.res.error.code === 'PROJECT_NOT_OPEN',
+    JSON.stringify(wrong.res),
   );
   const evil = await request('req_e2eevil', {
     type: 'open_project',

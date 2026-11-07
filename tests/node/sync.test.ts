@@ -195,7 +195,14 @@ describe('an agent changes the file', () => {
     expect(store.getState().selection).toEqual(['n_title']);
     expect(store.getState().history.past.map((h) => h.label)).toEqual(['AI change']);
     expect(notices).toEqual([
-      { kind: 'external', writer: 'mcp', overruled: [], tookTheirs: false, merged: false },
+      {
+        kind: 'external',
+        writer: 'mcp',
+        overruled: [],
+        tookTheirs: false,
+        merged: false,
+        changedIds: ['n_title'],
+      },
     ]);
 
     await sync.flush();
@@ -237,7 +244,14 @@ describe('an agent changes the file', () => {
     expect(local().nodes.n_other?.x).toBe(777);
     expect(local().nodes.n_title).toMatchObject({ text: 'Agent text' });
     expect(notices).toEqual([
-      { kind: 'external', writer: 'mcp', overruled: [], tookTheirs: false, merged: true },
+      {
+        kind: 'external',
+        writer: 'mcp',
+        overruled: [],
+        tookTheirs: false,
+        merged: true,
+        changedIds: ['n_title'],
+      },
     ]);
     await sync.flush();
     const saved = await onDisk();
@@ -252,7 +266,14 @@ describe('an agent changes the file', () => {
     await sync.poll();
     expect(local().nodes.n_other?.x).toBe(111);
     expect(notices).toEqual([
-      { kind: 'external', writer: 'mcp', overruled: ['Other'], tookTheirs: false, merged: true },
+      {
+        kind: 'external',
+        writer: 'mcp',
+        overruled: ['Other'],
+        tookTheirs: false,
+        merged: true,
+        changedIds: ['n_other'],
+      },
     ]);
     // The user's version is one undo away.
     store.getState().undo();

@@ -15,3 +15,4 @@ skills
 fixtures
 *.md
 .shots
+mcp/generated.ts
