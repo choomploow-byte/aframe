@@ -39,9 +39,30 @@ export function loadDoc(input: unknown): LoadResult {
   return { ok: true, doc, warnings: validation.warnings, migrated: migrated.migrated };
 }
 
-/** Stable, diff-friendly JSON for the project file (docs/06: plain files, git-friendly). */
+/**
+ * Stable, diff-friendly JSON for the project file (docs/06: plain files, git-friendly). Top-level
+ * keys are written in a fixed order, small ones first and the bulky `nodes` / `assets` last, so a
+ * file's name and rev can be read from its first few hundred bytes (the project list does that
+ * instead of loading every project's embedded images).
+ */
 export function serializeDoc(doc: Doc): string {
-  return `${JSON.stringify(doc, null, 2)}\n`;
+  const { schema, rev, id, name, rootId, meta, tokens, annotations, references, nodes, assets } =
+    doc;
+  const ordered = {
+    schema,
+    rev,
+    id,
+    name,
+    rootId,
+    meta,
+    tokens,
+    annotations,
+    references,
+    nodes,
+    assets,
+  };
+  return `${JSON.stringify(ordered, null, 2)}
+`;
 }
 
 export interface CreateDocOptions {

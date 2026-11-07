@@ -1,6 +1,6 @@
 import { runTool } from '@core/tools';
 import { deepFreeze, sampleDoc } from '@core/testing';
-import type { Op } from '@core/types';
+import type { Node, Op } from '@core/types';
 import { describe, expect, it } from 'vitest';
 import { createStoreContext } from './context';
 import { createAtelierStore } from './store';
@@ -81,6 +81,32 @@ describe('undo / redo', () => {
     expect(store.getState().doc.nodes.n_other?.x).toBe(700);
     expect(redo()).toBeNull();
     expect(store.getState().doc.rev).toBeGreaterThan(3);
+  });
+
+  it('rev strictly grows through every undo, redo and cancelled gesture', () => {
+    const { store, advance } = setup();
+    const { dispatch, undo, redo, beginTransaction, cancelTransaction } = store.getState();
+    const revs: number[] = [store.getState().doc.rev];
+    const note = (): void => void revs.push(store.getState().doc.rev);
+    for (const x of [600, 700, 800]) {
+      dispatch([move(x)]);
+      advance(1000);
+      note();
+    }
+    undo();
+    note();
+    undo();
+    note();
+    redo();
+    note();
+    beginTransaction('drag');
+    dispatch([move(900)]);
+    note();
+    cancelTransaction();
+    note();
+    for (let i = 1; i < revs.length; i++) {
+      expect(revs[i], `step ${i}: ${revs.join(', ')}`).toBeGreaterThan(revs[i - 1] as number);
+    }
   });
 
   it('a new edit after undo clears redo', () => {
@@ -249,5 +275,40 @@ describe('createStoreContext (the chat agent edits the live store)', () => {
     expect('getNodeBounds' in ctx).toBe(true);
     await ctx.commit({ ...store.getState().doc, name: 'x' });
     expect(store.getState().history.past[0]?.label).toBe('AI change');
+  });
+});
+
+describe('adoptExternal', () => {
+  it('installs the document as-is (no rev bump, no writer stamp) as one undo step', () => {
+    const { store } = setup();
+    const before = store.getState().doc;
+    const remote = {
+      ...before,
+      rev: 7,
+      meta: { ...before.meta, lastWriter: 'mcp' as const },
+      nodes: { ...before.nodes, n_other: { ...(before.nodes.n_other as Node), x: 123 } },
+    };
+    store.getState().adoptExternal(remote, 'AI change');
+    const s = store.getState();
+    expect(s.doc).toBe(remote);
+    expect(s.doc.rev).toBe(7);
+    expect(s.doc.meta.lastWriter).toBe('mcp');
+    expect(s.history.past.map((h) => h.label)).toEqual(['AI change']);
+    // Undo steps back over the agent's change, and that is a new revision after rev 7.
+    store.getState().undo();
+    expect(store.getState().doc.nodes.n_other?.x).toBe(500);
+    expect(store.getState().doc.rev).toBeGreaterThan(7);
+  });
+
+  it('keeps the selection (minus nodes that no longer exist) and ignores an identical document', () => {
+    const { store } = setup();
+    store.getState().setSelection(['n_other']);
+    store.getState().adoptExternal(store.getState().doc, 'noop');
+    expect(store.getState().history.past).toHaveLength(0);
+    const rest = Object.fromEntries(
+      Object.entries(store.getState().doc.nodes).filter(([id]) => id !== 'n_other'),
+    );
+    store.getState().adoptExternal({ ...store.getState().doc, nodes: rest }, 'AI change');
+    expect(store.getState().selection).toEqual([]);
   });
 });

@@ -80,6 +80,13 @@ export interface AtelierState {
   /** Replaces the document with one produced elsewhere (an agent, a sync merge) as one undo step. */
   commitExternal: (next: Doc, label: string) => void;
   /**
+   * Installs a document that already is the new truth (read from disk, or merged with it) exactly as
+   * it is: no `rev` bump, no writer stamp, because it is not a local edit. One undo step, so the
+   * user can step back over an agent's change (`history: false` for a bookkeeping change that is not
+   * one, like restamping `rev`). Selection and viewport are kept.
+   */
+  adoptExternal: (next: Doc, label: string, options?: { history?: boolean }) => void;
+  /**
    * Applies a pure document change that is not a node op (tokens, assets, project name) as one
    * undo step. `change` may throw a `CoreError`; the document is then left untouched.
    */
@@ -117,6 +124,15 @@ const DEFAULT_VIEWPORT: Viewport = { x: 0, y: 0, zoom: 1 };
 
 function existing(doc: Doc, ids: readonly string[]): string[] {
   return ids.filter((id) => doc.nodes[id] !== undefined && id !== doc.rootId);
+}
+
+/**
+ * A document restored from history (undo, redo, a cancelled gesture) is still a *new revision* of
+ * what is on disk: content comes from the snapshot, `rev` from the present, plus one. (Using the
+ * snapshot's own rev would let it fall behind the current one, and the file's rev must only grow.)
+ */
+function restored(current: Doc, target: Doc, at: string): Doc {
+  return bumpRev({ ...target, rev: current.rev }, 'app', at);
 }
 
 export function createAtelierStore(options: StoreOptions = {}): StoreApi<AtelierState> {
@@ -175,6 +191,16 @@ export function createAtelierStore(options: StoreOptions = {}): StoreApi<Atelier
         install(next, label, undefined);
       },
 
+      adoptExternal: (next, label, adoptOptions = {}) => {
+        const s = get();
+        if (next === s.doc) return;
+        const history =
+          s.transaction === null && adoptOptions.history !== false
+            ? record(s.history, s.doc, label, { now: now() })
+            : s.history;
+        set({ doc: next, history, selection: existing(next, s.selection) });
+      },
+
       edit: (change, label, key) => {
         try {
           const next = change(get().doc);
@@ -201,7 +227,7 @@ export function createAtelierStore(options: StoreOptions = {}): StoreApi<Atelier
         const step = undoStep(s.history, s.doc);
         if (!step) return null;
         // A restored document is still a *new revision* (docs/06: rev only ever grows).
-        const doc = bumpRev(step.doc, 'app', isoNow());
+        const doc = restored(s.doc, step.doc, isoNow());
         set({
           doc,
           history: step.history,
@@ -216,7 +242,7 @@ export function createAtelierStore(options: StoreOptions = {}): StoreApi<Atelier
         const s = get();
         const step = redoStep(s.history, s.doc);
         if (!step) return null;
-        const doc = bumpRev(step.doc, 'app', isoNow());
+        const doc = restored(s.doc, step.doc, isoNow());
         set({
           doc,
           history: step.history,
@@ -247,7 +273,7 @@ export function createAtelierStore(options: StoreOptions = {}): StoreApi<Atelier
         const s = get();
         const tx = s.transaction;
         if (tx === null) return;
-        const doc = s.doc === tx.before ? s.doc : bumpRev(tx.before, 'app', isoNow());
+        const doc = s.doc === tx.before ? s.doc : restored(s.doc, tx.before, isoNow());
         set({ doc, transaction: null, selection: existing(doc, s.selection), editingTextId: null });
       },
 
