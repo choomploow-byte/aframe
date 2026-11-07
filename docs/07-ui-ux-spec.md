@@ -21,8 +21,8 @@
 │ tabs      │                                            │  Chat             │
 └───────────┴────────────────────────────────────────────┴───────────────────┘
 ```
-- Left panel (240px, collapsible): **Layers** tab, **Assets** tab (images, references), **Tokens** tab.
-- Right panel (300px, collapsible): **Design** (properties), **Notes** (annotations list), **Chat** (inbuilt AI).
+- Left panel (264px, collapsible): **Layers** tab, **Assets** tab (images, references), **Tokens** tab.
+- Right panel (304px, collapsible): **Design** (properties), **Notes** (annotations list), **Chat** (inbuilt AI).
 - Floating bottom-centre toolbar over the canvas (rounded pill): Select (V), Frame (F), Rectangle (R), Ellipse (O), Text (T), Image (I), Annotate (A), Hand (H). Keyboard hints in tooltips.
 - Top-right **Connect AI** pill: green dot when an MCP agent was seen recently, grey otherwise. Opens the Connect dialog.
 - Status chip bottom-left: "Claude Code is editing..." while `lastWriter === 'mcp'` changed in the last 3 s (with a subtle accent pulse on changed nodes).
@@ -43,11 +43,23 @@
 - **Marquee** from empty canvas selects the artboards it touches; shift adds. Locked nodes can be selected but not moved, resized, nudged or deleted from the UI.
 - **Creating:** `F`/`R`/`O` drag to draw (live `W × H` readout); a click makes a default size (frame 390x844, shapes 100x100); `T` click then type, `Esc`/`Ctrl+Enter`/click-away commits; leaving it empty creates nothing. The new node goes into the frame under the pointer (no position when that frame is auto-layout). Tool returns to Select afterwards.
 - **Shortcuts as built:** `V F R O T H` tools (`I` and `A` arrive with images and annotations), `Ctrl+Z`, `Ctrl+Shift+Z`/`Ctrl+Y`, `Ctrl+C/X/V/D`, `Del`, `Ctrl+A`, `Ctrl+G` wrap in frame, `Ctrl+Alt+A` add auto-layout (infers direction, order, gap, padding, alignment), `[` `]` and `Ctrl+[` `Ctrl+]` z-order, arrows nudge, `Shift+1/2`, `Ctrl+0`, `+`/`-`, `Ctrl+Alt+D` performance HUD. One registry (`src/canvas/shortcuts.ts`) feeds the key handler and, later, the command palette.
-- **Not built yet:** reparenting by drag, multi-selection resize, resize snapping, distance labels, parent highlight while dragging, right-click menu (Phase 3), aligning/distributing, pasting from the system clipboard.
+- **Not built yet:** multi-selection resize, resize snapping, distance labels, parent highlight while dragging on the canvas, aligning/distributing, pasting from the system clipboard. (Reparenting by dragging in the Layers panel and the right-click menus arrived in Phase 3.)
 
 ## Properties panel (context-aware sections)
 Layout (x/y/w/h with sizing mode dropdowns hug/fill/fixed, rotation later) · Auto-layout (direction, gap, padding, align, justify, wrap) · Fill · Stroke · Effects (shadow, blur) · Typography (text only) · Image (fit) · Export (PNG/SVG/code) · Role/name.
 Colour picker: swatches from tokens first, then custom; hex input; eyedropper (where supported). Number fields support drag-to-scrub, arrows, and math (`16*2`).
+
+### As built in Phase 3 (decision log #44-#53)
+- **Shell:** top bar (project name, undo/redo, Ctrl+K hint, Export menu (stub until Phase 8), theme toggle, Connect AI pill that opens a dialog (stub until Phase 5)); left panel tabs **Layers / Assets / Tokens**; right panel **Design**. The right panel's *Notes* and *Chat* tabs arrive with Phases 6 and 7.
+- **Layers:** a `tree` with `treeitem` rows (icon, name, hide and lock buttons that appear on hover or focus). Click, Shift-range, Ctrl-toggle; arrows move and expand/collapse, Home/End, `F2` or `Enter` or double-click renames, `Delete` removes, Space selects. Drag to reorder or reparent (insertion line or a frame outline); the front-most layer is listed first. The filter box keeps ancestors of matches visible; `Esc` clears it. Selecting on the canvas expands the path to the row.
+- **Design panel:** sections follow the selection: Layer (name, role, link, opacity, visible, locked) · Layout (X/Y, width and height each with Fixed/Hug/Fill, rotation) · Auto layout (direction, gap, padding as four fields, align, justify, wrap, clip; frames only) · Typography (text, font, size, weight, line height, letter spacing, align, case, colour; text only) · Fill (none/solid/linear/radial, gradient stops and angle) · Stroke · Corner radius (all corners, per corner, or a `$radius` token) · Effects (shadows, blur, backdrop blur) · Image (fit) · Notes for export. Multi-selection edits every node; fields whose values differ show "Mixed". Number fields scrub by dragging the label (Shift = x10, Alt = x0.1), take arrows and simple maths (`16*2`), and commit on Enter or blur; colour fields take hex, rgb(), hsl() or `$token`, and offer the document's tokens first.
+- **Tokens:** colours, fonts, corner radii and the spacing scale, each editable inline with a usage count. "Create token from selection" tokenises a literal colour and applies it.
+- **Assets:** add by picker, drag-and-drop or paste (a drop on the canvas lands under the cursor); thumbnails place the image on the canvas; "use as reference"; delete.
+- **Command palette (Ctrl+K)** lists every registered shortcut command plus panel actions, fuzzy-filtered; **Ctrl+/** opens the shortcut sheet. Both are modal dialogs with a focus trap that return focus to where it was.
+- **Right-click menus** on the canvas and on layers: cut/copy/paste, duplicate, delete, wrap in frame, add auto layout, z-order, hide, lock (the "copy as code" and "ask AI" entries are present but disabled until their phases).
+- **Empty state:** a welcome with three ways to begin (draw a frame, open the sample, connect an AI).
+- **Theme:** light, dark, or follow the system; no flash on load. Fonts used by the document load before first paint; the font picker previews each face in itself.
+- **Accessibility pass:** every visible control has an accessible name (audited in the e2e), panels are reachable with Tab, tabs use arrow keys, dialogs trap focus, reduced motion switches transitions off, contrast measured (AA for text).
 
 ## Annotations (the "point at it" feature)
 - Tool `A`: click to drop a numbered pin, or drag for a region. Inline popover to type the comment. Enter to save.

@@ -39,7 +39,7 @@ Must include, concisely:
 | Tool | Input | Notes |
 |---|---|---|
 | `apply_changes` | `{ operations: Op[], label?: string }` | Atomic batch. See Op schema below |
-| `set_tokens` | `{ colors?, fonts?, spacing?, radii? }` | Merge |
+| `set_tokens` | `{ colors?, fonts?, radii?, spacing?, label? }` | Merge. `{ name: value }` records; `null` removes a token; `spacing` is an array that replaces the scale. Built in Phase 3 (shares `core/token-edit.ts` with the Tokens panel) |
 | `create_project` | `{ name, template?: 'blank'\|'landing'\|'dashboard'\|'mobile' }` | Writes file |
 | `open_project` | `{ project }` | Sets current project (app switches if open) |
 | `import_image` | `{ path: string, parentId?, x?, y?, as?: 'node'\|'reference', name? }` | Reads a local image file, stores as asset |

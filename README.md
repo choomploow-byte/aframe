@@ -2,7 +2,7 @@
 
 Open-source, local-first AI design studio. Let Claude Code, Codex, or an API-key chat design real UI on a canvas you can see, annotate and approve, then export it as code into your repo.
 
-> Status: early development (Phases 0-2: foundations, core library, canvas editor). There is nothing to install yet. See [`docs/12-roadmap-and-phases.md`](docs/12-roadmap-and-phases.md).
+> Status: early development (Phases 0-3: foundations, core library, canvas editor, panels). There is nothing to install yet. See [`docs/12-roadmap-and-phases.md`](docs/12-roadmap-and-phases.md).
 
 ## Develop
 
@@ -20,7 +20,7 @@ npm run tauri:dev  # desktop shell (needs Rust)
 Browser tests (need Chrome; set `CHROME_PATH` if it is not in a standard place):
 
 ```bash
-npm run test:e2e      # shell smoke + canvas interactions (real mouse and keyboard)
+npm run test:e2e      # shell smoke + canvas + panels (real mouse and keyboard)
 npm run test:visual   # screenshot baselines; UPDATE_BASELINES=1 refreshes them deliberately
 npm run test:perf     # frame timing on a 500-node document (optimised build); PERF_NODES=2000 to scale
 npm run probe:css     # proves the nodeToCss layout contract in a real browser
