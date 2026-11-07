@@ -1,0 +1,61 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Vitest 5 and Vite 8 need Node >= 22.12 (see docs/20 decision log).
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run build:mcp
+      - run: npm run test:unit
+      - run: node scripts/test-mcp.mjs
+      # Chrome is preinstalled on ubuntu-latest; the smoke test runs headless.
+      - run: npm run test:e2e
+        env:
+          CI: 'true'
+
+  rust-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Tauri system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      # src-tauri is added in the Tauri smoke step; skip cleanly until it exists.
+      - run: |
+          if [ -f src-tauri/Cargo.toml ]; then cargo test --manifest-path src-tauri/Cargo.toml; else echo "no src-tauri yet"; fi
+
+  # Enabled once the desktop shell is real (Phase 4). Kept here so the Windows/WebView2 path is
+  # not forgotten: docs/13 asks for a build smoke on three OSes.
+  tauri-build-windows:
+    if: false
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - run: npm ci
+      - run: npm run tauri:build -- --debug
