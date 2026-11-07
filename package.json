@@ -24,6 +24,7 @@
     "test:e2e:persist": "node --import tsx tests/e2e/persistence.mjs",
     "test:e2e:mcp": "node tests/e2e/mcp-live.mjs",
     "test:e2e:toolkit": "node tests/e2e/toolkit.mjs",
+    "promo": "node scripts/render-promo.mjs",
     "demo:core": "tsx scripts/demo-core.ts",
     "probe:css": "tsx scripts/css-probe.ts",
     "test:coverage": "vitest run --coverage",

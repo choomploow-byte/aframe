@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Atelier: design game UI with your AI</title>
+    <meta
+      name="description"
+      content="Atelier is a free, open-source design canvas that Claude Code or Codex can build on while you watch. Game HUDs, shops and inventories, with icons, patterns, bevels and components."
+    />
+    <meta property="og:title" content="Atelier: design game UI with your AI" />
+    <meta
+      property="og:description"
+      content="A free, open-source design canvas your AI can build on while you watch."
+    />
+    <meta property="og:image" content="https://{{OWNER}}.github.io/{{NAME}}/img/promo.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="img/icon-3d.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="#top" aria-label="Atelier home">
+        <img src="img/icon-3d.svg" alt="" width="36" height="36" />
+        <span>Atelier</span>
+      </a>
+      <nav aria-label="Main">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#download">Download</a>
+        <a href="https://github.com/{{REPO}}">GitHub</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero__copy">
+          <h1>Design <em>game UI</em><br />with your AI.</h1>
+          <p class="lead">
+            Atelier is a free, open-source canvas. Tell Claude Code or Codex what you want; it
+            builds the screen while you watch, and you steer by selecting things and saying what to
+            change.
+          </p>
+          <div class="cta-row">
+            <a class="btn" href="https://github.com/{{REPO}}/releases/latest"
+              >Download for Windows</a
+            >
+            <a class="btn btn--ghost" href="https://github.com/{{REPO}}">View the source</a>
+          </div>
+          <p class="fine">Free · MIT licence · runs on your own computer · no account</p>
+        </div>
+        <figure class="hero__shot">
+          <img
+            src="img/shop.png"
+            width="1280"
+            height="720"
+            alt="An item shop screen designed in Atelier: tabs, item cards with gem, sword, potion, key and crown icons, and gold price buttons"
+          />
+        </figure>
+      </section>
+
+      <section class="strip" aria-label="Screens made in Atelier">
+        <figure>
+          <img
+            src="img/hud.png"
+            width="1280"
+            height="720"
+            loading="lazy"
+            alt="A game HUD with health and mana bars, currency, skill slots and an attack button"
+          />
+          <figcaption>HUD</figcaption>
+        </figure>
+        <figure>
+          <img
+            src="img/inventory.png"
+            width="1280"
+            height="720"
+            loading="lazy"
+            alt="An inventory screen with a character panel, a grid of item slots and a detail panel"
+          />
+          <figcaption>Inventory</figcaption>
+        </figure>
+        <figure>
+          <img
+            src="img/kit.png"
+            width="760"
+            height="551"
+            loading="lazy"
+            alt="A component kit: buttons, panel, tab, slot, currency pill, stat bar, toast and shop card"
+          />
+          <figcaption>Component kit</figcaption>
+        </figure>
+      </section>
+
+      <section id="how" class="how">
+        <h2>How it works</h2>
+        <ol class="cards">
+          <li>
+            <span class="num">1</span>
+            <h3>Install and connect</h3>
+            <p>
+              Open Atelier and press <strong>Connect AI</strong>. It gives you one line to paste
+              into Claude Code or Codex.
+            </p>
+          </li>
+          <li>
+            <span class="num">2</span>
+            <h3>Ask for a screen</h3>
+            <p>
+              "Design a shop for my game." It starts from a template, picks icons and fonts, and
+              builds on the canvas while you watch.
+            </p>
+          </li>
+          <li>
+            <span class="num">3</span>
+            <h3>Look, point, refine</h3>
+            <p>
+              It takes screenshots of its own work and checks every button state. Select something
+              and say "make this bigger".
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <section id="features" class="features">
+        <h2>Made for game interfaces</h2>
+        <ul class="grid">
+          <li>
+            <h3>An icon set</h3>
+            <p>
+              Coins, gems, keys, shields, swords, potions, chests and more, in one style that takes
+              your colours.
+            </p>
+          </li>
+          <li>
+            <h3>Chunky fonts</h3>
+            <p>Lilita One, Luckiest Guy, Bungee and Fredoka are built in.</p>
+          </li>
+          <li>
+            <h3>Patterns and bevels</h3>
+            <p>
+              Stripes, halftone dots, sunbursts and grain. Raised, pressed and glossy looks with an
+              intensity dial.
+            </p>
+          </li>
+          <li>
+            <h3>Components with states</h3>
+            <p>
+              Define a button once. Hover, pressed, disabled and selected come with it, and every
+              copy follows.
+            </p>
+          </li>
+          <li>
+            <h3>Seven templates</h3>
+            <p>
+              Game HUD, shop and inventory, plus product landing, SaaS dashboard, mobile app and
+              pricing page.
+            </p>
+          </li>
+          <li>
+            <h3>Your own textures</h3>
+            <p>
+              One command copies a folder of your images in, and your AI can search and place them.
+            </p>
+          </li>
+          <li>
+            <h3>Local and private</h3>
+            <p>
+              Your designs are plain files on your disk. No telemetry. Your AI connects through a
+              local connector, not a cloud.
+            </p>
+          </li>
+          <li>
+            <h3>Open source</h3>
+            <p>MIT licensed. Read it, change it, send a fix.</p>
+          </li>
+        </ul>
+      </section>
+
+      <section id="download" class="download">
+        <h2>Download</h2>
+        <div class="dl">
+          <div class="dl__main">
+            <h3>Windows</h3>
+            <p>The installer is on the releases page. This is the platform we test.</p>
+            <a class="btn" href="https://github.com/{{REPO}}/releases/latest"
+              >Get the latest release</a
+            >
+          </div>
+          <div class="dl__side">
+            <h3>macOS and Linux</h3>
+            <p>
+              Each release also builds them automatically. We have not been able to test those
+              builds yet, so treat them as experimental.
+            </p>
+          </div>
+        </div>
+        <ul class="notes">
+          <li>
+            <strong>Windows may warn you.</strong> The installer is not code-signed yet, so
+            SmartScreen can say "Windows protected your PC". Choose <em>More info</em>, then
+            <em>Run anyway</em>, if you trust this page.
+          </li>
+          <li>
+            <strong>You need an AI that speaks MCP:</strong> Claude Code or Codex, with Node.js 20
+            or newer for the connector.
+          </li>
+          <li>
+            <strong>Early software.</strong> Designing, screenshots and templates work. Exporting a
+            design to React or HTML code is the next big piece and is not in yet.
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        Atelier is MIT licensed. Icons: Font Awesome Free (CC BY 4.0) and our own. Fonts: SIL OFL,
+        except Luckiest Guy (Apache 2.0). Full list in
+        <a href="https://github.com/{{REPO}}/blob/main/THIRD-PARTY-NOTICES.md"
+          >THIRD-PARTY-NOTICES.md</a
+        >.
+      </p>
+    </footer>
+  </body>
+</html>
