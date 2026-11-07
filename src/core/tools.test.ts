@@ -229,12 +229,60 @@ describe('apply_changes', () => {
   });
 });
 
+describe('set_tokens', () => {
+  it('merges tokens, commits once with a label, and returns the new tokens', async () => {
+    const c = ctx();
+    const r = await runTool(c, 'set_tokens', {
+      label: 'Warmer palette',
+      colors: { primary: '#112233', brand: '$primary', muted: null },
+      radii: { pill: 999 },
+    });
+    expect(r).toMatchObject({ ok: true, data: { rev: 2 } });
+    const tokens = c.current().tokens;
+    expect(tokens.colors.primary).toBe('#112233');
+    expect(tokens.colors.brand).toBe('$primary');
+    expect(tokens.colors).not.toHaveProperty('muted');
+    expect(tokens.radii.pill).toBe(999);
+    expect(c.commits).toHaveLength(1);
+    expect(c.commits[0]?.meta).toEqual({ source: 'agent', label: 'Warmer palette' });
+  });
+
+  it('uses a default label and skips the commit when nothing changes', async () => {
+    const c = ctx();
+    await runTool(c, 'set_tokens', { colors: { extra: '#fff' } });
+    expect(c.commits[0]?.meta?.label).toBe('Update tokens');
+    const same = ctx();
+    expect(await runTool(same, 'set_tokens', {})).toMatchObject({ ok: true, data: { rev: 1 } });
+    expect(same.commits).toHaveLength(0);
+  });
+
+  it('reports invalid tokens as INVALID_VALUE and changes nothing', async () => {
+    const c = ctx();
+    const r = await runTool(c, 'set_tokens', { colors: { 'bad name': '#fff' } });
+    expect(r).toMatchObject({ ok: false, error: { code: 'INVALID_VALUE' } });
+    expect(await runTool(c, 'set_tokens', { colors: { x: 'url(evil)' } })).toMatchObject({
+      ok: false,
+    });
+    expect(c.commits).toHaveLength(0);
+  });
+
+  it('a token set in one call can be used in the next apply_changes without a warning', async () => {
+    const c = ctx();
+    await runTool(c, 'set_tokens', { colors: { sunrise: '#FF8800' } });
+    const r = await runTool(c, 'apply_changes', {
+      operations: [{ op: 'update', id: 'n_other', set: { fill: '$sunrise' } }],
+    });
+    expect(r).toMatchObject({ ok: true, data: { warnings: [] } });
+  });
+});
+
 describe('registry', () => {
   it('lists the tools and finds them by name', () => {
     expect(TOOLS.map((t) => t.name)).toEqual([
       'get_design',
       'get_node',
       'get_tokens',
+      'set_tokens',
       'apply_changes',
     ]);
     expect(findTool('get_tokens')?.name).toBe('get_tokens');
@@ -246,7 +294,7 @@ describe('registry', () => {
     expect(r).toMatchObject({ ok: false, error: { code: 'NOT_FOUND' } });
     if (!r.ok)
       expect(r.error.hint).toBe(
-        'Available tools: get_design, get_node, get_tokens, apply_changes.',
+        'Available tools: get_design, get_node, get_tokens, set_tokens, apply_changes.',
       );
   });
 

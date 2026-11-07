@@ -3,7 +3,9 @@ import { applyChanges } from './apply';
 import { CoreError } from './errors';
 import { getOutline } from './outline';
 import { CREATABLE_TYPES } from './props';
+import { mergeTokens } from './token-edit';
 import type { ErrorCode, NodePropKey, Op, OpError, ToolContext, Warning } from './types';
+import { deepEqual } from './util';
 
 /**
  * Tool definitions and handlers shared by the MCP server and the in-app chat (docs/03 §2, docs/05).
@@ -301,6 +303,27 @@ const getTokens = defineTool({
   handler: async (ctx) => (await ctx.getDoc()).tokens,
 });
 
+const setTokens = defineTool({
+  name: 'set_tokens',
+  description:
+    'Add or change design tokens (merge). colors: { name: "#hex" | "$other" | null }, fonts: { name: "Family" | null }, radii: { name: px | null }, spacing: [px, ...] replaces the scale. null removes a token. Set tokens first, then reference them as $name in apply_changes. Returns { rev, tokens }.',
+  inputSchema: z.object({
+    colors: z.record(z.string(), z.string().nullable()).optional(),
+    fonts: z.record(z.string(), z.string().nullable()).optional(),
+    radii: z.record(z.string(), z.number().nullable()).optional(),
+    spacing: z.array(z.number()).optional(),
+    label: z.string().max(100).optional().describe('Short description shown in the undo history'),
+  }),
+  handler: async (ctx, { label, ...patch }) => {
+    const doc = await ctx.getDoc();
+    const tokens = mergeTokens(doc.tokens, patch);
+    if (!deepEqual(tokens, doc.tokens)) {
+      await ctx.commit({ ...doc, tokens }, { source: 'agent', label: label ?? 'Update tokens' });
+    }
+    return { rev: (await ctx.getDoc()).rev, tokens };
+  },
+});
+
 const applyChangesTool = defineTool({
   name: 'apply_changes',
   description:
@@ -335,7 +358,7 @@ const applyChangesTool = defineTool({
   },
 });
 
-export const TOOLS: readonly Tool[] = [getDesign, getNode, getTokens, applyChangesTool];
+export const TOOLS: readonly Tool[] = [getDesign, getNode, getTokens, setTokens, applyChangesTool];
 
 export function findTool(name: string): Tool | undefined {
   return TOOLS.find((t) => t.name === name);
