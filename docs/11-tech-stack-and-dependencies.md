@@ -2,6 +2,18 @@
 
 > **Pinned reality (2026-11-07, decision log #12-#15):** React 19, Vite 8, Vitest 5, ESLint 10, TypeScript ~6.0 (typescript-eslint does not support 7 yet), zod 4, zustand 5, MCP SDK v2, Tauri 2.x (never the 3.0 alphas), no `tauri-plugin-fs`. The table below is the original intent; `package.json` is authoritative.
 
+## Dependency log (why each package is here)
+| Package | Added in | Reason |
+|---|---|---|
+| `react`, `react-dom`, `@fontsource-variable/inter`, `@fontsource-variable/fraunces` | Phase 0 | UI and the editor's own type |
+| `zod` | Phase 1 | Tool input schemas shared with the MCP server; `z.toJSONSchema()` feeds MCP and LLM providers |
+| `tsx` (dev) | Phase 1 | Runs the TypeScript demo/probe scripts that import `src/core` |
+| `pngjs`, `pixelmatch` (dev) | Phase 1 / 2 | Pixel checks in `scripts/css-probe.ts` and the visual-regression baselines |
+| `zustand` | Phase 2 | The editor store (`doc`, selection, tool, viewport, history); tiny, no provider needed |
+| `lucide-react` | Phase 2 | Toolbar and top-bar icons, tree-shaken |
+| `@fontsource-variable/dm-sans`, `space-grotesk`, `playfair-display`, `jetbrains-mono` | Phase 2 | The bundled design fonts listed below; registered as plain-name aliases by `scripts/gen-fonts-css.mjs` |
+| `puppeteer-core` (dev) | Phase 0 | Browser tests against system Chrome and the WebView2 window |
+
 Versions below are the *intended major versions at time of writing*. Claude Code must run `npm view <pkg> version` / check docs and pin what's current and compatible; don't blindly trust these numbers.
 
 ## Prerequisites on the developer machine
