@@ -13,7 +13,7 @@ All notable changes are recorded here. Format: [Keep a Changelog](https://keepac
   export, recovery of damaged projects, agent request handling (`ping`, `get_selection`,
   `open_project`), confined Rust file commands each granted as a named permission,
   single-instance and window-state, a browser dev adapter sharing its code with the future MCP
-  server, an NSIS installer, and a three-OS CI build. Verified by 28 Rust tests, 70 Node tests
+  server, an NSIS installer, and a three-OS CI build. Verified by 28 Rust tests, 71 Node tests
   (including four separate processes writing one project and hard kills mid-write), a 23-case merge
   suite, a browser suite that also runs against the real window, a kill-the-real-app test and an
   install/launch/uninstall test.
