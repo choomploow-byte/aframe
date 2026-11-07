@@ -16,6 +16,7 @@ import {
   type Store,
 } from '../store/commands';
 import type { ToolId } from '../store/store';
+import { openExportDialog } from '../export/dialog-state';
 import { openDialog } from '../ui/ui-state';
 import type { CanvasApi } from './canvas-api';
 
@@ -275,6 +276,13 @@ export const SHORTCUTS: readonly Shortcut[] = [
     keys: 'Ctrl+O',
     match: (e) => mod(e) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'o',
     run: () => openDialog('projects'),
+  },
+  {
+    id: 'export.open',
+    label: 'Export…',
+    keys: 'Ctrl+Shift+E',
+    match: (e) => mod(e) && !e.altKey && e.shiftKey && e.key.toLowerCase() === 'e',
+    run: () => openExportDialog('code'),
   },
   {
     id: 'help.palette',

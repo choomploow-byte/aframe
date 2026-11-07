@@ -971,3 +971,96 @@
   font-weight: 600;
   color: var(--muted);
 }
+
+/* Export dialog */
+.export__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+}
+.export__hint {
+  margin: 0;
+  font-size: 12px;
+}
+.export__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.export__row > span {
+  flex: none;
+  color: var(--muted);
+  font-size: 12px;
+}
+.export__row .segmented {
+  width: auto;
+  min-width: 160px;
+}
+.export__row .segmented__btn {
+  padding: 0 12px;
+}
+.export__row .field {
+  width: 240px;
+}
+.export__code {
+  max-height: 260px;
+}
+.export__notes {
+  font-size: 12px;
+  color: var(--muted);
+}
+.export__notes ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+.export__save {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.export__folder {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  word-break: break-all;
+}
+.export__status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 0;
+  margin: 0;
+  font-size: 12px;
+}
+.export__status--done {
+  color: #3f9d63;
+}
+.export__status--conflict,
+.export__status--error {
+  color: var(--danger, #c0392b);
+}
+.export__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.export__actions .btn,
+.export__copyimage {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.export__copyimage {
+  align-self: flex-end;
+}
+.linklike {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-text, var(--accent));
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}

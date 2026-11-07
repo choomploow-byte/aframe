@@ -13,7 +13,7 @@ const MAX_PATH_LENGTH = 120;
 
 /** Names Windows treats as devices, in any extension. */
 const RESERVED = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$/i;
-const SEGMENT = /^[A-Za-z0-9_][A-Za-z0-9._ -]*$/;
+const SEGMENT = /^[A-Za-z0-9_][A-Za-z0-9._ @-]*$/; // '@' for retina names such as hero@2x.png
 
 /** Why a relative path may not be written, or null when it is fine. */
 export function exportPathProblem(rel: string): string | null {

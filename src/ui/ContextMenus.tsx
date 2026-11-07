@@ -8,6 +8,7 @@ import {
   wrapSelectionInFrame,
   addAutoLayout,
 } from '../store/commands';
+import { openExportDialog } from '../export/dialog-state';
 import { setLayerFlag } from '../store/panel-commands';
 import { store } from '../store/store';
 import { currentShortcutContext } from '../canvas/useShortcuts';
@@ -115,6 +116,19 @@ function itemsFor(): MenuItem[] {
       label: allLocked ? 'Unlock' : 'Lock',
       disabled: !has,
       run: () => void setLayerFlag(store, s.selection, 'locked', !allLocked),
+    },
+    { kind: 'separator' },
+    {
+      id: 'export-code',
+      label: 'Copy as code / export…',
+      disabled: s.selection.length !== 1,
+      run: () => openExportDialog('code', s.selection[0]),
+    },
+    {
+      id: 'export-image',
+      label: 'Export as image…',
+      disabled: s.selection.length !== 1,
+      run: () => openExportDialog('image', s.selection[0]),
     },
     { kind: 'separator' },
     { id: 'code', label: 'Copy as code (coming later)', disabled: true, run: () => undefined },

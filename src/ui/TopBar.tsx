@@ -2,7 +2,8 @@ import { Check, ChevronDown, FolderOpen, Monitor, Moon, Redo2, Sun, Undo2 } from
 import { useRef, useState } from 'react';
 import { BRAND } from '../brand';
 import { useConnect } from '../connect/agents';
-import { useProjects } from '../projects/session';
+import { openExportDialog } from '../export/dialog-state';
+import { exportProjectFile, useProjects } from '../projects/session';
 import { renameProject } from '../store/panel-commands';
 import { store, useAtelier } from '../store/store';
 import { STRINGS } from '../strings';
@@ -143,19 +144,15 @@ export function TopBar() {
           label="Export"
           onClose={() => setExportAt(null)}
           items={[
-            { id: 'png', label: 'PNG image (coming later)', disabled: true, run: () => undefined },
             {
-              id: 'html',
-              label: 'HTML + CSS (coming later)',
-              disabled: true,
-              run: () => undefined,
+              id: 'code',
+              label: 'Design as code…',
+              shortcut: 'Ctrl+Shift+E',
+              run: () => openExportDialog('code'),
             },
-            {
-              id: 'react',
-              label: 'React component (coming later)',
-              disabled: true,
-              run: () => undefined,
-            },
+            { id: 'image', label: 'Image (PNG or SVG)…', run: () => openExportDialog('image') },
+            { kind: 'separator' },
+            { id: 'project', label: 'Project file (.atelier.json)', run: exportProjectFile },
           ]}
         />
       )}

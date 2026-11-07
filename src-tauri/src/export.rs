@@ -54,7 +54,7 @@ fn segment_ok(s: &str) -> bool {
     let first_ok = chars
         .next()
         .is_some_and(|c| c.is_ascii_alphanumeric() || c == '_');
-    first_ok && chars.all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | ' ' | '-'))
+    first_ok && chars.all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | ' ' | '-' | '@'))
 }
 
 /// Why a relative file name may not be written, or None when it is fine.
@@ -357,6 +357,7 @@ mod tests {
             "src/design/Card.module.css",
             "My Card.tsx",
             "a_b-c.d.ts",
+            "hero@2x.png",
         ] {
             assert_eq!(path_problem(p), None, "{p}");
         }

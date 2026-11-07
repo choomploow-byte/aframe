@@ -34,6 +34,7 @@ describe('exportPathProblem', () => {
     'src/design/Card.module.css',
     'My Card.tsx',
     'a_b-c.d.ts',
+    'hero@2x.png',
   ])('accepts %s', (p) => expect(exportPathProblem(p)).toBeNull());
 
   it.each([

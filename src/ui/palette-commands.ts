@@ -12,6 +12,7 @@ import {
 import { store } from '../store/store';
 import { importFiles } from './image-import';
 import { setThemePreference, type ThemePreference } from './theme';
+import { openExportDialog } from '../export/dialog-state';
 import { openDialog } from './ui-state';
 
 /**
@@ -96,6 +97,18 @@ export function buildPaletteCommands(): PaletteCommand[] {
       run: () => void createNewProject(tpl),
     })),
     { id: 'file.import', label: 'Import a project file…', group: 'File', run: pickProjectFile },
+    {
+      id: 'export.code',
+      label: 'Export design as code…',
+      group: 'File',
+      run: () => openExportDialog('code'),
+    },
+    {
+      id: 'export.image',
+      label: 'Export image (PNG or SVG)…',
+      group: 'File',
+      run: () => openExportDialog('image'),
+    },
     {
       id: 'file.export',
       label: 'Export this project as a file',

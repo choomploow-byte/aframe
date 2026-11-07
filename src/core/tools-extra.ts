@@ -484,7 +484,7 @@ const exportCode = defineTool({
   },
 });
 
-const IMAGE_NAME = /^[A-Za-z0-9_][A-Za-z0-9._ -]*$/;
+const IMAGE_NAME = /^[A-Za-z0-9_][A-Za-z0-9._ @-]*$/;
 
 /** Splits an absolute file path into its folder and file name, on either kind of separator. */
 function splitFilePath(p: string): { dir: string; name: string } {
