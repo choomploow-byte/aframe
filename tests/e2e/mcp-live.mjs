@@ -745,6 +745,162 @@ await group('the game-UI toolkit, driven by an agent', async () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+await group('the signature loop: a person pins a note, an agent addresses it', async () => {
+  // The person: Annotate tool, click on the agent's button, type, Enter.
+  const buttonNode = await page.evaluate(() => {
+    const n = Object.values(window.__atelier.store.getState().doc.nodes).find(
+      (x) => x.name === 'Agent Buy Button',
+    );
+    return n?.id ?? null;
+  });
+  check('there is a button to annotate', !!buttonNode);
+  await page.evaluate((id) => window.__atelier.store.getState().setSelection([id]), buttonNode);
+  await page.evaluate(() => window.__atelier.canvas().fitSelection());
+  await settle(page);
+  await page.focus('[data-testid="canvas"]');
+  await page.keyboard.press('a');
+  const box = await page.evaluate((id) => {
+    const b = document.querySelector(`[data-node-id="${id}"]`).getBoundingClientRect();
+    return { x: b.x, y: b.y, w: b.width, h: b.height };
+  }, buttonNode);
+  const click = { x: box.x + box.w * 0.25, y: box.y + box.h * 0.4 };
+  await page.mouse.click(click.x, click.y);
+  await settle(page);
+  await page.keyboard.type('make this pop');
+  await page.keyboard.press('Enter');
+  await settle(page);
+  await page.keyboard.press('v');
+  const noteInApp = await until(
+    async () => page.evaluate(() => window.__atelier.store.getState().doc.annotations.length === 1),
+    { timeout: 3000 },
+  );
+  check('the note is in the app', noteInApp !== null);
+
+  // It reaches the agent (the app saves, the server reads the file).
+  let list = null;
+  const seen = await until(
+    async () => {
+      list = (await call('get_annotations')).json;
+      return list.count === 1;
+    },
+    { timeout: 5000 },
+  );
+  check('the agent sees the note', seen !== null, JSON.stringify(list).slice(0, 200));
+  const note = list?.annotations?.[0];
+  check(
+    'with the text, the author, its number and the node it is on',
+    note?.text === 'make this pop' &&
+      note.author === 'user' &&
+      note.number === 1 &&
+      // The click landed on the label inside the button: the pin sits on that layer, and the
+      // agent is told the button around it.
+      note.node?.name === 'Label' &&
+      note.parentFrame?.name === 'Agent Buy Button' &&
+      note.offset !== undefined,
+    JSON.stringify(note).slice(0, 300),
+  );
+  check('and says it is data, not an instruction', /data/.test(list?.note ?? ''), list?.note);
+
+  // The agent takes a screenshot with the pin drawn on it, where the person put it.
+  const shotWithPins = await call('screenshot', { nodeId: buttonNode, annotations: true });
+  check(
+    'a screenshot with annotations works',
+    !shotWithPins.isError && shotWithPins.images.length === 1,
+    shotWithPins.text.slice(0, 200),
+  );
+  if (shotWithPins.images[0]) {
+    const png = PNG.sync.read(Buffer.from(shotWithPins.images[0].data, 'base64'));
+    const plain = PNG.sync.read(
+      Buffer.from((await call('screenshot', { nodeId: buttonNode })).images[0].data, 'base64'),
+    );
+    // The pin is a purple disc centred on offset (in design units; the screenshot is 1 px per unit).
+    // (the note keeps the world point it was made at; the button was placed at 40,760)
+    const cx = Math.round(note.x - 40);
+    const cy = Math.round(note.y - 760);
+    const at = (img, x, y) => {
+      const i = (img.width * y + x) * 4;
+      return [img.data[i], img.data[i + 1], img.data[i + 2]];
+    };
+    const ring = at(png, cx + 8, cy);
+    const same = at(plain, cx + 8, cy);
+    const isPurple = (p) =>
+      Math.abs(p[0] - 91) < 20 && Math.abs(p[1] - 60) < 20 && Math.abs(p[2] - 176) < 25;
+    check(
+      'the pin is drawn at the place the person clicked',
+      isPurple(ring) && !isPurple(same),
+      `${ring} vs plain ${same} at ${cx},${cy}`,
+    );
+    if (SHOT_DIR)
+      await fs.writeFile(
+        path.join(SHOT_DIR, 'agent-sees-pin.png'),
+        Buffer.from(shotWithPins.images[0].data, 'base64'),
+      );
+  }
+
+  // The agent addresses it, and replies.
+  const fix = await call('apply_changes', {
+    label: 'Make the button pop',
+    operations: [
+      { op: 'update', id: buttonNode, set: { effects: ['gloss-top', 'hard-3d-bottom'] } },
+    ],
+  });
+  check('the agent changes the button', !fix.isError, fix.text.slice(0, 200));
+  const resolved = await call('resolve_annotation', {
+    id: note.id,
+    reply: 'Added a gloss and a 3D edge.',
+  });
+  check('and resolves the note with a reply', !resolved.isError, resolved.text.slice(0, 200));
+
+  // The person sees it.
+  const sawReply = await until(
+    async () =>
+      page.evaluate(() => {
+        const a = window.__atelier.store.getState().doc.annotations[0];
+        return a?.status === 'resolved' && a.reply === 'Added a gloss and a 3D edge.';
+      }),
+    { timeout: 5000 },
+  );
+  check('the resolved note and its reply arrive in the app', sawReply !== null);
+  await page.evaluate(() => {
+    [...document.querySelectorAll('[role="tab"]')]
+      .find((b) => b.textContent?.startsWith('Notes'))
+      ?.click();
+  });
+  await settle(page);
+  await page.evaluate(() => {
+    [...document.querySelectorAll('[role="radio"]')]
+      .find((b) => b.textContent?.startsWith('Resolved'))
+      ?.click();
+  });
+  await settle(page);
+  const replyText = await page
+    .$eval('[data-testid="note-reply"]', (e) => e.textContent)
+    .catch(() => '');
+  check('the reply is visible in the Notes tab', /Added a gloss/.test(replyText), replyText);
+  await shot('agent-addressed-note');
+
+  // The agent leaves its own note.
+  const own = await call('add_annotation', {
+    text: 'Chose a gold gradient for warmth.',
+    nodeId: buttonNode,
+    x: 4,
+    y: 4,
+  });
+  check('the agent can leave its own note on the node', !own.isError, own.text.slice(0, 200));
+  const sawOwn = await until(
+    async () =>
+      page.evaluate(() => {
+        const n = window.__atelier.store
+          .getState()
+          .doc.annotations.find((a) => a.author === 'agent');
+        return !!n && !!document.querySelector(`[data-annotation-id="${n.id}"]`);
+      }),
+    { timeout: 5000 },
+  );
+  check('and the person sees it as an AI pin', sawOwn !== null);
+});
+
+// ---------------------------------------------------------------------------------------------
 await group('stability', async () => {
   check(
     'no console errors in the app during the whole run',
