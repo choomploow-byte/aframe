@@ -20,7 +20,7 @@
 | **Lint** | Automatic design checks (contrast, spacing, etc.) |
 | **Bridge** | The file-based request/response mechanism between MCP server and app |
 | **Rev** | Monotonic revision counter in each doc |
-| **Heartbeat** | App's periodic `state.json` update proving it's alive |
+| **Heartbeat** | The native side's periodic `app-state.json` update proving the app is alive (every 2 s, even when the window is hidden) |
 | **Vibe coding** | Building software mostly by directing an AI, often without deep design/engineering skill |
 | **Round-trip test** | Export code -> render -> screenshot -> compare to canvas screenshot |
 | **Eval** | Repeatable test of AI output quality against a rubric |

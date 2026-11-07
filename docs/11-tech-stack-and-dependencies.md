@@ -13,6 +13,12 @@
 | `lucide-react` | Phase 2 | Toolbar and top-bar icons, tree-shaken |
 | `@fontsource-variable/dm-sans`, `space-grotesk`, `playfair-display`, `jetbrains-mono` | Phase 2 | The bundled design fonts listed below; registered as plain-name aliases by `scripts/gen-fonts-css.mjs` |
 | `puppeteer-core` (dev) | Phase 0 | Browser tests against system Chrome and the WebView2 window |
+| `@tauri-apps/api` | Phase 4 | The official IPC wrapper (`invoke`, `listen`) the Tauri file adapter uses; imported lazily so the browser dev build never loads it |
+| Rust `serde`, `serde_json` | Phase 4 | Serialising `app-state.json` and the command results; reading only the `rev` field of a project file during a compare-and-write |
+| Rust `dirs` | Phase 4 | The user's home directory for `~/.atelier` (the one platform detail not worth hand-rolling) |
+| Rust `tauri-plugin-single-instance` | Phase 4 | A second launch focuses the running window; two apps on one home would fight over the same files. Registered first, as its docs require |
+| Rust `tauri-plugin-window-state` | Phase 4 | Remembers window size and position between runs |
+| `tsx` (dev, already present) | Phase 4 | Also runs the persistence e2e and the writer child process, which import the TypeScript file module directly |
 
 Versions below are the *intended major versions at time of writing*. Claude Code must run `npm view <pkg> version` / check docs and pin what's current and compatible; don't blindly trust these numbers.
 
@@ -37,7 +43,7 @@ Versions below are the *intended major versions at time of writing*. Claude Code
 | `@fontsource-variable/inter`, `dm-sans`, `space-grotesk`, `fraunces`, `playfair-display`, `jetbrains-mono` | Bundled fonts (offline, consistent rendering and export). Add more later |
 | `lucide-react` (or lucide static SVGs) | UI icons + design icon library (v0.2) |
 | `@tauri-apps/api` 2 | invoke/commands |
-| `@tauri-apps/plugin-dialog`, `@tauri-apps/plugin-fs` | Save/open dialogs, writing exports |
+| `@tauri-apps/plugin-dialog` | Folder picker for code export (Phase 8). `plugin-fs` is deliberately not used (decision log #16) |
 | `zod` | Tool input validation (shared with MCP) |
 | `immer` (optional) | Not needed if ops are written with explicit shallow copies |
 
@@ -51,7 +57,7 @@ Versions below are the *intended major versions at time of writing*. Claude Code
 `typescript` 5, `vite` 5/6, `@vitejs/plugin-react`, `esbuild` (bundle MCP), `@tauri-apps/cli` 2, `vitest` (unit tests), `puppeteer-core` (e2e with system Chrome), `eslint` + `typescript-eslint`, `prettier`, `@types/node`, `@types/react*`.
 
 ## Rust crates (src-tauri)
-`tauri` 2, `tauri-build` 2, `tauri-plugin-dialog`, `tauri-plugin-fs`, `serde`, `serde_json`, `dirs` (home dir), optional `reqwest` or `tauri-plugin-http` (CORS fallback + Figma API), optional `keyring` (API keys v0.2), `tauri-plugin-updater` (v0.2), `tauri-plugin-single-instance`, `tauri-plugin-window-state`.
+`tauri` 2, `tauri-build` 2, `tauri-plugin-dialog` (Phase 8), `serde`, `serde_json`, `dirs` (home dir), optional `reqwest` or `tauri-plugin-http` (CORS fallback + Figma API), optional `keyring` (API keys v0.2), `tauri-plugin-updater` (v0.2), `tauri-plugin-single-instance`, `tauri-plugin-window-state`.
 
 ## Why these choices (and alternatives considered)
 | Choice | Alternatives | Reason |

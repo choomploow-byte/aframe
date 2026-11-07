@@ -61,6 +61,13 @@ Colour picker: swatches from tokens first, then custom; hex input; eyedropper (w
 - **Theme:** light, dark, or follow the system; no flash on load. Fonts used by the document load before first paint; the font picker previews each face in itself.
 - **Accessibility pass:** every visible control has an accessible name (audited in the e2e), panels are reachable with Tab, tabs use arrow keys, dialogs trap focus, reduced motion switches transitions off, contrast measured (AA for text).
 
+### As built in Phase 4 (decision log #54-#65)
+- **Projects:** the app opens the last project on start (or the newest that opens), or creates "Untitled" on first run. **Ctrl+O** or the folder button opens the Projects dialog: newest first, open, rename, delete (asks first, in words, and says it cannot be undone), New project, Import file. "Open the sample" makes the sample a project of its own (replacing an empty untitled one). Export downloads the open project as `<name>.atelier.json`.
+- **Save status** next to the project name: Saved / Saving… / Can't save (the reason is in the tooltip). Edits are on disk about a quarter of a second after the last change.
+- **Agents and scripts:** a change to the file shows up on screen within ~0.5 s as one undo step ("AI change" or "External change") with a toast; unsaved edits on other nodes are kept; the user's version wins nothing in a same-property clash (the toast names the node) but is one undo away.
+- **A damaged project** is never opened silently: a dialog says what is wrong and offers "Restore previous version" when the backup is intact; meanwhile another project is open so the app stays usable.
+- **Not built yet:** a "recently opened" menu in the top bar (the dialog's order serves), project thumbnails, duplicate project, moving the projects folder.
+
 ## Annotations (the "point at it" feature)
 - Tool `A`: click to drop a numbered pin, or drag for a region. Inline popover to type the comment. Enter to save.
 - Pins render in an overlay (not part of the design, excluded from exports and screenshots unless `annotations:true`).

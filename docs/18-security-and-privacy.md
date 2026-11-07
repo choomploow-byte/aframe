@@ -18,9 +18,9 @@ Local-first. No accounts. No telemetry. Least privilege everywhere. Treat everyt
 | Tauri over-permission | Broad fs/shell access | Capabilities file minimal: only custom commands + dialog + scoped fs; **no shell plugin**, no `fs:allow-*` wildcards beyond the exports location the user picks |
 
 ## Tauri hardening checklist
-- [ ] CSP set; `dangerousDisableAssetCspModification` not used
-- [ ] Capabilities limited to the main window
-- [ ] Custom fs commands canonicalise paths and enforce prefix `~/.atelier`
+- [x] CSP set; `dangerousDisableAssetCspModification` not used (Phase 0; the installed release build was checked running under it, Phase 4)
+- [x] Capabilities limited to the main window (`core:default` plus one named permission per app command; no fs, shell, dialog or opener plugin)
+- [x] Custom fs commands canonicalise paths and enforce prefix `~/.atelier` (`home.rs`, tested; the Node twin in `mcp/home-fs.ts` has the same tests)
 - [ ] Remote URLs not loaded in the main WebView; external links open in system browser via shell-less `opener`
 - [ ] Updater pubkey configured; signing key stored in CI secrets
 

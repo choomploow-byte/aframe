@@ -22,7 +22,7 @@ Must include, concisely:
 - Large outputs are trimmed: `get_design` returns an outline by default (id, type, name, geometry, key style, text snippet) with `detail: 'full'` available.
 - Every mutating tool returns `{ rev, changed: [ids], created: [ids] }`. `apply_changes` also returns `deleted: [ids]`, `idMap` (tempId -> id) and `warnings` (`LOCKED_NODE`, `UNKNOWN_TOKEN`); `changed` is the net effect of the batch (nodes whose own props or children changed). A batch that changes nothing is not committed.
 - Failures are `{ code, message, hint?, op?, path?, details? }`: `op` is the index of the failing operation, `path` the offending field (e.g. `set.opacity`), `details` every error found. Codes: `NOT_FOUND`, `BAD_PARENT`, `CYCLE`, `INVALID_VALUE`, `LIMIT_EXCEEDED`, `SCHEMA_NEWER`, `APP_NOT_RUNNING`, `TIMEOUT`, `PATH_NOT_ALLOWED`, `INTERNAL`.
-- All tools accept optional `project` (id or name); default = the project currently open in the app (stored in `~/.atelier/state.json`), else the most recent.
+- All tools accept optional `project` (id or name); default = the project currently open in the app (stored in `~/.atelier/app-state.json`), else the most recent.
 
 ## Tools
 

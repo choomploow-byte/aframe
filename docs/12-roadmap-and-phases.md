@@ -25,7 +25,7 @@ Each phase: **goal, deliverables, acceptance criteria, how to verify, estimate**
 
 ## Phase 4: Persistence, Tauri shell and sync (2 sessions)
 **Goal:** a real desktop app that saves and syncs.
-**Deliver:** `platform/fs.ts` with Tauri + dev-HTTP adapters; Rust commands (confined fs); project open/create/recent; autosave with `.bak`; sync service (mtime polling, rev merge, dirty-node merge); heartbeat/state.json; `.exe/.app/.AppImage` build via `tauri build`; app icons; single-instance + window-state.
+**Deliver:** `platform/fs.ts` with Tauri + dev-HTTP adapters; Rust commands (confined fs); project open/create/recent; autosave with `.bak`; sync service (mtime polling, rev merge, dirty-node merge); native heartbeat (`app-state.json`); project lock and compare-and-write; property-level merge; `.exe/.app/.AppImage` build via `tauri build`; app icons; single-instance + window-state.
 **Accept:** edit in the app -> file on disk updates < 500 ms; edit file externally (script) -> UI updates < 700 ms with undo entry; kill app mid-write -> doc intact; installer runs on a clean Windows VM.
 
 ## Phase 5: MCP server, bridge and installer (2-3 sessions)
