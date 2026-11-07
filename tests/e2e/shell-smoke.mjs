@@ -1,7 +1,8 @@
 // Phase 0 smoke test: boots the Vite dev server, opens the shell in system Chrome in light and
 // dark colour schemes, checks the four regions render with the themed colours, and fails on any
 // console error. Optional: SHOT_DIR=<dir> saves screenshots there.
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createServer } from 'vite';
 import puppeteer from 'puppeteer-core';
@@ -26,6 +27,9 @@ const EXPECTED = {
   dark: { bg: 'rgb(38, 38, 36)', text: 'rgb(245, 244, 238)' },
 };
 
+// A throwaway projects folder: this test must never touch a real one.
+const home = mkdtempSync(join(tmpdir(), 'atelier-smoke-home-'));
+process.env.ATELIER_HOME = home;
 const server = await createServer({
   server: { port: 1431, strictPort: false, host: '127.0.0.1' },
   logLevel: 'error',
@@ -44,7 +48,7 @@ try {
     page.on('pageerror', (e) => errors.push(String(e)));
     await page.setViewport({ width: 1360, height: 860 });
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: scheme }]);
-    await page.goto(url, { waitUntil: 'networkidle0' });
+    await page.goto(new URL('?nopersist', url).href, { waitUntil: 'networkidle0' });
 
     const info = await page.evaluate(() => {
       const cs = getComputedStyle(document.body);
@@ -99,6 +103,7 @@ try {
 } finally {
   await browser.close();
   await server.close();
+  rmSync(home, { recursive: true, force: true });
 }
 
 process.exit(failures === 0 ? 0 : 1);

@@ -1,7 +1,9 @@
 // Shared helpers for the browser tests: boots the Vite dev server, launches system Chrome, and
 // offers small functions to read the store and drive the canvas like a user (real mouse and keyboard
 // events through puppeteer, never by calling store actions, unless a test says so explicitly).
-import { existsSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { build, createServer, preview } from 'vite';
 import puppeteer from 'puppeteer-core';
 
@@ -29,8 +31,14 @@ export function findChrome() {
  * (WebView2 with --remote-debugging-port) instead of starting Vite and Chrome, so the same tests
  * can run against the real desktop webview.
  */
-export async function start({ width = 1360, height = 860 } = {}) {
+export async function start({ width = 1360, height = 860, persist = false } = {}) {
   const errors = [];
+  // Every run gets a throwaway home, so no test can ever touch a real projects folder, even by
+  // accident. `persist` boots the real app (projects, autosave, sync) against it; without it the
+  // app stays in memory (`?nopersist`). Attached to a desktop window, its ATELIER_HOME is whatever
+  // it was started with.
+  const home = !process.env.CDP_URL ? mkdtempSync(join(tmpdir(), 'atelier-e2e-home-')) : undefined;
+  if (home) process.env.ATELIER_HOME = home;
   if (process.env.CDP_URL) {
     const browser = await puppeteer.connect({
       browserURL: process.env.CDP_URL,
@@ -42,15 +50,23 @@ export async function start({ width = 1360, height = 860 } = {}) {
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
     page.on('pageerror', (e) => errors.push(String(e)));
     await page.waitForFunction(() => window.__atelier !== undefined, { timeout: 30000 });
-    await page.evaluate(() => window.__atelier.loadSample());
-    await page.waitForFunction(() => window.__atelier.store.getState().doc.id === 'p_sample');
-    await page.evaluate(() => window.__atelier.canvas().fitAll());
+    if (persist) {
+      // The real app, against the ATELIER_HOME the window was started with.
+      await page.waitForFunction(() => window.__atelier?.sync?.()?.attached === true, {
+        timeout: 30000,
+      });
+    } else {
+      await page.evaluate(() => window.__atelier.loadSample());
+      await page.waitForFunction(() => window.__atelier.store.getState().doc.id === 'p_sample');
+      await page.evaluate(() => window.__atelier.canvas().fitAll());
+    }
     await page.evaluate(() => document.fonts.ready);
     await settle(page);
     return {
       page,
       errors,
       userAgent: await page.evaluate(() => navigator.userAgent),
+      home: process.env.ATELIER_HOME,
       close: async () => browser.disconnect(),
     };
   }
@@ -84,17 +100,28 @@ export async function start({ width = 1360, height = 860 } = {}) {
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   page.on('pageerror', (e) => errors.push(String(e)));
   await page.setViewport({ width, height });
-  await page.goto(url, { waitUntil: 'networkidle0' });
-  await page.waitForFunction(() => window.__atelier?.store.getState().doc.id === 'p_sample');
+  // The canvas and panel tests work on an in-memory document: no projects, no saving.
+  if (persist) {
+    // The app polls its files, so the network is never idle: wait for the app itself.
+    await page.goto(url, { waitUntil: 'load' });
+    await page.waitForFunction(() => window.__atelier?.sync?.()?.attached === true, {
+      timeout: 30000,
+    });
+  } else {
+    await page.goto(new URL('?nopersist', url).href, { waitUntil: 'networkidle0' });
+    await page.waitForFunction(() => window.__atelier?.store.getState().doc.id === 'p_sample');
+  }
   await page.evaluate(() => document.fonts.ready);
   await settle(page);
   return {
     page,
     errors,
     userAgent: await page.evaluate(() => navigator.userAgent),
+    home,
     close: async () => {
       await browser.close();
       await (server.close ? server.close() : new Promise((r) => server.httpServer.close(r)));
+      if (home) rmSync(home, { recursive: true, force: true });
     },
   };
 }
