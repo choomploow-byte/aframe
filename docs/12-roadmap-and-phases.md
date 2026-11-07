@@ -43,6 +43,7 @@ Each phase: **goal, deliverables, acceptance criteria, how to verify, estimate**
 **Accept:** drop a pin on a button saying "make this pop", run "in atelier, address my annotations" in Claude Code -> button changes, annotation resolved with reply visible in the UI. **First public demo-able milestone.**
 
 ## Phase 7: Inbuilt chat and API keys (2 sessions)
+**Status: built (2026-11-08), not yet run against a live provider.** Everything is tested against scripted providers; the first real request needs your key (see docs/08).
 **Goal:** works without any CLI agent.
 **Deliver:** provider layer (Anthropic, OpenAI, custom), settings UI, agent loop with tools and images, history transaction per turn, stop button, error states, suggested prompts, image attach ("rebuild this screenshot"), context trimming of screenshots, token usage display.
 **Accept:** with only an API key, "improve the selected frame" yields a visible improvement with at least one self-screenshot; Stop works; one undo reverts the entire AI turn; 401/429/network errors show human messages.

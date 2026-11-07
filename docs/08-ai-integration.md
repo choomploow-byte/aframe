@@ -6,7 +6,9 @@ Two ways in, one behaviour.
 Covered in docs 05, 06, 09. The agent brings its own model, context and permissions. Atelier is a tool provider.
 
 ## Path B: inbuilt chat with the user's API key
-Runs in the WebView (no backend). Uses the **same tool handlers** from `core/tools.ts` with an in-app `ToolContext`.
+**Built (Phase 7).** The conversation and the agent loop run in the page (`src/chat/`); the network calls and the API key do not: they go through the desktop app's Rust side (`src-tauri/src/ai.rs`). It uses the **same tool handlers** from `core/tools.ts` with an in-app `ToolContext` over the live store, minus the file and project tools (`CHAT_EXCLUDED` in `tool-context.ts`: no `export_code`, `import_image`, `open_project`...).
+
+What is verified and what is not: the provider converters, the loop, Stop, retries, error messages, the panel and the settings are tested against scripted replies (`src/chat/*.test.ts`, `tests/e2e/chat.mjs`), and the Rust side against a local HTTP server and the real Windows credential store. **No live request to Anthropic or OpenAI has been made by the project's tests** (they need your key): the request shapes follow the providers' current documentation (Anthropic Messages API: current models take no sampling parameters or forced tool choice, so the body is model, max_tokens, system, messages, tools only; thinking blocks are echoed back unchanged to the same model). The first live run is yours: Settings > Test connection, then "Improve the selected frame". Expected token use is in the panel after each reply.
 
 ### Providers
 | Provider | Endpoint | Notes |
@@ -44,13 +46,13 @@ final: summarise changes in 1-2 sentences
 - **Cost visibility:** show tokens used per turn if the API returns usage; optional soft budget per turn.
 - Errors: 401 -> "key rejected"; 429 -> backoff with message; network/CORS -> "Couldn't reach the API" with a pointer to settings (see fallback below).
 
-### CORS / network fallback
-If a webview blocks provider calls, add a Rust command `http_post` (reqwest or tauri-plugin-http) and route provider calls through it. Design the provider layer around a `fetchImpl` injection point from day one.
+### Network: through Rust, not the webview
+Provider calls are made by the Rust command `ai_send` (`ureq`), not by the page, so there is no CORS question, the page's CSP keeps `connect-src 'self'`, and the key never enters JavaScript. The page sends a request body; Rust picks the address (fixed for Anthropic and OpenAI; for a custom server, https only, or http on this computer) and adds the key header. The `Transport` type in `src/chat/types.ts` is the injection point: the desktop transport calls `ai_send`, tests install a scripted one. A browser build has no transport (the assistant needs the desktop app; the Connect dialog covers Claude Code and Codex). Stop ends the wait and ignores the answer (a request already sent cannot be recalled). Replies are not streamed in this version: each step's text appears when the step finishes.
 
 ### Key handling
-- MVP: stored in the webview's localStorage under an obfuscated key, with a clear note in settings. 
-- v0.2: OS keychain (Tauri `keyring` crate / stronghold plugin). Never log keys; never include them in project files or exports.
-- Keys never leave the device except to the chosen provider URL.
+- Built: the OS credential store from the first release (Windows Credential Manager, macOS Keychain, Secret Service on Linux) through the `keyring` crate, not localStorage. The page can save, check for and remove a key, never read one back. Without the desktop app (a browser build) keys cannot be stored at all: there is no fallback to storing one in the page.
+- Never logged, never in project files or exports, never in an error message (tests assert that a key does not appear in the DOM, storage, request bodies, the document, the chat state or the console).
+- Keys never leave the device except to the chosen provider URL. Only the keychain is verified on Windows here; macOS and Linux use the same crate but have not been run.
 
 ## The system prompt (in-app agent)
 `prompts/in-app-system-prompt.md`. Must include: role, the see-edit-verify loop, tool etiquette, design principles summary, how to treat annotations/references, output style (brief, plain-language, no design jargon for vibe coders), and prompt-injection guardrails.

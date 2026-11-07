@@ -97,6 +97,7 @@ Colour picker: swatches from tokens first, then custom; hex input; eyedropper (w
 - Side-by-side compare view: toggle shows reference beside the selected frame, or an overlay with opacity slider (for pixel-matching layouts).
 
 ## Chat panel (inbuilt AI)
+**As built:** the right panel's third tab (Ctrl+L focuses it). First use shows a plain privacy notice, then either a setup card ("Add your API key in Settings first") or the conversation. Tool rows read as plain words ("Edited the design", "Took a screenshot") and open to show the screenshot the assistant looked at. Composer: Enter sends, Shift+Enter a new line, paste/drag/pick up to four images, **Stop**, token use for the last reply, **Undo AI change** (one step per reply; Ctrl+Z does the same). The `@` mention and the per-reply model picker are not built: the model is chosen in AI settings. Errors name what to do and offer **Open settings** where that helps. "Ask AI to address N open notes" sends the notes here when the assistant is set up.
 - Message list with: assistant text, collapsible **tool activity** rows ("Updated 12 nodes", "Took screenshot") and inline screenshots the agent looked at.
 - Composer: multi-line, attach image (paste/drag), `@` to mention a layer or reference, model picker, **Stop** button.
 - Empty state: 4 suggested prompts ("Improve the selected frame", "Match this reference", "Make it mobile", "Critique my design").
