@@ -1,20 +1,17 @@
+import { FONT_CATALOG, type FontCategory } from '@core/fonts';
 import { resolveFont } from '@core/tokens';
 import type { Doc } from '@core/types';
 
-/** The families bundled with the app (docs/11) and registered by `fonts.css`. */
+/** The families bundled with the app (docs/11, `core/fonts.ts`) and registered by `fonts.css`. */
 export interface BundledFont {
   name: string;
-  category: 'sans' | 'serif' | 'mono';
+  category: FontCategory;
 }
 
-export const BUNDLED_FONTS: readonly BundledFont[] = [
-  { name: 'Inter', category: 'sans' },
-  { name: 'DM Sans', category: 'sans' },
-  { name: 'Space Grotesk', category: 'sans' },
-  { name: 'Fraunces', category: 'serif' },
-  { name: 'Playfair Display', category: 'serif' },
-  { name: 'JetBrains Mono', category: 'mono' },
-];
+export const BUNDLED_FONTS: readonly BundledFont[] = FONT_CATALOG.map((f) => ({
+  name: f.name,
+  category: f.category,
+}));
 
 /** Every family the document's text uses (tokens resolved), so they can be loaded before painting. */
 export function docFontFamilies(doc: Doc): string[] {
