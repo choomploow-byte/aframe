@@ -19,6 +19,8 @@ export default tseslint.config(
   {
     ignores: [
       'dist',
+      'dist-perf',
+      'tests/e2e/__diff__',
       'coverage',
       'node_modules',
       'src-tauri/target',

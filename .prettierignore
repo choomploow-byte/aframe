@@ -1,6 +1,10 @@
 node_modules
 dist
+dist-perf
+tests/e2e/__diff__
+tests/e2e/baselines
 coverage
+.impeccable
 src-tauri/target
 src-tauri/gen
 mcp/dist

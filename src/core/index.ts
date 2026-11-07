@@ -76,6 +76,8 @@ export {
   type LoadResult,
 } from './doc';
 export { createMemoryContext, type MemoryContext } from './memory-context';
+export { extractSpec, extractSpecs, topmostIds } from './clipboard';
+export { inferAutoLayout, type AutoLayoutPlan, type LayoutRect } from './autolayout';
 export {
   findTool,
   getToolDefinitions,

@@ -154,16 +154,47 @@ body {
 
 .canvas {
   grid-area: canvas;
-  display: grid;
-  place-items: center;
+  position: relative;
+  overflow: hidden;
   background-color: var(--canvas-bg);
   background-image: radial-gradient(var(--canvas-dot) 1px, transparent 1px);
   background-size: 24px 24px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  outline: none;
 }
 
-.canvas__hint {
+.canvas[data-cursor='grab'] {
+  cursor: grab;
+}
+.canvas[data-cursor='grabbing'] {
+  cursor: grabbing;
+}
+.canvas[data-cursor='crosshair'] {
+  cursor: crosshair;
+}
+.canvas[data-cursor='text'] {
+  cursor: text;
+}
+
+/* Only this layer is transformed by pan/zoom; nodes are never re-laid-out by the camera. */
+.world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.canvas__empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
   text-align: center;
   color: var(--muted);
+  pointer-events: none;
 }
 
 .canvas__headline {
@@ -172,6 +203,243 @@ body {
   font-size: 28px;
   font-weight: 500;
   color: var(--text);
+}
+
+/* ---- Overlay: screen space, above the world --------------------------------------------- */
+.overlay {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.artboard-label {
+  position: absolute;
+  padding: 2px 0;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: auto;
+  cursor: default;
+}
+.artboard-label--selected {
+  color: var(--accent);
+}
+
+.ov-hover {
+  position: absolute;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.ov-selected {
+  position: absolute;
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+.ov-selected:not(.ov-selected--single) {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+.ov-group {
+  position: absolute;
+  outline: 1px dashed var(--accent);
+}
+
+.ov-handles {
+  position: absolute;
+}
+.ov-handle {
+  position: absolute;
+  box-sizing: border-box;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border: 1.5px solid var(--accent);
+  border-radius: 2px;
+  background: #fff;
+  pointer-events: auto;
+}
+
+.ov-size {
+  position: absolute;
+  transform: translateX(-50%);
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.ov-guide {
+  position: absolute;
+  background: var(--accent);
+}
+.ov-marquee {
+  position: absolute;
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.ov-draw {
+  position: absolute;
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+.ov-ghost {
+  position: absolute;
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  opacity: 0.8;
+}
+.ov-insertion {
+  position: absolute;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+/* ---- Floating chrome over the canvas ----------------------------------------------------- */
+.toolbar {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  transform: translateX(-50%);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.08);
+}
+.toolbar__group {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.toolbar__presets {
+  position: relative;
+  display: inline-flex;
+}
+.toolbar__btn,
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 120ms var(--ease);
+}
+.toolbar__btn--small {
+  width: 16px;
+  margin-left: -4px;
+  color: var(--muted);
+}
+.toolbar__btn:hover:not(:disabled),
+.icon-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+}
+.toolbar__btn[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+}
+.toolbar__btn:disabled,
+.icon-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.toolbar__btn:focus-visible,
+.icon-btn:focus-visible,
+.zoom__btn:focus-visible,
+.menu__item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.topbar__group {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 12px;
+}
+
+.zoom {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+}
+.zoom__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.menu {
+  position: absolute;
+  z-index: 10;
+  min-width: 190px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--panel);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+}
+.menu--up {
+  bottom: calc(100% + 8px);
+  left: 0;
+}
+.menu--right {
+  left: auto;
+  right: 0;
+}
+.menu__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.menu__item:hover {
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+}
+.menu__hint {
+  color: var(--muted);
+}
+
+.hud {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgb(0 0 0 / 0.72);
+  color: #fff;
+  font:
+    11px/1.4 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace;
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

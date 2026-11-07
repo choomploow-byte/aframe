@@ -1,5 +1,6 @@
 import '@fontsource-variable/inter';
 import '@fontsource-variable/fraunces';
+import './canvas/fonts.css';
 import './styles.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -13,3 +14,10 @@ createRoot(rootEl).render(
     <App />
   </StrictMode>,
 );
+
+// Loads the sample document and exposes window.__atelier for tests. Off in every normal build:
+// it is on for `vite dev`, and for the optimised `--mode perf` build used by the perf test
+// (.env.perf), so performance is measured on minified React rather than the dev build.
+if (import.meta.env.DEV || import.meta.env.VITE_DEVTOOLS === '1') {
+  void import('./dev/dev').then((m) => m.installDevTools());
+}

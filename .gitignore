@@ -1,14 +1,18 @@
 node_modules/
 dist/
+dist-perf/
+tests/e2e/__diff__/
 target/
 gen/
 coverage/
 .atelier-dev/
+.impeccable/
 *.tsbuildinfo
 .DS_Store
 Thumbs.db
 .env
 .env.*
+!.env.perf
 # the original build kit lives outside this repo; never copy it in
 kit/
 mcp/dist/

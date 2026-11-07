@@ -18,20 +18,28 @@
     "format:check": "prettier --check .",
     "test": "vitest run && node scripts/test-mcp.mjs",
     "test:unit": "vitest run",
-    "test:e2e": "node tests/e2e/shell-smoke.mjs",
+    "test:e2e": "node tests/e2e/shell-smoke.mjs && node tests/e2e/canvas.mjs",
     "demo:core": "tsx scripts/demo-core.ts",
     "probe:css": "tsx scripts/css-probe.ts",
     "test:coverage": "vitest run --coverage",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "test:visual": "node tests/e2e/visual.mjs",
+    "test:perf": "node tests/e2e/perf.mjs"
   },
   "dependencies": {
+    "@fontsource-variable/dm-sans": "^5.3.0",
     "@fontsource-variable/fraunces": "^5.3.0",
     "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource-variable/playfair-display": "^5.3.0",
+    "@fontsource-variable/space-grotesk": "^5.3.0",
+    "lucide-react": "^1.70.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "zod": "^4.6.7"
+    "zod": "^4.6.7",
+    "zustand": "^5.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -45,6 +53,7 @@
     "eslint": "^10.14.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.14.0",
+    "pixelmatch": "^8.0.0",
     "pngjs": "^7.0.0",
     "prettier": "^3.9.10",
     "puppeteer-core": "^25.16.0",
