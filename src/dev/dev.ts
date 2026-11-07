@@ -39,6 +39,16 @@ export async function installDevTools(): Promise<void> {
         .loadDoc(createTemplateDoc(name as (typeof TEMPLATES)[number], { name, id: 'p_tpl00' }));
       getCanvasApi()?.fitAll();
     },
+    /** The in-app assistant, with hooks for scripted providers (tests never use a real key). */
+    chat: async () => {
+      const [transport, keys, settings, session] = await Promise.all([
+        import('../chat/transport'),
+        import('../chat/keys'),
+        import('../chat/settings'),
+        import('../chat/session'),
+      ]);
+      return { transport, keys, settings, session };
+    },
     loadBlank: () => {
       projects.detachForTests();
       store.getState().loadDoc(createEmptyDoc());

@@ -17,6 +17,7 @@ import {
 } from '../store/commands';
 import type { ToolId } from '../store/store';
 import { openExportDialog } from '../export/dialog-state';
+import { openChat } from '../chat/focus';
 import { openDialog } from '../ui/ui-state';
 import type { CanvasApi } from './canvas-api';
 
@@ -283,6 +284,14 @@ export const SHORTCUTS: readonly Shortcut[] = [
     keys: 'Ctrl+Shift+E',
     match: (e) => mod(e) && !e.altKey && e.shiftKey && e.key.toLowerCase() === 'e',
     run: () => openExportDialog('code'),
+  },
+  {
+    id: 'chat.focus',
+    label: 'Focus the AI chat',
+    keys: 'Ctrl+L',
+    match: (e) => mod(e) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'l',
+    run: () => openChat(),
+    global: true,
   },
   {
     id: 'help.palette',

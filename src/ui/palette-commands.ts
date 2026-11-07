@@ -13,6 +13,7 @@ import { store } from '../store/store';
 import { importFiles } from './image-import';
 import { setThemePreference, type ThemePreference } from './theme';
 import { openExportDialog } from '../export/dialog-state';
+import { openChat } from '../chat/focus';
 import { openDialog } from './ui-state';
 
 /**
@@ -123,6 +124,8 @@ export function buildPaletteCommands(): PaletteCommand[] {
       run: () => void createSampleProject(),
     },
     { id: 'ai.connect', label: 'Connect your AI', group: 'Help', run: () => openDialog('connect') },
+    { id: 'ai.chat', label: 'Open the AI chat', group: 'Help', run: openChat },
+    { id: 'ai.settings', label: 'AI settings…', group: 'Help', run: () => openDialog('settings') },
   ];
   return [...fromShortcuts, ...frames, ...themes, ...other];
 }

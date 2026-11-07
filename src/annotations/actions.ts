@@ -1,5 +1,7 @@
 import { addressNotesPrompt, placeAnnotations } from '@core/annotations';
 import { getCanvasApi } from '../canvas/canvas-api';
+import { openChat } from '../chat/focus';
+import { chatReadiness, sendChat } from '../chat/session';
 import { store } from '../store/store';
 import { showToast } from '../ui/toast';
 import { annotationUi } from './ui-state';
@@ -28,8 +30,8 @@ export function focusAnnotation(id: string): void {
 }
 
 /**
- * "Ask AI to address N open notes". With the built-in chat configured (Phase 7) this sends the
- * notes; until then, and for external agents, it copies the sentence to say in Claude Code or Codex.
+ * "Ask AI to address N open notes". With the built-in chat set up this sends the notes to it;
+ * otherwise (and for external agents) it copies the sentence to say in Claude Code or Codex.
  */
 export async function askAiToAddressNotes(): Promise<void> {
   const open = store.getState().doc.annotations.filter((a) => a.status === 'open').length;
@@ -38,6 +40,14 @@ export async function askAiToAddressNotes(): Promise<void> {
     return;
   }
   const prompt = addressNotesPrompt(open);
+  // The built-in assistant, when it is set up, takes the notes itself.
+  if ((await chatReadiness()).ok) {
+    openChat();
+    void sendChat(
+      'Address my open annotations: read them with get_annotations, fix each one, then answer each with resolve_annotation.',
+    );
+    return;
+  }
   try {
     await navigator.clipboard.writeText(prompt);
     showToast(`Copied: "${prompt}". Paste it into Claude Code or Codex.`);

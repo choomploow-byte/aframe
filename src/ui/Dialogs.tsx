@@ -5,6 +5,7 @@ import { Dialog } from './Dialog';
 import { groupOf } from './palette-commands';
 import { ConnectDialog } from './ConnectDialog';
 import { ExportDialog } from './ExportDialog';
+import { SettingsDialog } from './SettingsDialog';
 import { ProjectsDialog, RecoverDialog } from './ProjectDialogs';
 import { closeDialog, useDialog } from './ui-state';
 
@@ -51,5 +52,6 @@ export function Dialogs() {
   if (dialog === 'projects') return <ProjectsDialog />;
   if (dialog === 'recover') return <RecoverDialog />;
   if (dialog === 'export') return <ExportDialog />;
+  if (dialog === 'settings') return <SettingsDialog />;
   return null;
 }

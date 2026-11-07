@@ -74,6 +74,7 @@ export const STRINGS = {
     properties: 'Properties',
     design: 'Design',
     notes: 'Notes',
+    chat: 'Chat',
     propertiesEmpty: 'Select something on the canvas or in Layers to edit it.',
     left: 'Layers, assets, tokens, icons and components',
   },
