@@ -1,4 +1,5 @@
 import { Canvas } from './canvas/Canvas';
+import { AgentActivity } from './ui/AgentActivity';
 import { LeftPanel } from './panels/LeftPanel';
 import { PropertiesPanel } from './panels/PropertiesPanel';
 import { STRINGS } from './strings';
@@ -29,6 +30,7 @@ export function App() {
       <ContextMenus />
       <Dialogs />
       <Toasts />
+      <AgentActivity />
     </div>
   );
 }

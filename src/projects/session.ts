@@ -11,10 +11,12 @@ import type { Doc } from '@core/types';
 import { useStore } from 'zustand';
 import { createStore } from 'zustand/vanilla';
 import { getCanvasApi } from '../canvas/canvas-api';
+import { pulseNodes } from '../canvas/pulse';
+import { startAgentPolling } from '../connect/agents';
 import { getFs, type HomeApi } from '../platform/fs';
 import { renameProject } from '../store/panel-commands';
 import { store } from '../store/store';
-import { BridgeService } from '../sync/requests';
+import { BridgeService, RequestError } from '../sync/requests';
 import { SyncService, type SyncNotice, type SyncStatus } from '../sync/sync';
 import { showToast } from '../ui/toast';
 import { closeDialog, openDialog } from '../ui/ui-state';
@@ -133,6 +135,10 @@ function ensureSession(): Promise<Session> {
       fs,
       store,
       notify: (n) => {
+        // Show where an agent's edit landed, once the new nodes are on screen.
+        if (n.kind === 'external' && n.writer !== 'app') {
+          requestAnimationFrame(() => requestAnimationFrame(() => pulseNodes(n.changedIds)));
+        }
         const d = describeNotice(n);
         showToast(d.message, {
           kind: d.error ? 'error' : 'info',
@@ -146,10 +152,31 @@ function ensureSession(): Promise<Session> {
       flush: () => sync.flush(),
       currentProject: () => sync.currentProjectId,
       selection: () => store.getState().selection,
+      screenshot: async (params) => {
+        const { captureScreenshot, ScreenshotError } = await import('../canvas/screenshot');
+        const p: Record<string, unknown> = params;
+        try {
+          const state = store.getState();
+          return await captureScreenshot(state.doc, state.viewport.zoom, {
+            ...(typeof p.nodeId === 'string' ? { nodeId: p.nodeId } : {}),
+            ...(p.scale === 1 || p.scale === 2 ? { scale: p.scale } : {}),
+            ...(typeof p.maxWidth === 'number' ? { maxWidth: p.maxWidth } : {}),
+            ...(p.annotations === true ? { annotations: true } : {}),
+          });
+        } catch (e) {
+          if (e instanceof ScreenshotError) throw new RequestError(e.code, e.message);
+          throw e;
+        }
+      },
+      nodeBounds: async (nodeId) => {
+        const { nodeBounds } = await import('../canvas/screenshot');
+        return nodeBounds(nodeId, store.getState().viewport.zoom);
+      },
       openProject: async (id) =>
         (await openById(id)) ? null : `Project ${id} could not be opened.`,
     });
     bridge.start();
+    startAgentPolling(fs);
     // The window is closing: save what is pending, then let it go.
     fs.onCloseRequested(() => {
       void sync

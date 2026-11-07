@@ -86,8 +86,25 @@ export const STRINGS = {
   connect: {
     title: 'Connect your AI',
     body: 'Atelier works with Claude Code, Codex and any MCP-compatible agent. They open the same design you see here, edit it, take screenshots and read your notes.',
-    soon: 'The one-line install arrives in a later phase. Until then, the canvas works fully on its own.',
-    close: 'Got it',
+    hosts: 'Which AI tool',
+    other: 'Other',
+    claudeHow:
+      'Copy this, paste it into Claude Code, and press Enter. It installs itself and tells you how to use it.',
+    pasteIntoClaude: 'Paste into Claude Code',
+    codexHow: 'Copy this, paste it into Codex, and press Enter.',
+    pasteIntoCodex: 'Paste into Codex',
+    orTerminal: 'Or run in a terminal',
+    otherHow:
+      'Any tool that supports MCP servers over stdio can use this entry. (Node.js 20 or newer must be installed.)',
+    jsonLabel: 'MCP server entry',
+    copy: 'Copy',
+    copied: 'Copied',
+    waiting: 'Waiting for your AI tool… ask it to "use atelier" and this turns green.',
+    connectedIdle: 'Connected. Ask your AI tool something to try it.',
+    heard: 'Connected: your AI tool just used Atelier.',
+    tryAsking: 'Try asking',
+    noPath: (why: string) => `Could not find where Atelier keeps its files (${why}).`,
+    close: 'Done',
   },
   palette: {
     label: 'Command palette',

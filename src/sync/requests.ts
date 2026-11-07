@@ -15,9 +15,17 @@ const MAX_AGE_MS = 120_000;
 const MAX_HANDLED = 1000;
 
 /** Implemented now. */
-export const LIVE_TYPES = ['ping', 'get_selection', 'open_project'] as const;
-/** Allowed, but built in a later phase (screenshots: Phase 5, image export: Phase 8). */
-export const PLANNED_TYPES = ['screenshot', 'export_image', 'get_node_bounds'] as const;
+export const LIVE_TYPES = [
+  'ping',
+  'get_selection',
+  'open_project',
+  'screenshot',
+  'get_node_bounds',
+] as const;
+/** Allowed, but built in a later phase (image export: Phase 8). */
+export const PLANNED_TYPES = ['export_image'] as const;
+/** Request types that are about the project open on screen (a request for another one is refused). */
+const PROJECT_BOUND = new Set(['get_selection', 'screenshot', 'get_node_bounds']);
 export const REQUEST_TYPES: readonly string[] = [...LIVE_TYPES, ...PLANNED_TYPES];
 
 export type BridgeResult =
@@ -30,12 +38,32 @@ export interface BridgeHandlers {
   selection(): string[];
   /** Switches the open project. Returns a message if it could not be opened. */
   openProject(id: string): Promise<string | null>;
+  /** Renders the design or a node to a PNG (needs the canvas on screen). */
+  screenshot?(
+    params: Record<string, unknown>,
+  ): Promise<{ pngBase64: string; width: number; height: number }>;
+  /** A node's rectangle on the canvas in world units, or null if it is not drawn. */
+  nodeBounds?(
+    nodeId: string,
+  ): Promise<{ x: number; y: number; width: number; height: number } | null>;
+}
+
+/** A handler failing in a way the agent should read: becomes `{ ok:false, error:{ code, message } }`. */
+export class RequestError extends Error {
+  constructor(
+    readonly code: string,
+    message: string,
+  ) {
+    super(message);
+  }
 }
 
 interface ParsedRequest {
   id: string;
   type: string;
   params: Record<string, unknown>;
+  /** The project the agent means (ids only; anything else is ignored). */
+  project: string | null;
 }
 
 const isObject = (v: unknown): v is Record<string, unknown> =>
@@ -57,7 +85,7 @@ export function parseRequest(
   }
   if (!isObject(json))
     return { ok: false, id: idFromName, message: 'The request must be a JSON object.' };
-  const { id, type, params, createdAt } = json;
+  const { id, type, params, createdAt, project } = json;
   if (typeof id !== 'string' || !REQUEST_ID.test(id) || id !== idFromName) {
     return {
       ok: false,
@@ -75,7 +103,15 @@ export function parseRequest(
   if (params !== undefined && !isObject(params)) {
     return { ok: false, id, message: 'The request params must be an object.' };
   }
-  return { ok: true, request: { id, type, params: params ?? {} } };
+  return {
+    ok: true,
+    request: {
+      id,
+      type,
+      params: params ?? {},
+      project: typeof project === 'string' && isProjectId(project) ? project : null,
+    },
+  };
 }
 
 export class BridgeService {
@@ -114,7 +150,7 @@ export class BridgeService {
       }
       return;
     }
-    const { id, type, params } = parsed.request;
+    const { id, type, params, project } = parsed.request;
     if (this.handled.has(id)) return;
     this.handled.add(id);
     if (this.handled.size > MAX_HANDLED)
@@ -123,21 +159,37 @@ export class BridgeService {
     let result: BridgeResult;
     try {
       await this.handlers.flush();
-      result = await this.run(type, params);
+      result = await this.run(type, params, project);
     } catch (e) {
       result = {
         ok: false,
-        error: { code: 'INTERNAL', message: e instanceof Error ? e.message : String(e) },
+        error: {
+          code: e instanceof RequestError ? e.code : 'INTERNAL',
+          message: e instanceof Error ? e.message : String(e),
+        },
       };
     }
     await this.respond(id, fileName, result);
   }
 
-  private async run(type: string, params: Record<string, unknown>): Promise<BridgeResult> {
+  private async run(
+    type: string,
+    params: Record<string, unknown>,
+    project: string | null,
+  ): Promise<BridgeResult> {
     if (!REQUEST_TYPES.includes(type)) {
       return {
         ok: false,
         error: { code: 'UNKNOWN_TYPE', message: `Unknown request type "${type.slice(0, 40)}".` },
+      };
+    }
+    if (PROJECT_BOUND.has(type) && project !== null && project !== this.handlers.currentProject()) {
+      return {
+        ok: false,
+        error: {
+          code: 'PROJECT_NOT_OPEN',
+          message: 'That project is not the one open in Atelier right now.',
+        },
       };
     }
     switch (type) {
@@ -160,6 +212,25 @@ export class BridgeService {
         return problem === null
           ? { ok: true, result: { project } }
           : { ok: false, error: { code: 'PROJECT_NOT_FOUND', message: problem } };
+      }
+      case 'screenshot': {
+        if (!this.handlers.screenshot) return notBuilt(type);
+        return { ok: true, result: await this.handlers.screenshot(params) };
+      }
+      case 'get_node_bounds': {
+        const nodeId = params.nodeId;
+        if (
+          typeof nodeId !== 'string' ||
+          nodeId.length === 0 ||
+          nodeId.length > 64 ||
+          !this.handlers.nodeBounds
+        ) {
+          return {
+            ok: false,
+            error: { code: 'BAD_REQUEST', message: 'params.nodeId must be a node id.' },
+          };
+        }
+        return { ok: true, result: { bounds: await this.handlers.nodeBounds(nodeId) } };
       }
       default:
         return {
@@ -188,4 +259,14 @@ export class BridgeService {
       /* already gone, or a name the native side refused: nothing to clean up */
     }
   }
+}
+
+function notBuilt(type: string): BridgeResult {
+  return {
+    ok: false,
+    error: {
+      code: 'NOT_IMPLEMENTED',
+      message: `"${type}" is not available in this version of Atelier yet.`,
+    },
+  };
 }

@@ -1,6 +1,7 @@
 import { Check, ChevronDown, FolderOpen, Monitor, Moon, Redo2, Sun, Undo2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { BRAND } from '../brand';
+import { useConnect } from '../connect/agents';
 import { useProjects } from '../projects/session';
 import { renameProject } from '../store/panel-commands';
 import { store, useAtelier } from '../store/store';
@@ -55,6 +56,7 @@ export function TopBar() {
   const canRedo = useAtelier((s) => s.history.future.length > 0);
   const name = useAtelier((s) => s.doc.name);
   const theme = useThemePreference();
+  const connected = useConnect((s) => s.connected);
   const ThemeIcon = THEME_ICON[theme];
   const exportButton = useRef<HTMLButtonElement>(null);
   const [exportAt, setExportAt] = useState<{ x: number; y: number } | null>(null);
@@ -171,9 +173,11 @@ export function TopBar() {
         type="button"
         className="pill"
         data-testid="connect-ai"
+        data-connected={connected}
+        title={connected ? 'An AI tool is connected' : 'No AI tool connected yet'}
         onClick={() => openDialog('connect')}
       >
-        <span className="pill__dot" aria-hidden="true" />
+        <span className={`pill__dot${connected ? ' pill__dot--on' : ''}`} aria-hidden="true" />
         {STRINGS.topbar.connect}
       </button>
     </header>

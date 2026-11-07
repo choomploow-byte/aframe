@@ -3,6 +3,7 @@ import { STRINGS } from '../strings';
 import { CommandPalette } from './CommandPalette';
 import { Dialog } from './Dialog';
 import { groupOf } from './palette-commands';
+import { ConnectDialog } from './ConnectDialog';
 import { ProjectsDialog, RecoverDialog } from './ProjectDialogs';
 import { closeDialog, useDialog } from './ui-state';
 
@@ -35,22 +36,6 @@ function ShortcutSheet() {
             </dl>
           </section>
         ))}
-      </div>
-    </Dialog>
-  );
-}
-
-function ConnectDialog() {
-  return (
-    <Dialog title={STRINGS.connect.title} onClose={closeDialog}>
-      <div className="dialog__body">
-        <p>{STRINGS.connect.body}</p>
-        <p className="dialog__muted">{STRINGS.connect.soon}</p>
-        <div className="dialog__footer">
-          <button type="button" className="btn btn--primary" data-autofocus onClick={closeDialog}>
-            {STRINGS.connect.close}
-          </button>
-        </div>
       </div>
     </Dialog>
   );

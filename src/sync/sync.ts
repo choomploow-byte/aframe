@@ -14,7 +14,7 @@
  * on disk goes through the `HomeApi` it is given, so tests drive it against real temp directories.
  */
 import { serializeDoc } from '@core/doc';
-import { mergeDocs, sameContent } from '@core/merge';
+import { changedNodeIds, mergeDocs, sameContent } from '@core/merge';
 import type { Doc } from '@core/types';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import type { HomeApi } from '../platform/fs';
@@ -43,6 +43,8 @@ export type SyncNotice =
       tookTheirs: boolean;
       /** Your unsaved edits were combined with the change. */
       merged: boolean;
+      /** Nodes the change touched (at most 50), so the UI can point at them. */
+      changedIds: string[];
     }
   /** The file was deleted or replaced by something unreadable; yours is being written back. */
   | { kind: 'file-recreated' }
@@ -359,6 +361,9 @@ export class SyncService {
         this.store.getState().adoptExternal(merge.doc, label, { history: false });
       return 'done';
     }
+    const changedIds = changedNodeIds(s.doc, merge.doc).filter(
+      (id) => merge.doc.nodes[id] !== undefined,
+    );
     this.store.getState().adoptExternal(merge.doc, label);
     const names = merge.conflicts.map(
       (cid) => s.doc.nodes[cid]?.name ?? remote.nodes[cid]?.name ?? cid,
@@ -369,6 +374,7 @@ export class SyncService {
       overruled: names,
       tookTheirs: merge.mode === 'remote-fallback',
       merged: merge.mode === 'merged',
+      changedIds: changedIds.slice(0, 50),
     });
     return 'done';
   }
