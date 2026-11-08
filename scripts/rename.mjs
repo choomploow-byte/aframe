@@ -12,7 +12,8 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 
-const SKIP_FILES = new Set(['CHANGELOG.md']);
+// History and the tool's own test keep the old name on purpose.
+const SKIP_FILES = new Set(['CHANGELOG.md', 'scripts/rename.mjs', 'tests/node/rename.test.ts']);
 const BINARY = /\.(png|jpe?g|gif|webp|ico|icns|woff2?|ttf|otf|pdf|zip|gz|mp4|webm)$/i;
 const REPO_URLS = [
   /github\.com\/choomploow-byte\/atelier/g,
@@ -95,7 +96,9 @@ if (isMain) {
     );
     process.exit(2);
   }
-  const status = execFileSync('git', ['status', '--porcelain', '--untracked-files=no'], { encoding: 'utf8' }).trim();
+  const status = execFileSync('git', ['status', '--porcelain', '--untracked-files=no'], {
+    encoding: 'utf8',
+  }).trim();
   if (args.apply && status !== '') {
     console.error(
       'The working tree has uncommitted changes. Commit or stash them first, so the rename is one reviewable diff.',
