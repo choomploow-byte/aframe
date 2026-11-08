@@ -4,6 +4,10 @@ All notable changes are recorded here. Format: [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-08 (pre-release)
+
+Export, a built-in assistant, design checks, imports and launch polish. See the entries below; the unverified parts (live provider runs, a real Figma file, signing, other operating systems) are named in `docs/14-open-source-and-release.md`.
+
 ### Changed
 - Brand: the Atelier icon and wordmark (`brand/`) replace the placeholder square, and the accent is
   now purple everywhere: the interface (light and dark), the favicon, annotation pins in agent

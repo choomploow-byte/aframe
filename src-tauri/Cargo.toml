@@ -1,6 +1,6 @@
 [package]
 name = "atelier"
-version = "0.1.2"
+version = "0.2.0"
 description = "Open-source AI design studio"
 edition = "2021"
 license = "MIT"
