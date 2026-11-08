@@ -4,6 +4,17 @@ All notable changes are recorded here. Format: [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+### Added
+
+- **Beta features** in Settings: a master switch and one switch per feature (everything off by default); a feature that is off is fully hidden, including its AI tools.
+- **Pixel Art Editor (beta)**: draw on a palette-indexed grid (16, 32, 64 or custom up to 128), with pencil, eraser, fill, line, rectangle, colour picker, mirror draw, grid, zoom and pan, undo as one step per stroke, a palette editor, PNG export at a whole-number scale, JSON save and open, and an AI bar (Improve, Add shading, Clean up outline, Generate from prompt). Agents get nine `pixelart_` tools that draw on the live canvas.
+- Shared text styles, a Roblox ScreenGui export, `compare_reference` (match percentage, worst regions and a difference picture; a Difference blend and Measure button in compare mode), lint exemptions (`props["lint-ignore"]` and an Intentional button), and screenshots that wait for the agent's latest edit.
+
+### Fixed
+
+- Shared text styles were lost when the sync merged a project.
+- Tests that failed on macOS and Linux (the export folder guard, the missing credential store, lock waits).
+
 ## [0.4.0] - 2026-11-08 (pre-release)
 
 ### Added

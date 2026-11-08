@@ -3,6 +3,7 @@
  * `HomeApi`, so the same code runs against the Tauri commands, the dev HTTP adapter and, in tests,
  * a real temp directory.
  */
+import { parseBetaSettings, type BetaSettings } from '@core/beta';
 import { createEmptyDoc, loadDoc, serializeDoc } from '@core/doc';
 import { generateId } from '@core/ids';
 import type { Doc, OpError, Warning } from '@core/types';
@@ -257,6 +258,35 @@ export async function readSettings(fs: HomeApi): Promise<Settings> {
   }
 }
 
+/** The whole file as stored (so writing one setting keeps the others); empty when missing or damaged. */
+async function readRawSettings(fs: HomeApi): Promise<Record<string, unknown>> {
+  try {
+    const text = await fs.readText('settings.json');
+    if (text === null) return {};
+    const v: unknown = JSON.parse(text);
+    return typeof v === 'object' && v !== null && !Array.isArray(v)
+      ? (v as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
 export async function writeSettings(fs: HomeApi, settings: Settings): Promise<void> {
-  await fs.writeText('settings.json', `${JSON.stringify(settings, null, 2)}\n`);
+  const raw = await readRawSettings(fs);
+  // The settings given replace what they cover; other keys (the beta switches) stay.
+  const next: Record<string, unknown> = { ...raw };
+  delete next.lastProject;
+  Object.assign(next, settings);
+  await fs.writeText('settings.json', `${JSON.stringify(next, null, 2)}\n`);
+}
+
+/** The beta feature switches (see core/beta.ts); everything off when absent or unreadable. */
+export async function readBetaSettings(fs: HomeApi): Promise<BetaSettings> {
+  return parseBetaSettings((await readRawSettings(fs)).beta);
+}
+
+export async function writeBetaSettings(fs: HomeApi, beta: BetaSettings): Promise<void> {
+  const raw = await readRawSettings(fs);
+  await fs.writeText('settings.json', `${JSON.stringify({ ...raw, beta }, null, 2)}\n`);
 }

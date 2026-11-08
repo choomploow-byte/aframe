@@ -7,6 +7,7 @@ import { McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import { getOutline } from '../src/core/outline';
 import type { Tool, ToolResult } from '../src/core/tool-kit';
+import { PIXELART_FEATURE, PIXELART_TOOL_NAMES } from '../src/core/tools-pixelart';
 import { TOOLS } from '../src/core/tools';
 import { parseProjectText, projectFile } from '../src/projects/projects';
 import type { McpEnv } from './env';
@@ -38,6 +39,7 @@ const READ_ONLY = new Set([
   'search_library',
   'list_themes',
   'compare_reference',
+  'pixelart_get_canvas',
   'find_nodes',
 ]);
 
@@ -55,11 +57,16 @@ export function toCallToolResult(result: ToolResult): { content: Block[]; isErro
   return { content };
 }
 
-function registerTool(server: McpServer, env: McpEnv, presence: Presence, tool: Tool): void {
+function registerTool(
+  server: McpServer,
+  env: McpEnv,
+  presence: Presence,
+  tool: Tool,
+): ReturnType<McpServer['registerTool']> {
   const base = tool.inputSchema as z.ZodObject;
   // A tool that takes a `project` of its own (open_project) keeps it: it is the target, not the selector.
   const ownsProject = 'project' in base.shape;
-  server.registerTool(
+  return server.registerTool(
     tool.name,
     {
       description: tool.description,
@@ -102,7 +109,27 @@ export function createAFrameServer(env: McpEnv, presence: Presence): McpServer {
     { instructions: SERVER_INSTRUCTIONS },
   );
 
-  for (const tool of TOOLS) registerTool(server, env, presence, tool);
+  // Beta features: their tools are registered but hidden until the feature is switched on in
+  // AFrame's Settings (the switch is read from settings.json, so no restart is needed). A handler
+  // also refuses to run while the feature is off, in case a host kept an old tool list.
+  const betaTools: ReturnType<typeof registerTool>[] = [];
+  for (const tool of TOOLS) {
+    const handle = registerTool(server, env, presence, tool);
+    if (PIXELART_TOOL_NAMES.includes(tool.name)) {
+      handle.disable();
+      betaTools.push(handle);
+    }
+  }
+  const syncBeta = async (): Promise<void> => {
+    const on = await env.betaOn(PIXELART_FEATURE);
+    for (const handle of betaTools) {
+      if (on && !handle.enabled) handle.enable();
+      else if (!on && handle.enabled) handle.disable();
+    }
+  };
+  void syncBeta();
+  const timer = setInterval(() => void syncBeta(), 2000);
+  timer.unref();
 
   // Resources: skills as documents, and the design outline of each project.
   server.registerResource(

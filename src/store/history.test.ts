@@ -1,7 +1,15 @@
 import { createEmptyDoc } from '@core/doc';
 import type { Doc } from '@core/types';
 import { describe, expect, it } from 'vitest';
-import { COALESCE_WINDOW_MS, EMPTY_HISTORY, MAX_HISTORY, record, redo, undo } from './history';
+import {
+  COALESCE_WINDOW_MS,
+  EMPTY_HISTORY,
+  MAX_HISTORY,
+  record,
+  redo,
+  undo,
+  type History,
+} from './history';
 
 const docN = (n: number): Doc => ({ ...createEmptyDoc({ id: 'p_hist1', now: 't' }), rev: n });
 
@@ -83,5 +91,17 @@ describe('history', () => {
       max: 1,
     });
     expect(small.past.map((e) => e.label)).toEqual(['b']);
+  });
+});
+
+describe('keyed records with a long window (an agent drawing in bursts)', () => {
+  it('joins records with the same key inside the window, and not outside it', () => {
+    const doc = createEmptyDoc();
+    let h: History = EMPTY_HISTORY;
+    h = record(h, doc, 'AI change', { now: 0, key: 'agent-pixelart', windowMs: 15_000 });
+    h = record(h, doc, 'AI change', { now: 8_000, key: 'agent-pixelart', windowMs: 15_000 });
+    expect(h.past).toHaveLength(1);
+    h = record(h, doc, 'AI change', { now: 30_000, key: 'agent-pixelart', windowMs: 15_000 });
+    expect(h.past).toHaveLength(2);
   });
 });

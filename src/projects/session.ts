@@ -15,6 +15,7 @@ import { getCanvasApi } from '../canvas/canvas-api';
 import { pulseNodes } from '../canvas/pulse';
 import { startAgentPolling } from '../connect/agents';
 import { getFs, type HomeApi } from '../platform/fs';
+import { hydrateBeta } from '../ui/beta';
 import { renameProject } from '../store/panel-commands';
 import { store } from '../store/store';
 import { BridgeService, RequestError } from '../sync/requests';
@@ -143,7 +144,11 @@ async function catchUpTo(sync: SyncService, minRev: unknown): Promise<void> {
     await new Promise((r) => setTimeout(r, 60));
   }
   // Let React and the renderer settle on the new document before it is drawn.
-  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  // (A minimised window gets no animation frames, so this never waits longer than a moment.)
+  await Promise.race([
+    new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
+    new Promise((r) => setTimeout(r, 120)),
+  ]);
 }
 
 function ensureSession(): Promise<Session> {
@@ -325,6 +330,7 @@ export async function bootProject(): Promise<void> {
     return;
   }
   try {
+    void hydrateBeta();
     const [settings, list] = await Promise.all([readSettings(ctx.fs), listProjects(ctx.fs)]);
     projectsStore.setState({ list });
     const order = [settings.lastProject, ...list.map((p) => p.id)].filter(

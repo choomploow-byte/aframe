@@ -1,4 +1,5 @@
 import { isValidId } from './ids';
+import { validateCanvas } from './pixelart';
 import { EFFECT_PRESETS, PATTERN_NAMES } from './paint';
 import { CONTAINER_TYPES, NODE_TYPES, ownersOf, propsFor, REQUIRED_PROPS } from './props';
 import { suggest } from './suggest';
@@ -494,6 +495,13 @@ export function validateDoc(input: unknown): ValidationResult {
   if (typeof doc.rootId !== 'string') fail('rootId must be a string.', 'rootId');
 
   validateTokensShape(doc.tokens, fail);
+  if (doc.pixelArt !== undefined) {
+    try {
+      validateCanvas(doc.pixelArt);
+    } catch (e) {
+      fail(e instanceof Error ? e.message : 'pixelArt is not valid.', 'pixelArt');
+    }
+  }
   validateAnnotations(doc.annotations, fail);
   validateReferences(doc.references, doc.assets, fail);
 

@@ -4,6 +4,7 @@
  */
 
 import type { LibraryEntry } from './library';
+import type { PixelCanvas } from './pixelart';
 
 export const SCHEMA_VERSION = 1 as const;
 
@@ -267,6 +268,11 @@ export interface Doc {
   references: Reference[];
   /** assetId -> data URL (MVP). Later: files under assets/. */
   assets: Record<string, string>;
+  /**
+   * The pixel art canvas (beta feature "Pixel Art Editor"). Absent until one is made. Kept in the
+   * document so it is saved, synced with agents and undone like everything else.
+   */
+  pixelArt?: PixelCanvas;
   meta: DocMeta;
 }
 
@@ -484,6 +490,8 @@ export interface ToolContext {
   ) => Promise<{ root: string; written: string[]; unchanged: string[] }>;
   /** Renders a node to PNG or SVG bytes in the running app (the app must be open). */
   exportImage?: (opts: ExportImageOptions) => Promise<ExportImageResult>;
+  /** Whether a beta feature (see core/beta.ts) is switched on. A context that cannot say counts as off. */
+  betaEnabled?: (feature: string) => boolean | Promise<boolean>;
   /** Compares a frame with a reference image (needs the app: it renders and decodes pictures). */
   compareReference?: (opts: CompareReferenceOptions) => Promise<CompareReferenceResult>;
 }

@@ -78,7 +78,8 @@ export function sameContent(a: Doc, b: Doc): boolean {
     deepEqual(a.tokens, b.tokens) &&
     deepEqual(a.annotations, b.annotations) &&
     deepEqual(a.references, b.references) &&
-    deepEqual(a.assets, b.assets)
+    deepEqual(a.assets, b.assets) &&
+    deepEqual(a.pixelArt, b.pixelArt)
   );
 }
 
@@ -234,14 +235,21 @@ export function mergeDocs(base: Doc, local: Doc, remote: Doc): MergeResult {
     radii: mergeRecord(base.tokens.radii, local.tokens.radii, remote.tokens.radii),
     spacing: pick3(base.tokens.spacing, local.tokens.spacing, remote.tokens.spacing).value,
   };
+  const textStyles = mergeRecord(
+    base.tokens.textStyles ?? {},
+    local.tokens.textStyles ?? {},
+    remote.tokens.textStyles ?? {},
+  );
+  const pixelArt = pick3(base.pixelArt, local.pixelArt, remote.pixelArt).value;
   const doc: Doc = {
     ...remote,
     name,
     nodes,
-    tokens,
+    tokens: Object.keys(textStyles).length > 0 ? { ...tokens, textStyles } : tokens,
     annotations: mergeById<Annotation>(base.annotations, local.annotations, remote.annotations),
     references: mergeById<Reference>(base.references, local.references, remote.references),
     assets: mergeRecord(base.assets, local.assets, remote.assets),
+    ...(pixelArt === undefined ? {} : { pixelArt }),
     rev: Math.max(local.rev, remote.rev, base.rev) + 1,
     meta: {
       ...remote.meta,

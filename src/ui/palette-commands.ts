@@ -27,6 +27,8 @@ import {
   type CommandResult,
 } from '../store/game-commands';
 import { showToast } from './toast';
+import { betaOn } from './beta';
+import { openPixelEditor } from '../pixelart/state';
 import { setSnapSettings, useSnapSettings } from '../canvas/snap-settings';
 
 /**
@@ -235,8 +237,20 @@ export function buildPaletteCommands(): PaletteCommand[] {
       run: () => setSnapSettings({ grid: n, enabled: true }),
     })),
   ];
+  // A beta feature that is off has no menu entry.
+  const beta: PaletteCommand[] = betaOn('pixelArt')
+    ? [
+        {
+          id: 'beta.pixelart',
+          label: 'Open the Pixel Art editor (beta)',
+          group: 'Create',
+          run: openPixelEditor,
+        },
+      ]
+    : [];
   return [
     ...fromShortcuts,
+    ...beta,
     ...snapping,
     ...frames,
     ...themes,

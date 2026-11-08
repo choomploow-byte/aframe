@@ -181,10 +181,13 @@ await group('the sample becomes a real project', async () => {
     s.id !== 'p_sample' && ids.includes(s.id),
     s.id,
   );
+  // The old project is deleted just after the new one opens, so give that a moment.
+  const settled = await until(async () => ((await projectIds()).length === 1 ? true : null));
+  const left = await projectIds();
   check(
     'the empty Untitled project it replaced is gone',
-    !ids.includes(projectA) && ids.length === 1,
-    ids.join(','),
+    settled !== null && !left.includes(projectA) && left.length === 1,
+    left.join(','),
   );
   projectA = s.id;
   check(

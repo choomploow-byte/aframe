@@ -3,6 +3,7 @@ import { applyChanges } from './apply';
 import { bumpRev } from './doc';
 import { seededRng } from './ids';
 import { changedNodeIds, mergeDocs, sameContent } from './merge';
+import { createCanvas } from './pixelart';
 import { deepFreeze, sampleDoc } from './testing';
 import type { Doc, Op } from './types';
 import { validateDoc } from './validate';
@@ -303,5 +304,21 @@ describe('random scenarios', () => {
     }
     expect(merged).toBeGreaterThan(100); // the generator really exercises the merge path
     expect(clean).toBeGreaterThan(30);
+  });
+});
+
+describe('merging the newer document fields', () => {
+  it('keeps text styles and the pixel canvas through a merge', () => {
+    const base = sampleDoc();
+    const withStyle = {
+      ...base,
+      rev: base.rev + 1,
+      tokens: { ...base.tokens, textStyles: { Title: { fontSize: 40 } } },
+    };
+    const canvas = createCanvas(4, 4);
+    const remote = { ...base, rev: base.rev + 1, pixelArt: canvas };
+    const result = mergeDocs(base, withStyle, remote);
+    expect(result.doc.tokens.textStyles).toEqual({ Title: { fontSize: 40 } });
+    expect(result.doc.pixelArt).toEqual(canvas);
   });
 });

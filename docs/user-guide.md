@@ -77,6 +77,27 @@ shows one over or beside a frame.
 Skills are short markdown guides the AI loads on demand (typography, colour, layout, patterns,
 accessibility, critique, game UI...). Put your own in `~/.aframe/skills/`; see `skills/README.md`.
 
+## Beta features
+
+Settings (the AI settings dialog, Ctrl+K then "AI settings") has a **Beta features** section: a master
+switch, and once that is on, one switch per feature with its name and a short description. Everything is
+off until you turn it on, and a feature that is off is completely hidden: no button, no panel, and no
+tools for the AI. Your choices are remembered.
+
+### Pixel Art Editor (beta)
+Turn it on, then press **Pixel Art** in the top bar (or Ctrl+K, "Open the Pixel Art editor").
+- **Start**: a blank 16, 32 or 64 pixel square, a custom size up to 128 x 128, or open a saved file.
+- **Draw**: pencil (P), eraser (E), fill (F), line (L), rectangle (R, Shift+R filled), colour picker (I),
+  mirror drawing (M, Shift+M), grid (G), zoom (+ / - / wheel), pan (Space-drag or middle mouse), fit (0).
+  Arrow keys move a cursor and Enter draws, so it works without a mouse.
+- **Palette**: pick, add, edit (colour box or hex) and remove colours. Index 0 is transparent.
+- **Undo** (Ctrl+Z / Ctrl+Y): one step per stroke, per fill, per shape.
+- **Save** as a JSON file `{ width, height, palette, pixels }`, **Export PNG** at 1x to 32x (whole-number
+  scaling, transparent where empty), or open a saved file again. The canvas is also part of your project.
+- **Ask the AI**: Improve, Add shading, Clean up outline, Generate from a prompt, or type your own request. The
+  AI reads your canvas first and draws on it live; a whole request is one undo step, and Cancel stops it.
+  An AI tool you connect (Claude Code, Codex) gets the same `pixelart_` tools while the feature is on.
+
 ## Checking a design
 
 **Check** (top bar) counts problems and opens a list: faint text, tiny type (14px minimum on phone-width

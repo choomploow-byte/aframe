@@ -9,7 +9,7 @@ Goal: the app and any number of MCP server processes cooperate on the same proje
 ```
 ~/.aframe/
   app-state.json                written ONLY by the app: { appHeartbeat: ISO, appPid, appVersion, currentProject, selection: [ids] }
-  settings.json                 written only by the webview: { lastProject }
+  settings.json                 written only by the webview: { lastProject, beta }; the MCP server only reads `beta`
   agents/<pid>.json             one per MCP process, written only by that process (Phase 5)
   projects/
     <id>/

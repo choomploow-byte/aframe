@@ -5,6 +5,7 @@ import './styles.css';
 import './ui/ui.css';
 import './ui/brand.css';
 import './panels/panels.css';
+import './pixelart/pixelart.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';

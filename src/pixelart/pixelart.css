@@ -1,0 +1,295 @@
+/* Pixel Art editor (beta): fills the canvas area of the shell, above the design canvas. */
+.pixel {
+  grid-area: canvas;
+  position: relative;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg);
+  color: var(--ink);
+  outline: none;
+}
+.pixel__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  flex-wrap: wrap;
+}
+.pixel__bar h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.pixel__beta {
+  margin-left: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--accent-soft, var(--hover));
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.pixel__size {
+  font-size: 12px;
+  color: var(--muted);
+}
+.pixel__spacer {
+  flex: 1;
+}
+.pixel__scale select {
+  font: inherit;
+  font-size: 12px;
+}
+.pixel__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.pixel__tools {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border-right: 1px solid var(--border);
+  background: var(--panel);
+}
+.pixel__tool[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-ink, #fff);
+}
+.pixel__glyph {
+  font-size: 15px;
+  line-height: 1;
+}
+.pixel__rule {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--border);
+}
+.pixel__stage {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background-color: var(--canvas-bg, var(--bg));
+  background-image: radial-gradient(var(--canvas-dot, var(--border)) 1px, transparent 1px);
+  background-size: 24px 24px;
+  touch-action: none;
+  user-select: none;
+  cursor: crosshair;
+}
+.pixel__sheet {
+  position: relative;
+  flex: none;
+  box-shadow: 0 0 0 1px var(--border);
+  /* a checkerboard shows through transparent pixels */
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #d8d8d8 25%, transparent 25%, transparent 75%, #d8d8d8 75%),
+    linear-gradient(45deg, #d8d8d8 25%, transparent 25%, transparent 75%, #d8d8d8 75%);
+  background-size: calc(var(--cell) * 2) calc(var(--cell) * 2);
+  background-position:
+    0 0,
+    var(--cell) var(--cell);
+}
+.pixel__sheet--grid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.22) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.22) 1px, transparent 1px);
+  background-size: var(--cell) var(--cell);
+}
+.pixel__canvas {
+  display: block;
+  image-rendering: pixelated;
+}
+.pixel__cursor {
+  position: absolute;
+  pointer-events: none;
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  box-shadow: 0 0 0 1px #fff;
+}
+.pixel__side {
+  width: 220px;
+  flex: none;
+  overflow: auto;
+  padding: 10px;
+  border-left: 1px solid var(--border);
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pixel__panel h3 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pixel__swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.pixel__swatch {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  background: var(--bg);
+}
+.pixel__swatch[aria-pressed='true'] {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.pixel__swatch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.pixel__swatch--clear {
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%),
+    linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%);
+  background-size: 8px 8px;
+  background-position:
+    0 0,
+    4px 4px;
+}
+.pixel__colour {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.pixel__colour input[type='color'] {
+  width: 30px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: none;
+}
+.pixel__colour .textfield {
+  min-width: 0;
+  flex: 1;
+  font-family: ui-monospace, monospace;
+}
+.pixel__custom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.pixel__custom .textfield {
+  width: 64px;
+}
+.pixel__custom label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.pixel__note {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.pixel__error {
+  color: var(--danger, #c0392b);
+  font-size: 13px;
+}
+.pixel__start {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+}
+.pixel__start h2 {
+  margin: 0;
+  font-size: 22px;
+}
+.pixel__sizes {
+  display: flex;
+  gap: 8px;
+}
+.pixel__open {
+  cursor: pointer;
+}
+.pixel__ai {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+}
+.pixel__aiquick {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.pixel__aiform {
+  display: flex;
+  flex: 1;
+  min-width: 220px;
+  gap: 6px;
+}
+.pixel__aiform .textfield {
+  flex: 1;
+}
+.pixel__aistatus {
+  flex-basis: 100%;
+  min-height: 18px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.pixel__working {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pixel__spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: pixel-spin 0.8s linear infinite;
+}
+@keyframes pixel-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pixel__spinner {
+    animation: none;
+  }
+}

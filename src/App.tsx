@@ -9,10 +9,16 @@ import { CrashProbe } from './ui/ErrorBoundary';
 import { useImageDropAndPaste } from './ui/image-import';
 import { TopBar } from './ui/TopBar';
 import { Toasts } from './ui/Toasts';
+import { useBetaFeature } from './ui/beta';
+import { PixelArtEditor } from './pixelart/PixelArtEditor';
+import { usePixelUi } from './pixelart/state';
 
 /** App shell: top bar, left panel (Layers / Assets / Tokens), canvas, right panel (Design / Notes). */
 export function App() {
   useImageDropAndPaste();
+  // Beta feature: with it off there is nothing to open, so nothing is drawn.
+  const pixelArt = useBetaFeature('pixelArt');
+  const pixelOpen = usePixelUi((s) => s.open);
   return (
     <div className="shell">
       <TopBar />
@@ -22,6 +28,7 @@ export function App() {
       </aside>
 
       <Canvas />
+      {pixelArt && pixelOpen && <PixelArtEditor />}
 
       <aside className="panel panel--right" aria-label={STRINGS.panels.properties}>
         <RightPanel />

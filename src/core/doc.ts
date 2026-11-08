@@ -49,8 +49,20 @@ export function loadDoc(input: unknown): LoadResult {
  * instead of loading every project's embedded images).
  */
 export function serializeDoc(doc: Doc): string {
-  const { schema, rev, id, name, rootId, meta, tokens, annotations, references, nodes, assets } =
-    doc;
+  const {
+    schema,
+    rev,
+    id,
+    name,
+    rootId,
+    meta,
+    tokens,
+    annotations,
+    references,
+    nodes,
+    assets,
+    pixelArt,
+  } = doc;
   const ordered = {
     schema,
     rev,
@@ -63,6 +75,7 @@ export function serializeDoc(doc: Doc): string {
     references,
     nodes,
     assets,
+    ...(pixelArt === undefined ? {} : { pixelArt }),
   };
   return `${JSON.stringify(ordered, null, 2)}
 `;

@@ -85,6 +85,15 @@ Must include, concisely:
 | `ungroup_node` | `{ id }` | Release a frame's children into its parent and delete the frame |
 | `repeat_node` | `{ id, count, direction?, columns?, gap?, values? }` | Copies of a layer in a row, column or grid; `values` gives each copy its own text or icon by layer name |
 | `update_where` | `{ set, name?, query?, type?, role?, component?, inside?, dryRun?, label? }` | One atomic edit for every layer that matches ("every layer named Stud Texture to opacity 0.4"); properties that do not apply to a layer type are skipped, instance layers are skipped, `dryRun` lists what would change |
+| `pixelart_get_canvas` | `{}` | **Beta (Pixel Art Editor).** The pixel canvas: size, palette and every pixel as compact text rows (`.` transparent, then `1-9a-zA-Z` = palette colours) plus a legend |
+| `pixelart_create_canvas` | `{ width, height, palette? }` | Beta. New empty canvas (1-128 per side; palette of up to 61 hex colours) |
+| `pixelart_set_palette` | `{ colors }` | Beta. Replace the palette; pixels keep their index |
+| `pixelart_set_pixels` | `{ pixels: [{ x, y, color }] }` | Beta. Batch set (up to 4096); `color` is a palette index or a hex colour |
+| `pixelart_draw_line` | `{ x0, y0, x1, y1, color }` | Beta. 1-pixel line |
+| `pixelart_draw_rect` | `{ x0, y0, x1, y1, color, filled? }` | Beta. Outline or filled rectangle |
+| `pixelart_fill` | `{ x, y, color }` | Beta. Flood fill (4-connected) |
+| `pixelart_replace_grid` | `{ rows, palette? }` | Beta. Replace the whole canvas from text rows |
+| `pixelart_clear` | `{}` | Beta. Make every pixel transparent |
 | `find_nodes` | `{ query?, type?, role?, component?, inside?, limit? }` | Find layers by name or text; returns ids, size, parent |
 | `define_component` | `{ nodeId, kind?, name?, states? }` | Frame becomes a master; states by layer name |
 | `create_instance` | `{ component, parentId?, x?, y?, name?, state?, overrides? }` | An instance that follows its master |

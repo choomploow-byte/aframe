@@ -7,6 +7,7 @@ import { defineTool, ToolFailure, type Tool, type ToolResult } from './tool-kit'
 import { mergeTokens } from './token-edit';
 import { DESIGN_TOOLS } from './tools-design';
 import { GAME_TOOLS } from './tools-game';
+import { PIXELART_TOOLS } from './tools-pixelart';
 import { EXTRA_TOOLS } from './tools-extra';
 import { BLEND_MODES, type NodePropKey, type Op, type ToolContext, type Warning } from './types';
 import { lookupId } from './ops';
@@ -407,6 +408,7 @@ export const TOOLS: readonly Tool[] = [
   applyChangesTool,
   ...DESIGN_TOOLS,
   ...GAME_TOOLS,
+  ...PIXELART_TOOLS,
   ...EXTRA_TOOLS,
 ];
 

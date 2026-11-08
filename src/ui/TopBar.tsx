@@ -26,6 +26,8 @@ import { ContextMenu } from './ContextMenu';
 import { TextField } from './fields';
 import { nextTheme, setThemePreference, useThemePreference } from './theme';
 import { useLintCounts } from './use-lint-counts';
+import { useBetaFeature } from './beta';
+import { openPixelEditor } from '../pixelart/state';
 import { openDialog } from './ui-state';
 
 const THEME_ICON = { system: Monitor, light: Sun, dark: Moon } as const;
@@ -132,6 +134,7 @@ function WindowButtons() {
 /** Projects, project name and save status, undo/redo, export menu (a stub until Phase 8), theme and Connect AI. */
 export function TopBar() {
   const lint = useLintCounts();
+  const pixelArt = useBetaFeature('pixelArt');
   const canUndo = useAFrame((s) => s.history.past.length > 0);
   const canRedo = useAFrame((s) => s.history.future.length > 0);
   const name = useAFrame((s) => s.doc.name);
@@ -216,6 +219,17 @@ export function TopBar() {
       >
         Ctrl K
       </button>
+      {pixelArt && (
+        <button
+          type="button"
+          className="btn btn--ghost btn--small"
+          data-testid="open-pixelart"
+          title="Pixel Art editor (beta)"
+          onClick={openPixelEditor}
+        >
+          Pixel Art
+        </button>
+      )}
       <button
         type="button"
         className="btn btn--ghost btn--small"

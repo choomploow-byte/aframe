@@ -6,6 +6,8 @@ import { PROVIDERS, providerFor } from '../chat/providers';
 import { activeModel, settingsStore, useChatSettings } from '../chat/settings';
 import { currentTransport } from '../chat/transport';
 import { ProviderError, type ProviderId } from '../chat/types';
+import { BETA_FEATURES } from '@core/beta';
+import { setFeatureBeta, setMasterBeta, useBetaSettings } from './beta';
 import { Dialog } from './Dialog';
 import { Segmented, Select, Toggle } from './fields';
 import { closeDialog } from './ui-state';
@@ -23,6 +25,7 @@ export function SettingsDialog() {
   const model = activeModel(settings);
   const hasKey = keys[settings.provider];
   const update = settingsStore.getState().update;
+  const beta = useBetaSettings();
 
   const saveKey = async (): Promise<void> => {
     setBusy(true);
@@ -236,6 +239,48 @@ export function SettingsDialog() {
             }
           />
         </div>
+
+        <section
+          className="settings__beta"
+          aria-labelledby="beta-heading"
+          data-testid="beta-section"
+        >
+          <h3 id="beta-heading" className="settings__heading">
+            Beta features
+          </h3>
+          <div className="settings__row">
+            <span>
+              Turn on beta features
+              <small className="settings__hint">
+                Unfinished features you can try. Off, none of them show up anywhere.
+              </small>
+            </span>
+            <Toggle
+              ariaLabel="Turn on beta features"
+              field="beta-master"
+              checked={beta.enabled}
+              onChange={setMasterBeta}
+            />
+          </div>
+          {beta.enabled && (
+            <ul className="settings__betalist" data-testid="beta-list">
+              {BETA_FEATURES.map((f) => (
+                <li className="settings__row" key={f.id} data-beta-feature={f.id}>
+                  <span>
+                    {f.name}
+                    <small className="settings__hint">{f.description}</small>
+                  </span>
+                  <Toggle
+                    ariaLabel={f.name}
+                    field={`beta-${f.id}`}
+                    checked={beta.features[f.id] ?? f.default}
+                    onChange={(on) => setFeatureBeta(f.id, on)}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
         <div className="settings__result" aria-live="polite">
           {result !== null && (

@@ -364,7 +364,17 @@ export class SyncService {
     const changedIds = changedNodeIds(s.doc, merge.doc).filter(
       (id) => merge.doc.nodes[id] !== undefined,
     );
-    this.store.getState().adoptExternal(merge.doc, label);
+    // An agent drawing pixel art makes many small changes in a row: those join into one undo step.
+    const pixelOnly =
+      merge.doc.pixelArt !== s.doc.pixelArt &&
+      sameContent({ ...s.doc, pixelArt: undefined }, { ...merge.doc, pixelArt: undefined });
+    this.store
+      .getState()
+      .adoptExternal(
+        merge.doc,
+        label,
+        pixelOnly ? { key: 'agent-pixelart', windowMs: 15_000 } : undefined,
+      );
     const names = merge.conflicts.map(
       (cid) => s.doc.nodes[cid]?.name ?? remote.nodes[cid]?.name ?? cid,
     );

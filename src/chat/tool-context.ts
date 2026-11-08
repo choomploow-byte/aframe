@@ -1,6 +1,9 @@
 import { getToolDefinitions, runTool } from '@core/tools';
 import type { ToolContext } from '@core/types';
+import { PIXELART_TOOL_NAMES } from '@core/tools-pixelart';
+import type { BetaFeatureId } from '@core/beta';
 import { store } from '../store/store';
+import { betaOn } from '../ui/beta';
 import type { ToolOutcome } from './agent';
 import { chatSkills } from './skills';
 import type { ToolDef } from './types';
@@ -24,8 +27,11 @@ export const CHAT_EXCLUDED: ReadonlySet<string> = new Set([
 const MAX_RESULT_CHARS = 60_000;
 
 export function chatToolDefs(): ToolDef[] {
+  // A beta feature that is off has no tools here either.
+  const pixelArtOn = betaOn('pixelArt');
   return getToolDefinitions()
     .filter((t) => !CHAT_EXCLUDED.has(t.name))
+    .filter((t) => pixelArtOn || !PIXELART_TOOL_NAMES.includes(t.name))
     .map((t) => ({ name: t.name, description: t.description, inputSchema: t.inputSchema }));
 }
 
@@ -36,6 +42,7 @@ export function createChatToolContext(): ToolContext {
     // Inside the turn's transaction these edits become one undo step.
     commit: (next, meta) => store.getState().commitExternal(next, meta?.label ?? 'AI edit'),
     appOnline: () => true,
+    betaEnabled: (feature) => betaOn(feature as BetaFeatureId),
     getSelection: () => store.getState().selection,
     screenshot: async (opts) => {
       const { captureScreenshot } = await import('../canvas/screenshot');

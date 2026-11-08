@@ -830,3 +830,64 @@ describe('presence', () => {
     expect((await home.list('agents')).filter((e) => e.name.endsWith('.json'))).toHaveLength(0);
   }, 30_000);
 });
+
+describe('beta features: the Pixel Art tools', () => {
+  const names = async (c: Client): Promise<string[]> =>
+    (await c.listTools()).tools.map((t) => t.name).filter((n) => n.startsWith('pixelart_'));
+  const setBeta = async (beta: unknown): Promise<void> => {
+    await fs.writeFile(path.join(homeDir, 'settings.json'), JSON.stringify({ beta }));
+  };
+  /** The server looks at the settings file every couple of seconds. */
+  async function until(c: Client, want: boolean): Promise<string[]> {
+    for (let i = 0; i < 40; i += 1) {
+      const list = await names(c);
+      if (list.length > 0 === want) return list;
+      await new Promise((r) => setTimeout(r, 250));
+    }
+    return names(c);
+  }
+
+  it('has none of them until the feature is switched on, and they refuse to run while it is off', async () => {
+    const c = await connect();
+    expect(await names(c)).toEqual([]);
+    await ok(c, 'create_project', { name: 'Sprites' });
+    // A hidden tool is not just missing from the list: calling it is refused by the server.
+    await expect(call(c, 'pixelart_get_canvas')).rejects.toThrow(/disabled/);
+  });
+
+  it('shows them when the master switch and the feature are on, and hides them again', async () => {
+    await setBeta({ enabled: true, features: { pixelArt: true } });
+    const c = await connect();
+    const on = await until(c, true);
+    expect(on.sort()).toEqual([
+      'pixelart_clear',
+      'pixelart_create_canvas',
+      'pixelart_draw_line',
+      'pixelart_draw_rect',
+      'pixelart_fill',
+      'pixelart_get_canvas',
+      'pixelart_replace_grid',
+      'pixelart_set_palette',
+      'pixelart_set_pixels',
+    ]);
+    await ok(c, 'create_project', { name: 'Sprites' });
+    await ok(c, 'pixelart_create_canvas', { width: 4, height: 4, palette: ['#ff0000'] });
+    await ok(c, 'pixelart_draw_line', { x0: 0, y0: 0, x1: 3, y1: 3, color: 1 });
+    const got = await ok(c, 'pixelart_get_canvas');
+    expect(got.json.rows).toEqual(['1...', '.1..', '..1.', '...1']);
+    const bad = await call(c, 'pixelart_set_pixels', { pixels: [{ x: 9, y: 0, color: 1 }] });
+    expect(bad.isError).toBe(true);
+    expect(bad.text).toMatch(/outside the 4 x 4 canvas/);
+
+    await setBeta({ enabled: false, features: { pixelArt: true } }); // master off wins
+    expect(await until(c, false)).toEqual([]);
+    await expect(call(c, 'pixelart_get_canvas')).rejects.toThrow(/disabled/);
+  });
+
+  it('keeps them hidden when the master switch is on but the feature is not', async () => {
+    await setBeta({ enabled: true, features: {} });
+    const c = await connect();
+    await new Promise((r) => setTimeout(r, 2600));
+    expect(await names(c)).toEqual([]);
+  });
+});

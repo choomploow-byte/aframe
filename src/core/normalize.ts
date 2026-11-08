@@ -127,6 +127,7 @@ export function normalizeDoc(input: LooseDoc, now: string = new Date(0).toISOStr
     annotations: input.annotations ?? [],
     references: input.references ?? [],
     assets: input.assets ?? {},
+    ...(input.pixelArt === undefined ? {} : { pixelArt: input.pixelArt }),
     meta: input.meta ?? { createdAt: now, updatedAt: now, lastWriter: 'app' },
   };
 }

@@ -88,7 +88,11 @@ export interface AFrameState {
    * user can step back over an agent's change (`history: false` for a bookkeeping change that is not
    * one, like restamping `rev`). Selection and viewport are kept.
    */
-  adoptExternal: (next: Doc, label: string, options?: { history?: boolean }) => void;
+  adoptExternal: (
+    next: Doc,
+    label: string,
+    options?: { history?: boolean; key?: string; windowMs?: number },
+  ) => void;
   /**
    * Applies a pure document change that is not a node op (tokens, assets, project name) as one
    * undo step. `change` may throw a `CoreError`; the document is then left untouched.
@@ -199,7 +203,14 @@ export function createAFrameStore(options: StoreOptions = {}): StoreApi<AFrameSt
         if (next === s.doc) return;
         const history =
           s.transaction === null && adoptOptions.history !== false
-            ? record(s.history, s.doc, label, { now: now() })
+            ? record(
+                s.history,
+                s.doc,
+                label,
+                adoptOptions.key === undefined
+                  ? { now: now() }
+                  : { now: now(), key: adoptOptions.key, windowMs: adoptOptions.windowMs ?? 300 },
+              )
             : s.history;
         set({ doc: next, history, selection: existing(next, s.selection) });
       },

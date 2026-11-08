@@ -7,6 +7,7 @@
 import path from 'node:path';
 import { bumpRev, serializeDoc } from '../src/core/doc';
 import type { Skill } from '../src/core/skills';
+import { isBetaOn, parseBetaSettings, type BetaFeatureId } from '../src/core/beta';
 import { CoreError } from '../src/core/errors';
 import { createTemplateDoc, TEMPLATES, type TemplateName } from '../src/core/templates';
 import type { Tool, ToolResult } from '../src/core/tool-kit';
@@ -304,6 +305,7 @@ export class McpEnv {
         read: (id) => Promise.resolve(new Library(this.home.root).read(id)),
       },
       projects: this.projects,
+      betaEnabled: (feature) => this.betaOn(feature),
       skills: {
         list: () =>
           this.skillList().map((s) => ({
@@ -313,6 +315,22 @@ export class McpEnv {
         load: (name) => this.skillList().find((s) => s.name === name)?.body ?? null,
       },
     };
+  }
+
+  /**
+   * Whether a beta feature is switched on in AFrame's Settings. The app writes the switches to
+   * settings.json in the home; they are read fresh (a few milliseconds) so flipping one takes effect
+   * without restarting anything. Unreadable means off.
+   */
+  async betaOn(feature: string): Promise<boolean> {
+    try {
+      const text = await this.home.read('settings.json');
+      if (text === null) return false;
+      const raw = JSON.parse(text) as { beta?: unknown };
+      return isBetaOn(parseBetaSettings(raw.beta), feature as BetaFeatureId);
+    } catch {
+      return false;
+    }
   }
 
   /** Shipped skills and the ones in ~/.aframe/skills (theirs win), read fresh each time. */
