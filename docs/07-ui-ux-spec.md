@@ -9,9 +9,11 @@
 - **Density:** few panels, generous padding, icon + label only where unclear. No toolbars with 30 icons.
 
 ## Layout
+The desktop window has no native title bar: the top bar is the title bar (minimise, maximise/restore and close at its right end; an empty stretch moves the window). See decision #125.
+
 ```
 ┌────────────────────────────────────────────────────────────────────────────┐
-│ ▢ AFrame   Project name ▾            [Share/Export ▾]  [Connect AI ●]  ☾  │  top bar (44px)
+│ ▢ AFrame   Project name ▾            [Share/Export ▾]  [Connect AI ●]  ☾ — ▢ ✕│  top bar (44px)
 ├───────────┬────────────────────────────────────────────┬───────────────────┤
 │ Layers    │                                            │ Properties        │
 │ (tree)    │              CANVAS                        │ (context-aware)   │

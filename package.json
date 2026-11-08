@@ -1,6 +1,6 @@
 {
   "name": "aframe",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Open-source AI design studio. Let Claude Code, Codex or any API-key model design real UI on a canvas.",
   "license": "MIT",
@@ -19,7 +19,7 @@
     "test": "vitest run",
     "test:mcp": "node scripts/test-mcp.mjs",
     "test:unit": "vitest run",
-    "test:e2e": "node tests/e2e/shell-smoke.mjs && node tests/e2e/canvas.mjs && node tests/e2e/panels.mjs && node --import tsx tests/e2e/persistence.mjs && node tests/e2e/mcp-live.mjs && node tests/e2e/toolkit.mjs && node tests/e2e/annotations.mjs && node --import tsx tests/e2e/export.mjs && node tests/e2e/export-ui.mjs && node tests/e2e/chat.mjs && node tests/e2e/lint-ui.mjs && node tests/e2e/import.mjs && node tests/e2e/a11y.mjs && node tests/e2e/resilience.mjs",
+    "test:e2e": "node tests/e2e/shell-smoke.mjs && node tests/e2e/canvas.mjs && node tests/e2e/panels.mjs && node tests/e2e/titlebar.mjs && node --import tsx tests/e2e/persistence.mjs && node tests/e2e/mcp-live.mjs && node tests/e2e/toolkit.mjs && node tests/e2e/annotations.mjs && node --import tsx tests/e2e/export.mjs && node tests/e2e/export-ui.mjs && node tests/e2e/chat.mjs && node tests/e2e/lint-ui.mjs && node tests/e2e/import.mjs && node tests/e2e/a11y.mjs && node tests/e2e/resilience.mjs",
     "test:e2e:panels": "node tests/e2e/panels.mjs",
     "test:e2e:persist": "node --import tsx tests/e2e/persistence.mjs",
     "test:e2e:mcp": "node tests/e2e/mcp-live.mjs",
