@@ -21,20 +21,21 @@ const REPO_URLS = [
 
 export function validateNames({ name, slug, bundleId }) {
   const problems = [];
-  if (!name || name.length > 40 || /[\r\n<>&"\\]/.test(name))
-    problems.push('--name must be 1-40 characters without quotes, angle brackets or backslashes');
-  if (!/^[a-z][a-z0-9-]{1,30}$/.test(slug ?? ''))
-    problems.push(
-      '--slug must be lowercase letters, digits and dashes, starting with a letter (2-31 characters)',
-    );
-  if (bundleId !== undefined && !/^[a-z][a-z0-9]*(\.[a-z][a-z0-9-]*){1,4}$/.test(bundleId))
-    problems.push('--bundle-id must look like com.example.app');
+  if (!name || name.length > 40 || /[
+<>&"\]/.test(name)) problems.push('--name must be 1-40 characters without quotes, angle brackets or backslashes');
+  // No dashes: the slug also goes into identifiers (useFoo, __foo) and crate names.
+  if (!/^[a-z][a-z0-9]{1,30}$/.test(slug ?? '')) problems.push('--slug must be lowercase letters and digits only, starting with a letter (2-31 characters)');
+  if (bundleId !== undefined && !/^[a-z][a-z0-9]*(\.[a-z][a-z0-9-]*){1,4}$/.test(bundleId)) problems.push('--bundle-id must look like com.example.app');
   return problems;
 }
 
+const IDENT = '[A-Za-z0-9_$]';
+
 /** The text with the old name replaced by the new one. Pure, so it can be tested. */
 export function renameText(text, { name, slug, bundleId }, options = {}) {
-  const upper = slug.toUpperCase().replace(/-/g, '_');
+  const upper = slug.toUpperCase();
+  // A name with spaces cannot sit inside an identifier (useAtelier, AtelierState): there it is joined up.
+  const pascal = name.replace(/[^A-Za-z0-9]+(.)?/g, (_m, c) => (c ? c.toUpperCase() : '')).replace(/^./, (c) => c.toUpperCase());
   let out = text;
   const protectedUrls = [];
   if (!options.renameRepoUrls) {
@@ -46,7 +47,11 @@ export function renameText(text, { name, slug, bundleId }, options = {}) {
     }
   }
   if (bundleId) out = out.replaceAll('dev.atelier.app', bundleId);
-  out = out.replaceAll('ATELIER', upper).replaceAll('Atelier', name).replaceAll('atelier', slug);
+  out = out
+    .replaceAll('ATELIER', upper)
+    .replace(new RegExp(`(?<!${IDENT})Atelier(?!${IDENT})`, 'g'), () => name)
+    .replaceAll('Atelier', pascal)
+    .replaceAll('atelier', slug);
   // eslint-disable-next-line no-control-regex
   out = out.replace(/\u0000URL(\d+)\u0000/g, (_m, i) => protectedUrls[Number(i)]);
   return out;

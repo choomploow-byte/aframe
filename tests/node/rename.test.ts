@@ -24,8 +24,13 @@ describe('renameText', () => {
     );
   });
 
-  it('turns dashes in the slug into underscores for the env prefix', () => {
-    expect(rename('ATELIER_HOME', { ...names, slug: 'foo-studio' })).toBe('FOO_STUDIO_HOME');
+  it('keeps the name out of identifiers when it has a space in it', () => {
+    expect(rename('export function useAtelier() { return AtelierState; } // Atelier', names)).toBe(
+      'export function useFooStudio() { return FooStudioState; } // Foo Studio',
+    );
+    expect(
+      rename("const x = window.__atelier; import { AtelierStore } from './atelier';", names),
+    ).toBe("const x = window.__foostudio; import { FooStudioStore } from './foostudio';");
   });
 
   it('leaves links to this repository and its site alone unless told to', () => {
@@ -63,6 +68,7 @@ describe('renamePath and validateNames', () => {
     expect(validate(names)).toEqual([]);
     expect(validate({ name: '', slug: 'ok' }).length).toBe(1);
     expect(validate({ name: 'X', slug: 'Bad Slug' }).length).toBe(1);
+    expect(validate({ name: 'X', slug: 'foo-studio' }).length).toBe(1);
     expect(validate({ name: 'X"; rm -rf', slug: 'ok' }).length).toBe(1);
     expect(validate({ name: 'X', slug: 'ok', bundleId: 'nodots' }).length).toBe(1);
   });
