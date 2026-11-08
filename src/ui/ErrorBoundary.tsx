@@ -35,8 +35,8 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
       <div className="crash" role="alert" data-testid="crash">
         <h1>Something went wrong</h1>
         <p>
-          Atelier hit a problem it could not recover from. Your design is saved: edits are written
-          as you make them, and reopening the app brings it back.
+          AFrame hit a problem it could not recover from. Your design is saved: edits are written as
+          you make them, and reopening the app brings it back.
         </p>
         <div className="crash__actions">
           <button
@@ -45,7 +45,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
             data-action="crash-reload"
             onClick={() => window.location.reload()}
           >
-            Reload Atelier
+            Reload AFrame
           </button>
           <button
             type="button"

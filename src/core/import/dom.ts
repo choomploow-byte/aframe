@@ -6,7 +6,7 @@
  * It is a prototype with honest limits: sizes are fixed at the captured width (nothing is responsive),
  * flex containers become auto-layout, a block that stacks evenly becomes a column, anything else is
  * placed by coordinates, pictures and inline SVG become grey placeholders (nothing is downloaded), and
- * CSS that has no Atelier equivalent (transforms, pseudo-elements, grid tracks, filters) is not carried.
+ * CSS that has no AFrame equivalent (transforms, pseudo-elements, grid tracks, filters) is not carried.
  */
 import type { NodeSpec } from '../types';
 import {

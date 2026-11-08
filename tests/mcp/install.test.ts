@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { runCommand } from '../../mcp/cli';
-import { ATELIER_SKILL, MCP_VERSION } from '../../mcp/generated';
+import { AFRAME_SKILL, MCP_VERSION } from '../../mcp/generated';
 import {
   detectHosts,
   doctor,
@@ -21,11 +21,11 @@ import {
   type RunResult,
 } from '../../mcp/install';
 
-const BUNDLE = fileURLToPath(new URL('../../mcp/dist/atelier-mcp.mjs', import.meta.url));
+const BUNDLE = fileURLToPath(new URL('../../mcp/dist/aframe-mcp.mjs', import.meta.url));
 
 let root: string;
 let userHome: string;
-let atelierHome: string;
+let aframeHome: string;
 let claudeCalls: string[][];
 let claudeServers: Map<string, string>;
 
@@ -63,8 +63,8 @@ function makeEnv(
 ): InstallEnv {
   return {
     userHome,
-    atelierHome,
-    selfPath: options.selfPath ?? path.join(atelierHome, 'mcp', 'atelier-mcp.mjs'),
+    aframeHome,
+    selfPath: options.selfPath ?? path.join(aframeHome, 'mcp', 'aframe-mcp.mjs'),
     which: (cmd) => (cmd === 'claude' && options.claude ? '/fake/bin/claude' : null),
     run: (_cmd, args) => fakeClaude(args),
     platform: 'win32',
@@ -79,15 +79,15 @@ const writeUser = (rel: string, text: string): void => {
   fs.mkdirSync(path.dirname(path.join(userHome, rel)), { recursive: true });
   fs.writeFileSync(path.join(userHome, rel), text);
 };
-const stableFile = (): string => path.join(atelierHome, 'mcp', 'atelier-mcp.mjs');
+const stableFile = (): string => path.join(aframeHome, 'mcp', 'aframe-mcp.mjs');
 const levels = (reports: { steps: { level: string }[] }[]): string[] =>
   reports.flatMap((r) => r.steps.map((s) => s.level));
 
 beforeEach(() => {
-  root = fs.mkdtempSync(path.join(os.tmpdir(), 'atelier-install-'));
+  root = fs.mkdtempSync(path.join(os.tmpdir(), 'aframe-install-'));
   userHome = path.join(root, 'user');
-  atelierHome = path.join(userHome, '.atelier');
-  fs.mkdirSync(path.join(atelierHome, 'mcp'), { recursive: true });
+  aframeHome = path.join(userHome, '.aframe');
+  fs.mkdirSync(path.join(aframeHome, 'mcp'), { recursive: true });
   fs.writeFileSync(stableFile(), '// a real server\n');
   claudeCalls = [];
   claudeServers = new Map();
@@ -101,26 +101,26 @@ describe('install into a clean machine', () => {
 
     // Claude Code with no CLI on PATH: the config file is edited.
     const claude = JSON.parse(read('.claude.json'));
-    expect(claude.mcpServers.atelier).toEqual({
+    expect(claude.mcpServers.aframe).toEqual({
       type: 'stdio',
       command: 'node',
       args: [stableFile()],
       env: {},
     });
-    expect(read('.claude', 'skills', 'atelier', 'SKILL.md')).toBe(ATELIER_SKILL);
+    expect(read('.claude', 'skills', 'aframe', 'SKILL.md')).toBe(AFRAME_SKILL);
 
     // Codex: a marked block, literal path (no backslash escaping), timeouts above Codex's defaults.
     const toml = read('.codex', 'config.toml');
-    expect(toml).toContain('[mcp_servers.atelier]');
+    expect(toml).toContain('[mcp_servers.aframe]');
     expect(toml).toContain('command = "node"');
     expect(toml).toContain(`args = ['${stableFile()}']`);
     expect(toml).toMatch(/startup_timeout_sec = 20/);
     expect(toml).toMatch(/tool_timeout_sec = 120/);
-    expect(read('.codex', 'AGENTS.md')).toContain('`atelier` MCP tools');
-    expect(read('.agents', 'skills', 'atelier', 'SKILL.md')).toBe(ATELIER_SKILL);
+    expect(read('.codex', 'AGENTS.md')).toContain('`aframe` MCP tools');
+    expect(read('.agents', 'skills', 'aframe', 'SKILL.md')).toBe(AFRAME_SKILL);
 
     // Cursor
-    expect(JSON.parse(read('.cursor', 'mcp.json')).mcpServers.atelier).toEqual({
+    expect(JSON.parse(read('.cursor', 'mcp.json')).mcpServers.aframe).toEqual({
       command: 'node',
       args: [stableFile()],
     });
@@ -134,13 +134,13 @@ describe('install into a clean machine', () => {
       'add',
       '--scope',
       'user',
-      'atelier',
+      'aframe',
       '--',
       'node',
       stableFile(),
     ]);
     expect(exists('.claude.json')).toBe(false); // the CLI did it; no hand edit
-    expect(exists('.claude', 'skills', 'atelier', 'SKILL.md')).toBe(true);
+    expect(exists('.claude', 'skills', 'aframe', 'SKILL.md')).toBe(true);
   });
 });
 
@@ -152,7 +152,7 @@ describe('idempotence', () => {
       '.codex/config.toml',
       '.codex/AGENTS.md',
       '.cursor/mcp.json',
-      '.claude/skills/atelier/SKILL.md',
+      '.claude/skills/aframe/SKILL.md',
     ];
     const before = files.map((f) => read(f));
     const mtimes = files.map((f) => fs.statSync(path.join(userHome, f)).mtimeMs);
@@ -190,21 +190,21 @@ describe('foreign configuration is never clobbered', () => {
     install(makeEnv(), ['claude', 'codex', 'cursor']);
     expect(JSON.parse(read('.cursor/mcp.json'))).toMatchObject({
       extra: { keep: true },
-      mcpServers: { other: { command: 'npx' }, atelier: { command: 'node' } },
+      mcpServers: { other: { command: 'npx' }, aframe: { command: 'node' } },
     });
     expect(read('.codex/config.toml').startsWith(codex.trimEnd())).toBe(true);
     expect(read('.codex/config.toml')).toContain('[mcp_servers.context7]');
     expect(read('.codex/AGENTS.md').startsWith('# My rules\nBe kind.')).toBe(true);
     expect(JSON.parse(read('.claude.json'))).toMatchObject({
       numStartups: 7,
-      mcpServers: { github: { command: 'gh-mcp' }, atelier: { command: 'node' } },
+      mcpServers: { github: { command: 'gh-mcp' }, aframe: { command: 'node' } },
     });
 
     // Backups hold the originals, and a later install does not overwrite them.
-    expect(read('.codex/config.toml.atelier-bak')).toBe(codex);
-    expect(JSON.parse(read('.cursor/mcp.json.atelier-bak'))).toEqual(cursor);
+    expect(read('.codex/config.toml.aframe-bak')).toBe(codex);
+    expect(JSON.parse(read('.cursor/mcp.json.aframe-bak'))).toEqual(cursor);
     install(makeEnv(), ['codex', 'cursor']);
-    expect(read('.codex/config.toml.atelier-bak')).toBe(codex);
+    expect(read('.codex/config.toml.aframe-bak')).toBe(codex);
 
     uninstall(makeEnv(), ['claude', 'codex', 'cursor']);
     expect(JSON.parse(read('.cursor/mcp.json'))).toEqual(cursor);
@@ -214,16 +214,16 @@ describe('foreign configuration is never clobbered', () => {
       numStartups: 7,
       mcpServers: { github: { command: 'gh-mcp' } },
     });
-    expect(exists('.claude/skills/atelier/SKILL.md')).toBe(false);
-    expect(exists('.agents/skills/atelier/SKILL.md')).toBe(false);
+    expect(exists('.claude/skills/aframe/SKILL.md')).toBe(false);
+    expect(exists('.agents/skills/aframe/SKILL.md')).toBe(false);
   });
 
-  it('refuses to replace an "atelier" entry it did not write, unless forced', () => {
+  it('refuses to replace an "aframe" entry it did not write, unless forced', () => {
     writeUser(
       '.cursor/mcp.json',
-      JSON.stringify({ mcpServers: { atelier: { command: 'python', args: ['mine.py'] } } }),
+      JSON.stringify({ mcpServers: { aframe: { command: 'python', args: ['mine.py'] } } }),
     );
-    writeUser('.codex/config.toml', '[mcp_servers.atelier]\ncommand = "python"\n');
+    writeUser('.codex/config.toml', '[mcp_servers.aframe]\ncommand = "python"\n');
     const r = install(makeEnv(), ['codex', 'cursor']);
     expect(r.reports.map((x) => x.ok)).toEqual([false, false]);
     expect(
@@ -233,12 +233,12 @@ describe('foreign configuration is never clobbered', () => {
           (s) => s.level === 'fail' && /not (this one|write)|different|did not write/i.test(s.text),
         ),
     ).toBe(true);
-    expect(JSON.parse(read('.cursor/mcp.json')).mcpServers.atelier.command).toBe('python');
-    expect(read('.codex/config.toml')).toBe('[mcp_servers.atelier]\ncommand = "python"\n');
+    expect(JSON.parse(read('.cursor/mcp.json')).mcpServers.aframe.command).toBe('python');
+    expect(read('.codex/config.toml')).toBe('[mcp_servers.aframe]\ncommand = "python"\n');
 
     const forced = install(makeEnv(), ['cursor'], { force: true });
     expect(forced.reports[0]?.ok).toBe(true);
-    expect(JSON.parse(read('.cursor/mcp.json')).mcpServers.atelier.command).toBe('node');
+    expect(JSON.parse(read('.cursor/mcp.json')).mcpServers.aframe.command).toBe('node');
   });
 
   it('leaves a config it cannot parse alone and prints the manual step', () => {
@@ -249,38 +249,38 @@ describe('foreign configuration is never clobbered', () => {
     expect(read('.cursor/mcp.json')).toBe('{ not json');
     expect(read('.claude.json')).toBe('{ also not');
     expect(
-      r.reports[0]?.steps.some((s) => s.text.includes('claude mcp add --scope user atelier')),
+      r.reports[0]?.steps.some((s) => s.text.includes('claude mcp add --scope user aframe')),
     ).toBe(true);
   });
 
-  it('with the claude CLI: an existing foreign "atelier" server is refused, forced is replaced', () => {
-    claudeServers.set('atelier', 'python other.py');
+  it('with the claude CLI: an existing foreign "aframe" server is refused, forced is replaced', () => {
+    claudeServers.set('aframe', 'python other.py');
     const r = install(makeEnv({ claude: true }), ['claude']);
     expect(r.reports[0]?.ok).toBe(false);
-    expect(claudeServers.get('atelier')).toBe('python other.py');
+    expect(claudeServers.get('aframe')).toBe('python other.py');
     const forced = install(makeEnv({ claude: true }), ['claude'], { force: true });
     expect(forced.reports[0]?.ok).toBe(true);
-    expect(claudeServers.get('atelier')).toContain('atelier-mcp.mjs');
+    expect(claudeServers.get('aframe')).toContain('aframe-mcp.mjs');
   });
 
   it('replaces a different SKILL.md only after saving a copy of it', () => {
-    writeUser('.claude/skills/atelier/SKILL.md', '---\nname: my-own\n---\nmine');
+    writeUser('.claude/skills/aframe/SKILL.md', '---\nname: my-own\n---\nmine');
     install(makeEnv(), ['claude']);
-    expect(read('.claude/skills/atelier/SKILL.md')).toBe(ATELIER_SKILL);
-    expect(read('.claude/skills/atelier/SKILL.md.atelier-bak')).toContain('name: my-own');
+    expect(read('.claude/skills/aframe/SKILL.md')).toBe(AFRAME_SKILL);
+    expect(read('.claude/skills/aframe/SKILL.md.aframe-bak')).toContain('name: my-own');
   });
 
   it('uninstall leaves a skill it does not own', () => {
-    writeUser('.claude/skills/atelier/SKILL.md', '---\nname: my-own\n---\nmine');
+    writeUser('.claude/skills/aframe/SKILL.md', '---\nname: my-own\n---\nmine');
     uninstall(makeEnv(), ['claude']);
-    expect(read('.claude/skills/atelier/SKILL.md')).toContain('my-own');
+    expect(read('.claude/skills/aframe/SKILL.md')).toContain('my-own');
   });
 });
 
 describe('details', () => {
   it('TOML strings: literal for Windows paths, quoted when the path has an apostrophe', () => {
-    expect(tomlString('C:\\Users\\me\\.atelier\\mcp\\atelier-mcp.mjs')).toBe(
-      "'C:\\Users\\me\\.atelier\\mcp\\atelier-mcp.mjs'",
+    expect(tomlString('C:\\Users\\me\\.aframe\\mcp\\aframe-mcp.mjs')).toBe(
+      "'C:\\Users\\me\\.aframe\\mcp\\aframe-mcp.mjs'",
     );
     expect(tomlString("C:\\Users\\O'Brien\\x.mjs")).toBe(
       JSON.stringify("C:\\Users\\O'Brien\\x.mjs"),
@@ -289,32 +289,32 @@ describe('details', () => {
 
   it('replaces the managed block instead of duplicating it when the path changes', () => {
     install(makeEnv(), ['codex']);
-    const moved = { ...makeEnv(), atelierHome: path.join(root, 'elsewhere', '.atelier') };
-    fs.mkdirSync(path.join(moved.atelierHome, 'mcp'), { recursive: true });
-    fs.writeFileSync(path.join(moved.atelierHome, 'mcp', 'atelier-mcp.mjs'), '// real');
+    const moved = { ...makeEnv(), aframeHome: path.join(root, 'elsewhere', '.aframe') };
+    fs.mkdirSync(path.join(moved.aframeHome, 'mcp'), { recursive: true });
+    fs.writeFileSync(path.join(moved.aframeHome, 'mcp', 'aframe-mcp.mjs'), '// real');
     install(moved, ['codex']);
     const toml = read('.codex/config.toml');
-    expect(toml.match(/\[mcp_servers\.atelier\]/g)).toHaveLength(1);
+    expect(toml.match(/\[mcp_servers\.aframe\]/g)).toHaveLength(1);
     expect(toml).toContain('elsewhere');
   });
 
   it('adds no note to an AGENTS.md that is near Codex’s size limit', () => {
     writeUser('.codex/AGENTS.md', `${'x'.repeat(29 * 1024)}\n`);
     const r = install(makeEnv(), ['codex']);
-    expect(read('.codex/AGENTS.md')).not.toContain('atelier');
+    expect(read('.codex/AGENTS.md')).not.toContain('aframe');
     expect(r.reports[0]?.steps.some((s) => s.level === 'warn' && /32 KiB/.test(s.text))).toBe(true);
   });
 
   it('copies itself to the stable path when run from elsewhere, but never over a newer one or a user edit', () => {
     fs.rmSync(stableFile());
-    const dev = path.join(root, 'dev', 'atelier-mcp.mjs');
+    const dev = path.join(root, 'dev', 'aframe-mcp.mjs');
     fs.mkdirSync(path.dirname(dev), { recursive: true });
     fs.writeFileSync(dev, '// the bundle');
     install(makeEnv({ selfPath: dev }), ['cursor']);
     expect(fs.readFileSync(stableFile(), 'utf8')).toBe('// the bundle');
 
     // The app's placeholder is replaced...
-    fs.writeFileSync(stableFile(), '// atelier-generated placeholder\n');
+    fs.writeFileSync(stableFile(), '// aframe-generated placeholder\n');
     install(makeEnv({ selfPath: dev }), ['cursor']);
     expect(fs.readFileSync(stableFile(), 'utf8')).toBe('// the bundle');
     // ...but a newer file already there is kept.
@@ -331,7 +331,7 @@ describe('details', () => {
     fs.mkdirSync(path.join(userHome, '.codex'), { recursive: true });
     expect(detectHosts(makeEnv()).sort()).toEqual(['codex', 'cursor']);
     expect(JSON.parse(printConfig(makeEnv()))).toEqual({
-      mcpServers: { atelier: { command: 'node', args: [stableFile()] } },
+      mcpServers: { aframe: { command: 'node', args: [stableFile()] } },
     });
   });
 });
@@ -360,7 +360,7 @@ describe('doctor and the command line', () => {
 
   it('flags an old Node and a placeholder server', () => {
     expect(statusOf(makeEnv({ node: '18.19.0' }), 'Node.js')).toBe('fail');
-    fs.writeFileSync(stableFile(), '// atelier-generated placeholder\n');
+    fs.writeFileSync(stableFile(), '// aframe-generated placeholder\n');
     expect(doctor(makeEnv()).find((c) => c.name === 'Server file')?.detail).toContain(
       'placeholder',
     );
@@ -369,11 +369,11 @@ describe('doctor and the command line', () => {
   it('reads the app heartbeat: fresh is running, stale is a warning not a failure', () => {
     const now = Date.parse('2026-11-07T12:00:00.000Z');
     fs.writeFileSync(
-      path.join(atelierHome, 'app-state.json'),
+      path.join(aframeHome, 'app-state.json'),
       JSON.stringify({ appHeartbeat: '2026-11-07T11:59:58.000Z' }),
     );
-    expect(statusOf(makeEnv({ now }), 'Atelier app')).toBe('ok');
-    expect(statusOf(makeEnv({ now: now + 60_000 }), 'Atelier app')).toBe('warn');
+    expect(statusOf(makeEnv({ now }), 'AFrame app')).toBe('ok');
+    expect(statusOf(makeEnv({ now: now + 60_000 }), 'AFrame app')).toBe('warn');
   });
 
   it('runCommand: exit codes and output', () => {
@@ -407,10 +407,10 @@ describe.skipIf(!REAL_CLAUDE)('the real Claude Code CLI (isolated config directo
       HOME: sandbox,
       USERPROFILE: sandbox,
       CLAUDE_CONFIG_DIR: path.join(sandbox, '.claude'),
-      ATELIER_HOME: path.join(sandbox, '.atelier'),
+      AFRAME_HOME: path.join(sandbox, '.aframe'),
     };
     const env: InstallEnv = {
-      ...realEnv(BUNDLE, path.join(sandbox, '.atelier')),
+      ...realEnv(BUNDLE, path.join(sandbox, '.aframe')),
       userHome: sandbox,
       which: (c) => (c === 'claude' ? (REAL_CLAUDE as string) : null),
       run: (cmd, args) => {
@@ -424,21 +424,21 @@ describe.skipIf(!REAL_CLAUDE)('the real Claude Code CLI (isolated config directo
     };
     const { reports } = install(env, ['claude']);
     expect(reports[0]?.ok, JSON.stringify(reports[0]?.steps)).toBe(true);
-    expect(fs.existsSync(path.join(sandbox, '.atelier', 'mcp', 'atelier-mcp.mjs'))).toBe(true);
+    expect(fs.existsSync(path.join(sandbox, '.aframe', 'mcp', 'aframe-mcp.mjs'))).toBe(true);
 
-    const get = env.run(REAL_CLAUDE as string, ['mcp', 'get', 'atelier']);
+    const get = env.run(REAL_CLAUDE as string, ['mcp', 'get', 'aframe']);
     expect(get.code, get.stderr).toBe(0);
-    expect(get.stdout).toContain('atelier-mcp.mjs');
+    expect(get.stdout).toContain('aframe-mcp.mjs');
 
     // `claude mcp list` health-checks every server by starting it: this proves a real host can
     // launch our bundle and complete the MCP handshake.
     const list = env.run(REAL_CLAUDE as string, ['mcp', 'list']);
-    expect(`${list.stdout}${list.stderr}`, 'claude mcp list').toMatch(/atelier.*(Connected|✓)/s);
+    expect(`${list.stdout}${list.stderr}`, 'claude mcp list').toMatch(/aframe.*(Connected|✓)/s);
 
     // Idempotent against the real CLI, and uninstall removes it.
     expect(install(env, ['claude']).reports[0]?.ok).toBe(true);
     uninstall(env, ['claude']);
-    expect(env.run(REAL_CLAUDE as string, ['mcp', 'get', 'atelier']).code).not.toBe(0);
+    expect(env.run(REAL_CLAUDE as string, ['mcp', 'get', 'aframe']).code).not.toBe(0);
     expect(doctor(env).find((c) => c.name === 'claude registration')?.status).not.toBe('ok');
   }, 240_000);
 });
@@ -446,18 +446,18 @@ describe.skipIf(!REAL_CLAUDE)('the real Claude Code CLI (isolated config directo
 describe('the real server is not mistaken for the placeholder', () => {
   it('doctor and install look only at the first lines', () => {
     // The real bundle's own source contains the marker text; only a file that STARTS with it is a stand-in.
-    const real = `#!/usr/bin/env node\n// atelier-mcp-version: 0.1.0\nconst a = 1;\nconst m = 'atelier-generated placeholder';\n`;
+    const real = `#!/usr/bin/env node\n// aframe-mcp-version: 0.1.0\nconst a = 1;\nconst m = 'aframe-generated placeholder';\n`;
     fs.mkdirSync(path.dirname(stableFile()), { recursive: true });
     fs.writeFileSync(stableFile(), real);
     expect(doctor(makeEnv()).find((c) => c.name === 'Server file')?.status).toBe('ok');
-    const dev = path.join(root, 'dev', 'atelier-mcp.mjs');
+    const dev = path.join(root, 'dev', 'aframe-mcp.mjs');
     fs.mkdirSync(path.dirname(dev), { recursive: true });
     fs.writeFileSync(dev, '// the dev bundle');
     const older = new Date(Date.now() - 60_000);
     fs.utimesSync(dev, older, older);
     install(makeEnv({ selfPath: dev }), ['cursor']);
     expect(fs.readFileSync(stableFile(), 'utf8')).toBe(real); // an older copy never replaces it
-    fs.writeFileSync(stableFile(), '// atelier-generated placeholder\nprocess.exit(1);\n');
+    fs.writeFileSync(stableFile(), '// aframe-generated placeholder\nprocess.exit(1);\n');
     expect(doctor(makeEnv()).find((c) => c.name === 'Server file')?.detail).toContain(
       'placeholder',
     );

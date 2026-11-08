@@ -11,7 +11,7 @@ import { realEnv } from '../../mcp/install';
 import { Library } from '../../mcp/library';
 
 const BUNDLE = path.resolve(
-  fileURLToPath(new URL('../../mcp/dist/atelier-mcp.mjs', import.meta.url)),
+  fileURLToPath(new URL('../../mcp/dist/aframe-mcp.mjs', import.meta.url)),
 );
 
 let dir: string;
@@ -31,7 +31,7 @@ function png(r: number, g: number, b: number, size = 8): Buffer {
 }
 
 beforeEach(() => {
-  dir = fs.mkdtempSync(path.join(os.tmpdir(), 'atelier-lib-'));
+  dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aframe-lib-'));
   home = path.join(dir, 'home');
   source = path.join(dir, 'assets');
   fs.mkdirSync(home, { recursive: true });
@@ -153,7 +153,7 @@ describe('the library tools, through the built server', () => {
       new StdioClientTransport({
         command: process.execPath,
         args: [BUNDLE],
-        env: { ...process.env, ATELIER_HOME: home },
+        env: { ...process.env, AFRAME_HOME: home },
         stderr: 'pipe',
       }),
     );

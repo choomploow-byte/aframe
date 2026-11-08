@@ -1,4 +1,4 @@
-import { useAtelier } from '../store/store';
+import { useAFrame } from '../store/store';
 import { STRINGS } from '../strings';
 import { useChat } from '../chat/session';
 import { ChatPanel } from './ChatPanel';
@@ -11,7 +11,7 @@ import { PropertiesPanel } from './PropertiesPanel';
 export function RightPanel() {
   const tab = useRightTab();
   const working = useChat((s) => s.running);
-  const open = useAtelier((s) => s.doc.annotations.filter((a) => a.status === 'open').length);
+  const open = useAFrame((s) => s.doc.annotations.filter((a) => a.status === 'open').length);
   const tabs: readonly TabDef<RightTab>[] = [
     { id: 'design', label: STRINGS.panels.design },
     { id: 'notes', label: open > 0 ? `${STRINGS.panels.notes} ${open}` : STRINGS.panels.notes },

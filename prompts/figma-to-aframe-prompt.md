@@ -1,21 +1,21 @@
-# Figma to Atelier (agent workflow using two MCP servers)
+# Figma to AFrame (agent workflow using two MCP servers)
 
 > Verify what Figma's current developer tooling offers (Dev Mode / MCP server availability, plans, limits). If unavailable, use the REST API importer (Phase 10) or export the frame as PNG/SVG and use "rebuild from screenshot".
 
 ## Prompt (user pastes into Claude Code with both MCP servers connected)
 ```
-I have a Figma frame at {FIGMA_URL}. Recreate it in Atelier as an editable design.
+I have a Figma frame at {FIGMA_URL}. Recreate it in AFrame as an editable design.
 
 1. Use the Figma tools to read the frame: structure, auto-layout settings, text styles, colours, radii, shadows, and export any images/icons you need.
-2. Create tokens in Atelier first (colours, fonts, spacing, radii) from the Figma styles/variables.
-3. Build the frame in Atelier with apply_changes using nested auto-layout frames. Map: Figma auto-layout -> layout row/column; itemSpacing -> gap; padding -> padding; primary-axis alignment -> justify; counter-axis alignment -> align; hug/fill/fixed -> w/h 'hug'/'fill'/number.
-4. Use the closest fonts available in Atelier (list them in the skill typography) and tell me which substitutions you made.
+2. Create tokens in AFrame first (colours, fonts, spacing, radii) from the Figma styles/variables.
+3. Build the frame in AFrame with apply_changes using nested auto-layout frames. Map: Figma auto-layout -> layout row/column; itemSpacing -> gap; padding -> padding; primary-axis alignment -> justify; counter-axis alignment -> align; hug/fill/fixed -> w/h 'hug'/'fill'/number.
+4. Use the closest fonts available in AFrame (list them in the skill typography) and tell me which substitutions you made.
 5. Screenshot your result and compare to a Figma export. Fix the biggest differences.
 6. Give me a short report: what matched, what was approximated, what was skipped.
 ```
 
 ## Mapping cheat sheet (for the agent and for the Phase 10 importer)
-| Figma | Atelier |
+| Figma | AFrame |
 |---|---|
 | FRAME / COMPONENT / INSTANCE | frame |
 | RECTANGLE | rect (radius from cornerRadius) |

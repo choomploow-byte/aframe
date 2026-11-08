@@ -43,7 +43,7 @@ const AGENT_NOTE =
 const getSelection = defineTool({
   name: 'get_selection',
   description:
-    'What the user has selected in the Atelier app right now: node ids with an outline of each. Use it when the user says "this", "here" or "what I selected". Returns appOnline:false (and no ids) when the app is closed.',
+    'What the user has selected in the AFrame app right now: node ids with an outline of each. Use it when the user says "this", "here" or "what I selected". Returns appOnline:false (and no ids) when the app is closed.',
   inputSchema: z.object({}),
   handler: async (ctx) => {
     const online = ctx.appOnline ? await ctx.appOnline() : false;
@@ -64,7 +64,7 @@ const getSelection = defineTool({
 const screenshot = defineTool({
   name: 'screenshot',
   description:
-    'Render the design (or one node) to a PNG so you can SEE it. Needs the Atelier app open; otherwise fails with APP_NOT_RUNNING (tell the user to open Atelier). Also saved as a file (see `path`) for hosts that cannot show images. Take one after every batch of edits and critique it.',
+    'Render the design (or one node) to a PNG so you can SEE it. Needs the AFrame app open; otherwise fails with APP_NOT_RUNNING (tell the user to open AFrame). Also saved as a file (see `path`) for hosts that cannot show images. Take one after every batch of edits and critique it.',
   inputSchema: z.object({
     nodeId: z.string().optional().describe('A frame or node; omit for everything'),
     scale: z
@@ -405,7 +405,7 @@ const lintDesignTool = defineTool({
 const listProjects = defineTool({
   name: 'list_projects',
   description:
-    'List every Atelier project with its id, name, last update and frame count, newest first.',
+    'List every AFrame project with its id, name, last update and frame count, newest first.',
   inputSchema: z.object({}),
   handler: async (ctx) => ({ projects: await need(ctx.projects, 'Projects').list() }),
 });
@@ -429,7 +429,7 @@ const createProject = defineTool({
 const openProject = defineTool({
   name: 'open_project',
   description:
-    'Make a project the current one (by id or exact name); a running Atelier app switches to it.',
+    'Make a project the current one (by id or exact name); a running AFrame app switches to it.',
   inputSchema: z.object({ project: z.string() }),
   handler: async (ctx, { project }) => ({
     project: await need(ctx.projects, 'Projects').open(project),
@@ -479,7 +479,7 @@ const exportCode = defineTool({
         mainText.length > PREVIEW_CHARS
           ? `${mainText.slice(0, PREVIEW_CHARS)}\n... (${mainText.length - PREVIEW_CHARS} more characters in ${result.main})`
           : mainText,
-      next: 'Tell the user which files were written and any warnings; fonts need installing (see README-atelier.md).',
+      next: 'Tell the user which files were written and any warnings; fonts need installing (see README-aframe.md).',
     };
   },
 });
@@ -498,7 +498,7 @@ function splitFilePath(p: string): { dir: string; name: string } {
 const exportImage = defineTool({
   name: 'export_image',
   description:
-    'Save a node as a PNG or SVG file at an absolute path the user confirmed (the Atelier app must be open). PNG: scale 1, 2 or 3; transparent:true leaves the area behind the design clear. SVG: scalable, text stays live text. The file name must end in .png or .svg to match. Refuses to replace an existing file unless overwrite is true.',
+    'Save a node as a PNG or SVG file at an absolute path the user confirmed (the AFrame app must be open). PNG: scale 1, 2 or 3; transparent:true leaves the area behind the design clear. SVG: scalable, text stays live text. The file name must end in .png or .svg to match. Refuses to replace an existing file unless overwrite is true.',
   inputSchema: z.object({
     nodeId: z.string(),
     format: z.enum(['png', 'svg']),

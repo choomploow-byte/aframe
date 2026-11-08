@@ -20,7 +20,7 @@ export function recordError(error: unknown): void {
 export function buildDiagnostics(extra?: unknown): string {
   const s = store.getState();
   const lines = [
-    `Atelier ${typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : 'dev'}`,
+    `AFrame ${typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : 'dev'}`,
     `Time: ${new Date().toISOString()}`,
     `Platform: ${typeof navigator === 'undefined' ? 'unknown' : navigator.userAgent}`,
     `Desktop app: ${typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window ? 'yes' : 'no'}`,

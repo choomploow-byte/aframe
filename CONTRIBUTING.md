@@ -1,10 +1,10 @@
-# Contributing to Atelier
+# Contributing to AFrame
 
 Thanks for helping! The easiest ways in, from lowest to highest effort:
 
 1. **Write a skill** (`skills/community/*.md`): markdown design knowledge agents load on demand. See `skills/README.md`.
 2. **Add a template / sample project** (JSON document + screenshot).
-3. **Report a bug** with diagnostics (Help → Copy diagnostics, or `node ~/.atelier/mcp/atelier-mcp.mjs doctor`).
+3. **Report a bug** with diagnostics (Help → Copy diagnostics, or `node ~/.aframe/mcp/aframe-mcp.mjs doctor`).
 4. **Add an exporter or importer** (Vue, Svelte, SVG…): interfaces in `src/core/export` and `src/core/import`.
 5. **Improve the editor or the core.**
 

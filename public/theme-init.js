@@ -2,7 +2,7 @@
 // An external file (not inline) so it satisfies the app's `script-src 'self'` CSP.
 (function () {
   try {
-    var t = localStorage.getItem('atelier.theme');
+    var t = localStorage.getItem('aframe.theme');
     if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
   } catch {
     /* storage unavailable: follow the system theme */

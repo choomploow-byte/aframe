@@ -196,7 +196,7 @@ export class BridgeService {
         ok: false,
         error: {
           code: 'PROJECT_NOT_OPEN',
-          message: 'That project is not the one open in Atelier right now.',
+          message: 'That project is not the one open in AFrame right now.',
         },
       };
     }
@@ -249,7 +249,7 @@ export class BridgeService {
           ok: false,
           error: {
             code: 'NOT_IMPLEMENTED',
-            message: `"${type}" is not available in this version of Atelier yet.`,
+            message: `"${type}" is not available in this version of AFrame yet.`,
           },
         };
     }
@@ -278,7 +278,7 @@ function notBuilt(type: string): BridgeResult {
     ok: false,
     error: {
       code: 'NOT_IMPLEMENTED',
-      message: `"${type}" is not available in this version of Atelier yet.`,
+      message: `"${type}" is not available in this version of AFrame yet.`,
     },
   };
 }

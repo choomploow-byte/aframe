@@ -19,15 +19,15 @@ pub const DIRS: &[&str] = &[
 
 /// Marker on generated files that are only stand-ins, so a real one may replace them while a file
 /// the user edited is left alone.
-pub const GENERATED: &str = "atelier-generated";
+pub const GENERATED: &str = "aframe-generated";
 
-/// First line of the MCP bundle: `// atelier-mcp-version: 0.1.0` (written by scripts/build-mcp.mjs).
-const VERSION_HEADER: &str = "// atelier-mcp-version: ";
+/// First line of the MCP bundle: `// aframe-mcp-version: 0.1.0` (written by scripts/build-mcp.mjs).
+const VERSION_HEADER: &str = "// aframe-mcp-version: ";
 
-const MCP_FILE: &str = "mcp/atelier-mcp.mjs";
+const MCP_FILE: &str = "mcp/aframe-mcp.mjs";
 
-const SKILLS_README: &str = "<!-- atelier-generated -->\n\
-Skills are markdown files the AI agent loads on demand. Atelier's own skills are built into the MCP\n\
+const SKILLS_README: &str = "<!-- aframe-generated -->\n\
+Skills are markdown files the AI agent loads on demand. AFrame's own skills are built into the MCP\n\
 server (load them with load_skill); put your own `*.md` files here too.\n";
 
 /// A stand-in marks itself in its first lines. Look only there: the real server's own source
@@ -97,15 +97,15 @@ mod tests {
     use super::*;
     use crate::home::testutil::TempHome;
 
-    const PLACEHOLDER: &str = "// atelier-generated placeholder\nconsole.error('x');\n";
+    const PLACEHOLDER: &str = "// aframe-generated placeholder\nconsole.error('x');\n";
     fn real(version: &str) -> String {
-        format!("#!/usr/bin/env node\n// atelier-mcp-version: {version}\nconsole.log('server');\n")
+        format!("#!/usr/bin/env node\n// aframe-mcp-version: {version}\nconsole.log('server');\n")
     }
 
     #[test]
     fn the_real_server_is_not_mistaken_for_a_stand_in_because_it_mentions_the_marker() {
         let real_with_marker = format!(
-            "{}const MARKER = 'atelier-generated placeholder';\n",
+            "{}const MARKER = 'aframe-generated placeholder';\n",
             real("0.1.0")
         );
         assert!(!is_stand_in(&real_with_marker));
@@ -120,7 +120,7 @@ mod tests {
     fn reads_versions_from_the_header() {
         assert_eq!(bundle_version(&real("0.1.0")), Some((0, 1, 0)));
         assert_eq!(bundle_version(&real("12.30.4-beta.1")), Some((12, 30, 4)));
-        assert_eq!(bundle_version("// atelier-mcp-version: nope\n"), None);
+        assert_eq!(bundle_version("// aframe-mcp-version: nope\n"), None);
         assert_eq!(bundle_version(PLACEHOLDER), None);
         assert_eq!(bundle_version(""), None);
     }
@@ -188,6 +188,6 @@ mod tests {
         ensure_layout(&t.home, &real("0.1.0")).unwrap();
         assert!(fs::read_to_string(&mcp)
             .unwrap()
-            .contains("atelier-mcp-version"));
+            .contains("aframe-mcp-version"));
     }
 }

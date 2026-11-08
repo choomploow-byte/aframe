@@ -1,12 +1,12 @@
 import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { STRINGS } from '../strings';
-import { useAtelier } from '../store/store';
+import { useAFrame } from '../store/store';
 import { getCanvasApi } from './canvas-api';
 
 /** "100% ▾" at the bottom right of the canvas. */
 export function ZoomControl() {
-  const zoom = useAtelier((s) => s.viewport.zoom);
+  const zoom = useAFrame((s) => s.viewport.zoom);
   const [open, setOpen] = useState(false);
 
   const run = (action: (api: NonNullable<ReturnType<typeof getCanvasApi>>) => void): void => {

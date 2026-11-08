@@ -38,9 +38,9 @@ export const STRINGS = {
     recoverHasBackup: 'The version saved just before the damage is intact. Restoring puts it back.',
     recoverNoBackup:
       'There is no earlier version to restore. The file is left as it is so you can look at it.',
-    tooNewTitle: 'Made with a newer Atelier',
+    tooNewTitle: 'Made with a newer AFrame',
     tooNewBody: (name: string) =>
-      `"${name}" was saved by a newer version of Atelier. Update Atelier to open it; it has not been changed.`,
+      `"${name}" was saved by a newer version of AFrame. Update AFrame to open it; it has not been changed.`,
     restore: 'Restore previous version',
     close: 'Close',
     save: { saved: 'Saved', saving: 'Saving…', error: "Can't save", unsaved: 'Not saved' },
@@ -94,7 +94,7 @@ export const STRINGS = {
   },
   connect: {
     title: 'Connect your AI',
-    body: 'Atelier works with Claude Code, Codex and any MCP-compatible agent. They open the same design you see here, edit it, take screenshots and read your notes.',
+    body: 'AFrame works with Claude Code, Codex and any MCP-compatible agent. They open the same design you see here, edit it, take screenshots and read your notes.',
     hosts: 'Which AI tool',
     other: 'Other',
     claudeHow:
@@ -109,11 +109,11 @@ export const STRINGS = {
     copy: 'Copy',
     copied: 'Copied',
     copyFailed: 'Your browser would not copy it. The text is selected: press Ctrl+C.',
-    waiting: 'Waiting for your AI tool… ask it to "use atelier" and this turns green.',
+    waiting: 'Waiting for your AI tool… ask it to "use aframe" and this turns green.',
     connectedIdle: 'Connected. Ask your AI tool something to try it.',
-    heard: 'Connected: your AI tool just used Atelier.',
+    heard: 'Connected: your AI tool just used AFrame.',
     tryAsking: 'Try asking',
-    noPath: (why: string) => `Could not find where Atelier keeps its files (${why}).`,
+    noPath: (why: string) => `Could not find where AFrame keeps its files (${why}).`,
     close: 'Done',
   },
   palette: {
@@ -121,7 +121,7 @@ export const STRINGS = {
     placeholder: 'Type a command…',
     empty: 'No command matches.',
   },
-  shortcuts: { title: 'Keyboard shortcuts', version: (v: string) => `Atelier version ${v}` },
+  shortcuts: { title: 'Keyboard shortcuts', version: (v: string) => `AFrame version ${v}` },
   export: {
     title: 'Export',
     titleFor: (name: string) => `Export "${name}"`,

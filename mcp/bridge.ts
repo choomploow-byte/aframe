@@ -88,8 +88,8 @@ export class BridgeClient {
     if (!live) {
       throw new CoreError(
         'APP_NOT_RUNNING',
-        'The Atelier app is not running, so it cannot do that.',
-        'Ask the user to open Atelier (and keep its window visible), then retry. Tools that only read or edit the design still work without the app.',
+        'The AFrame app is not running, so it cannot do that.',
+        'Ask the user to open AFrame (and keep its window visible), then retry. Tools that only read or edit the design still work without the app.',
       );
     }
     const id = randomId();
@@ -119,8 +119,8 @@ export class BridgeClient {
     }
     throw new CoreError(
       'TIMEOUT',
-      `The Atelier app did not answer the ${type} request in time.`,
-      'The app may be minimised or busy. Ask the user to bring the Atelier window to the front and retry.',
+      `The AFrame app did not answer the ${type} request in time.`,
+      'The app may be minimised or busy. Ask the user to bring the AFrame window to the front and retry.',
     );
   }
 
@@ -138,7 +138,7 @@ export class BridgeClient {
       throw new CoreError(
         'NOT_FOUND',
         message,
-        'That project is not the one open in Atelier. Call open_project first, or ask the user to open it.',
+        'That project is not the one open in AFrame. Call open_project first, or ask the user to open it.',
       );
     }
     throw new CoreError(

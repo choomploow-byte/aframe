@@ -62,9 +62,9 @@ describe('the icon set', () => {
 
   it('records where each icon came from, for the attribution', () => {
     const sources = new Set(ICONS.map((i) => i.source));
-    expect(sources).toEqual(new Set(['atelier', 'fontawesome-free']));
+    expect(sources).toEqual(new Set(['aframe', 'fontawesome-free']));
     expect(
-      ICONS.filter((i) => i.source === 'atelier')
+      ICONS.filter((i) => i.source === 'aframe')
         .map((i) => i.name)
         .sort(),
     ).toEqual(['chest', 'potion', 'sparkles', 'sword', 'swords']);

@@ -1,5 +1,5 @@
 {
-  "name": "atelier",
+  "name": "aframe",
   "version": "0.2.0",
   "private": true,
   "description": "Open-source AI design studio. Let Claude Code, Codex or any API-key model design real UI on a canvas.",
@@ -84,6 +84,7 @@
     "eslint": "^10.14.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.14.0",
+    "opentype.js": "^2.0.0",
     "pixelmatch": "^8.0.0",
     "pngjs": "^7.0.0",
     "prettier": "^3.9.10",

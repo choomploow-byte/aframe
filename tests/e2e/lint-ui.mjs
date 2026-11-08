@@ -13,9 +13,9 @@ if (SHOT_DIR) mkdirSync(SHOT_DIR, { recursive: true });
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 const rows = () => page.$$('[data-testid="lint-dialog"] .lint__row');
 const doc = () =>
-  page.evaluate(() => JSON.parse(JSON.stringify(window.__atelier.store.getState().doc)));
+  page.evaluate(() => JSON.parse(JSON.stringify(window.__aframe.store.getState().doc)));
 
-await page.evaluate(() => window.__atelier.loadSample());
+await page.evaluate(() => window.__aframe.loadSample());
 await page.evaluate(() => document.fonts.ready);
 await settle(page);
 await sleep(800); // the badge settles shortly after edits stop
@@ -41,7 +41,7 @@ if (SHOT_DIR) await page.screenshot({ path: join(SHOT_DIR, 'lint.png') });
 // Show selects the layer.
 await page.click('[data-testid="lint-dialog"] [data-action="lint-find"]');
 await settle(page);
-const selected = await page.evaluate(() => window.__atelier.store.getState().selection);
+const selected = await page.evaluate(() => window.__aframe.store.getState().selection);
 check('Show selects that layer', selected.length === 1);
 
 // One Fix removes its finding and is one undo step.
@@ -61,7 +61,7 @@ check(
   (await rows()).length < before,
   `${before} -> ${(await rows()).length} (${firstRule})`,
 );
-await page.evaluate(() => window.__atelier.store.getState().undo());
+await page.evaluate(() => window.__aframe.store.getState().undo());
 await settle(page);
 check(
   'one undo takes that fix back',
@@ -79,7 +79,7 @@ check(
   stillFixable.length === 0,
   String(stillFixable.length),
 );
-await page.evaluate(() => window.__atelier.store.getState().undo());
+await page.evaluate(() => window.__aframe.store.getState().undo());
 await settle(page);
 check(
   'one undo reverts all of it',
@@ -90,8 +90,8 @@ await settle(page);
 
 // A clean design says so.
 await page.evaluate(() => {
-  window.__atelier.loadBlank();
-  const s = window.__atelier.store.getState();
+  window.__aframe.loadBlank();
+  const s = window.__aframe.store.getState();
   s.dispatch(
     [
       {

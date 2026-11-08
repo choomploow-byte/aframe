@@ -12,7 +12,7 @@ export interface AgentFile {
   startedAt: string;
   /** Refreshed every 30 s while the process lives, and on every tool call: "an agent is connected". */
   lastAgentSeen: string;
-  /** Set on tool calls only: "an agent just used Atelier" (the Connect dialog's test waits for it). */
+  /** Set on tool calls only: "an agent just used AFrame" (the Connect dialog's test waits for it). */
   lastToolCall?: string;
   currentProject?: string;
 }

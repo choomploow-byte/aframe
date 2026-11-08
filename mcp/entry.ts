@@ -1,4 +1,4 @@
-// The bundle's entry point: `node atelier-mcp.mjs [command]`. Kept separate from cli.ts so tests can
+// The bundle's entry point: `node aframe-mcp.mjs [command]`. Kept separate from cli.ts so tests can
 // import the CLI without starting a server.
 import { fileURLToPath } from 'node:url';
 import { main } from './cli';

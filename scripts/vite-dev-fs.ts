@@ -4,7 +4,7 @@
  * `vite dev` and in the browser tests. The logic is `mcp/home-fs.ts`, shared with the MCP server,
  * so it cannot drift from what the desktop app does.
  *
- * Not part of any build: `apply: 'serve'`. Default home is `~/.atelier-dev`, never the real one.
+ * Not part of any build: `apply: 'serve'`. Default home is `~/.aframe-dev`, never the real one.
  */
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import os from 'node:os';
@@ -21,7 +21,7 @@ const VALID_ID = /^[A-Za-z0-9_-]{1,64}$/;
  * which this plugin never approves, so other websites cannot reach it). */
 function allowed(req: IncomingMessage): boolean {
   if (req.method !== 'POST') return false;
-  if (req.headers['x-atelier-dev'] !== '1') return false;
+  if (req.headers['x-aframe-dev'] !== '1') return false;
   const host = String(req.headers.host ?? '');
   if (!/^(127\.0\.0\.1|localhost|\[::1\]):\d+$/.test(host)) return false;
   const origin = req.headers.origin;
@@ -47,7 +47,7 @@ const str = (v: unknown, name: string): string => {
   return v;
 };
 
-export function atelierDevFs(): Plugin {
+export function aframeDevFs(): Plugin {
   const root = resolveHomeDir(process.env, path.join(os.homedir(), `${BRAND.homeDirName}-dev`));
   const home = new HomeFs(root);
   let ready: Promise<void> | null = null;
@@ -114,7 +114,7 @@ export function atelierDevFs(): Plugin {
   };
 
   return {
-    name: 'atelier-dev-fs',
+    name: 'aframe-dev-fs',
     apply: 'serve',
     configureServer(server) {
       server.middlewares.use('/__fs', (req: IncomingMessage, res: ServerResponse) => {

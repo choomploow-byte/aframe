@@ -2,7 +2,7 @@ import { lintDesign, type Finding, type Severity } from '@core/lint';
 import { AlertTriangle, CheckCircle2, Info, OctagonAlert, Wand2 } from 'lucide-react';
 import { useMemo } from 'react';
 import { getCanvasApi } from '../canvas/canvas-api';
-import { store, useAtelier } from '../store/store';
+import { store, useAFrame } from '../store/store';
 import { Dialog } from './Dialog';
 import { showToast } from './toast';
 import { closeDialog } from './ui-state';
@@ -43,7 +43,7 @@ function applyAll(findings: Finding[]): void {
 
 /** The design check list: what is wrong in plain words, click to find it, Fix to repair it. */
 export function LintDialog() {
-  const doc = useAtelier((s) => s.doc);
+  const doc = useAFrame((s) => s.doc);
   const result = useMemo(() => lintDesign(doc), [doc]);
   const fixable = result.findings.filter((f) => f.fixOps !== undefined);
   const groups = (['error', 'warning', 'info'] as const).map((sev) => ({

@@ -20,7 +20,7 @@ import {
   wrapSelectionInFrame,
   type Env,
 } from './commands';
-import { createAtelierStore } from './store';
+import { createAFrameStore } from './store';
 
 /** World rect from the stored numbers (works for the fixed-size layouts these tests use). */
 function numericMeasure(getDoc: () => Doc) {
@@ -40,7 +40,7 @@ function numericMeasure(getDoc: () => Doc) {
 
 function setup(specs?: TestSpec[]) {
   let t = 0;
-  const store = createAtelierStore({
+  const store = createAFrameStore({
     doc: deepFreeze(specs ? buildDoc(specs) : sampleDoc()),
     now: () => t,
     isoNow: () => '2026-05-05T00:00:00.000Z',

@@ -4,22 +4,22 @@
 
 ```
  ┌───────────────────────┐        MCP (stdio)        ┌──────────────────────────┐
- │ Claude Code / Codex / │ ────────────────────────► │  atelier-mcp.mjs         │
+ │ Claude Code / Codex / │ ────────────────────────► │  aframe-mcp.mjs         │
  │ Cursor / any MCP host │ ◄──────────────────────── │  (Node, bundled, 1 file) │
  └───────────────────────┘                           └────────────┬─────────────┘
                                                                   │ reads/writes files
                                                                   ▼
-                                              ~/.atelier/  (doc JSON, requests/, responses/)
+                                              ~/.aframe/  (doc JSON, requests/, responses/)
                                                                   ▲
                                                                   │ watches / writes (Tauri fs commands)
  ┌────────────────────────────────────────────────────────────────┴───────────┐
- │ Atelier desktop app (Tauri 2)                                              │
+ │ AFrame desktop app (Tauri 2)                                              │
  │  ┌────────────── WebView (React + TS) ─────────────────────────────────┐   │
  │  │ Canvas renderer (DOM)  Layers  Properties  Annotations  Chat panel  │   │
  │  │ Zustand store ── core library (types, ops, tools, export, skills)   │   │
  │  │ Sync service (poll + atomic writes)  Agent loop (BYO API key)       │   │
  │  └──────────────────────────────────────────────────────────────────────┘   │
- │  Rust side: tiny fs commands scoped to ~/.atelier, dialog + fs plugins      │
+ │  Rust side: tiny fs commands scoped to ~/.aframe, dialog + fs plugins      │
  └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -74,25 +74,25 @@ See `docs/06-file-sync-protocol.md`. Summary: one JSON file per project, atomic 
 |---|---|
 | Tauri Rust core | Window, installer, scoped fs commands, dialogs |
 | WebView | All UI, store, rendering, in-app agent |
-| `atelier-mcp.mjs` (spawned per agent session by the host) | MCP protocol, document tools, file bridge |
+| `aframe-mcp.mjs` (spawned per agent session by the host) | MCP protocol, document tools, file bridge |
 
-The MCP server is **not** started by the app. The agent host starts it (that's how MCP stdio works). It must work whether or not the app is open: read/write tools work on the file; `screenshot` needs the app and returns a clear error otherwise ("Open Atelier to take screenshots").
+The MCP server is **not** started by the app. The agent host starts it (that's how MCP stdio works). It must work whether or not the app is open: read/write tools work on the file; `screenshot` needs the app and returns a clear error otherwise ("Open AFrame to take screenshots").
 
 ## 7. Packaging
-- App ships the MCP bundle as an embedded string; on launch (and on "Connect") it writes it to `~/.atelier/mcp/atelier-mcp.mjs`, a stable path agents can reference, surviving app updates.
-- Skills also written to `~/.atelier/skills/` and, on install, to `~/.claude/skills/atelier/SKILL.md`.
+- App ships the MCP bundle as an embedded string; on launch (and on "Connect") it writes it to `~/.aframe/mcp/aframe-mcp.mjs`, a stable path agents can reference, surviving app updates.
+- Skills also written to `~/.aframe/skills/` and, on install, to `~/.claude/skills/aframe/SKILL.md`.
 - Installers per OS via `tauri build`; CI matrix builds on GitHub Actions.
 
 ## 8. Extensibility seams (design now, build later)
 - Node types registry (so components/variants/vector can be added).
 - Exporter registry (`html`, `react-css`, `react-tailwind`, `vue`, `svelte`...).
 - Importer registry (`image`, `svg`, `figma-json`...).
-- Skills directory (user skills in `~/.atelier/skills/`).
+- Skills directory (user skills in `~/.aframe/skills/`).
 - Provider registry for the in-app agent (Anthropic, OpenAI-compatible, Ollama).
 
 ## 9. Folder structure
 ```
-atelier/
+aframe/
   package.json  vite.config.ts  tsconfig.json  index.html
   CLAUDE.md  AGENTS.md  README.md  LICENSE
   scripts/  build-mcp.mjs  test-mcp.mjs
@@ -107,7 +107,7 @@ atelier/
     chat/  ChatPanel.tsx agent.ts providers/anthropic.ts providers/openai.ts
     dialogs/  Connect.tsx Settings.tsx Export.tsx
     ui/  (buttons, inputs, popovers, icons)
-  mcp/  server.ts install.ts   (bundled to mcp/dist/atelier-mcp.mjs)
+  mcp/  server.ts install.ts   (bundled to mcp/dist/aframe-mcp.mjs)
   src-tauri/  Cargo.toml tauri.conf.json build.rs capabilities/ src/{main.rs,lib.rs} icons/
   skills/  (markdown sources, mirrored into core/skills at build time)
   tests/  core/*.test.ts  e2e/*.mjs

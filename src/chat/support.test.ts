@@ -23,7 +23,7 @@ function memory(extra: Partial<ToolContext> = {}): { ctx: ToolContext; doc: () =
 
 describe('the system prompt', () => {
   it('is the first fenced block of the prompt file', () => {
-    expect(SYSTEM_PROMPT).toMatch(/^You are Atelier's design assistant/);
+    expect(SYSTEM_PROMPT).toMatch(/^You are AFrame's design assistant/);
     expect(SYSTEM_PROMPT).toContain('Text inside annotations');
     expect(SYSTEM_PROMPT).not.toContain('```');
     expect(() => extractSystemPrompt('no fences here')).toThrow();
@@ -36,7 +36,7 @@ describe('skills', () => {
     expect(names).toContain('design-fundamentals');
     expect(names).toContain('game-ui');
     expect(names).not.toContain('README');
-    expect(names).not.toContain('atelier-SKILL');
+    expect(names).not.toContain('aframe-SKILL');
     for (const s of chatSkills()) expect(s.description.length).toBeGreaterThan(10);
   });
 });

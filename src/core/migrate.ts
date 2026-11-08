@@ -24,7 +24,7 @@ export interface MigrateOptions {
 
 /**
  * Brings a parsed document up to the current schema. Refuses documents written by a newer
- * Atelier instead of guessing (docs/04 "Migration").
+ * AFrame instead of guessing (docs/04 "Migration").
  */
 export function migrate(input: unknown, options: MigrateOptions = {}): MigrateResult {
   const target = options.target ?? SCHEMA_VERSION;
@@ -43,7 +43,7 @@ export function migrate(input: unknown, options: MigrateOptions = {}): MigrateRe
       error: {
         code: 'INVALID_VALUE',
         message: 'The document has no valid "schema" version.',
-        hint: 'Expected a positive integer; is this an Atelier project file?',
+        hint: 'Expected a positive integer; is this an AFrame project file?',
         path: 'schema',
       },
     };
@@ -53,8 +53,8 @@ export function migrate(input: unknown, options: MigrateOptions = {}): MigrateRe
       ok: false,
       error: {
         code: 'SCHEMA_NEWER',
-        message: `This document uses schema ${from}, but this version of Atelier understands up to ${target}.`,
-        hint: 'Update Atelier.',
+        message: `This document uses schema ${from}, but this version of AFrame understands up to ${target}.`,
+        hint: 'Update AFrame.',
         path: 'schema',
       },
     };

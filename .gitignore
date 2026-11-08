@@ -5,7 +5,7 @@ tests/e2e/__diff__/
 target/
 gen/
 coverage/
-.atelier-dev/
+.aframe-dev/
 .impeccable/
 *.tsbuildinfo
 .DS_Store

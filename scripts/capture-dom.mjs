@@ -1,6 +1,6 @@
-// Captures a page for Atelier's "import a web page" (a prototype: see docs/10 for what it can and
+// Captures a page for AFrame's "import a web page" (a prototype: see docs/10 for what it can and
 // cannot carry). Loads a URL in headless Chrome, measures every element and its computed style, and
-// writes <out>.json (the snapshot Atelier imports) and <out>.png (what the page looked like).
+// writes <out>.json (the snapshot AFrame imports) and <out>.png (what the page looked like).
 //
 //   node scripts/capture-dom.mjs http://localhost:3000 [--out capture] [--width 1280] [--height 800]
 //                                                      [--allow-remote]
@@ -163,7 +163,7 @@ try {
   writeFileSync(`${out}.json`, JSON.stringify(snapshot));
   await page.screenshot({ path: `${out}.png`, fullPage: true });
   console.log(
-    `Captured ${url}\n  ${out}.json  (import this in Atelier: Import > Web page)\n  ${out}.png   (what the page looked like)`,
+    `Captured ${url}\n  ${out}.json  (import this in AFrame: Import > Web page)\n  ${out}.png   (what the page looked like)`,
   );
 } finally {
   await browser.close();

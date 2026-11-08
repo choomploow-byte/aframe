@@ -177,7 +177,7 @@ export function ProjectsDialog() {
           <input
             ref={input}
             type="file"
-            accept=".json,.atelier.json,application/json"
+            accept=".json,.aframe.json,application/json"
             hidden
             data-testid="project-file-input"
             aria-label={t.import}

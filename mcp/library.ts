@@ -1,5 +1,5 @@
 /**
- * The asset library on disk: `<atelier home>/library/` holds the user's images plus an `index.json`
+ * The asset library on disk: `<aframe home>/library/` holds the user's images plus an `index.json`
  * the tools search. `add` copies a folder of images in; `read` hands one back as bytes for
  * `use_library_asset`. Everything stays inside the home folder; nothing is ever read from a path an
  * agent supplies (an agent names an id, never a file).
@@ -32,8 +32,8 @@ export class Library {
   readonly dir: string;
   private readonly indexPath: string;
 
-  constructor(atelierHome: string) {
-    this.dir = path.join(atelierHome, 'library');
+  constructor(aframeHome: string) {
+    this.dir = path.join(aframeHome, 'library');
     this.indexPath = path.join(this.dir, 'index.json');
   }
 

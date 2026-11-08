@@ -325,7 +325,7 @@ mod tests {
         format!("{{\"schema\":1,\"rev\":{rev},\"id\":\"p_test1\",\"marker\":\"{marker}\"}}")
     }
 
-    const P: &str = "projects/p_test1/project.atelier.json";
+    const P: &str = "projects/p_test1/project.aframe.json";
 
     #[test]
     fn write_read_stat_list_remove_round_trip() {
@@ -477,7 +477,7 @@ mod tests {
         write_doc(&t.home, P, &doc(1, "one"), None, Crash::None).unwrap();
         let dir = t.home.confine(P).unwrap().parent().unwrap().to_path_buf();
         fs::write(dir.join(".lock"), "{\"pid\":999999}").unwrap();
-        fs::write(dir.join(".project.atelier.json.1.1.tmp"), "{\"half").unwrap();
+        fs::write(dir.join(".project.aframe.json.1.1.tmp"), "{\"half").unwrap();
         // The lock is fresh, so this would wait; age it by sweeping with a zero threshold and
         // treating our test lock as stale through the public helper used at startup.
         assert!(DirLock::acquire_with(
@@ -493,7 +493,7 @@ mod tests {
                 .ok
         );
         assert_eq!(sweep_temp_files(t.home.root(), Duration::ZERO), 1);
-        assert!(!dir.join(".project.atelier.json.1.1.tmp").exists());
+        assert!(!dir.join(".project.aframe.json.1.1.tmp").exists());
     }
 
     #[test]

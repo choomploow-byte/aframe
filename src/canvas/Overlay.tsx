@@ -1,6 +1,6 @@
 import { isEffectivelyLocked } from '@core/tree';
 import { useEffect, useLayoutEffect, useState, type CSSProperties } from 'react';
-import { useAtelier } from '../store/store';
+import { useAFrame } from '../store/store';
 import { equalRects, unionRects, type Rect } from './geometry';
 import { HANDLES, type Handle } from './interactions';
 import type { Measurer } from './measure';
@@ -53,12 +53,12 @@ const HANDLE_POS: Record<Handle, { left: string; top: string; cursor: string }> 
  * happen together, then one state update: no layout thrash.
  */
 export function Overlay({ measurer }: { measurer: Measurer }) {
-  const doc = useAtelier((s) => s.doc);
-  const selection = useAtelier((s) => s.selection);
-  const hover = useAtelier((s) => s.hover);
-  const viewport = useAtelier((s) => s.viewport);
-  const transient = useAtelier((s) => s.transient);
-  const editing = useAtelier((s) => s.editingTextId);
+  const doc = useAFrame((s) => s.doc);
+  const selection = useAFrame((s) => s.selection);
+  const hover = useAFrame((s) => s.hover);
+  const viewport = useAFrame((s) => s.viewport);
+  const transient = useAFrame((s) => s.transient);
+  const editing = useAFrame((s) => s.editingTextId);
   const [measured, setMeasured] = useState<Measured>(EMPTY);
   // Bumped when something resizes without the store changing (a web font finishing loading).
   const [tick, setTick] = useState(0);

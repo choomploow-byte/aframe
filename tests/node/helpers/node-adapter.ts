@@ -5,7 +5,7 @@ import { HomeFs } from '../../../mcp/home-fs';
 
 export interface TestAdapter extends HomeApi {
   readonly home_: HomeFs;
-  /** Every call made, in order: "writeDoc projects/p_x/project.atelier.json". */
+  /** Every call made, in order: "writeDoc projects/p_x/project.aframe.json". */
   readonly calls: string[];
   readonly reported: AppStateReport[];
   /** Make the next `n` writeDoc calls throw `error`. */

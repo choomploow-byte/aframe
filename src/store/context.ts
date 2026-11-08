@@ -1,6 +1,6 @@
 import type { ToolContext } from '@core/types';
 import type { StoreApi } from 'zustand/vanilla';
-import type { AtelierState } from './store';
+import type { AFrameState } from './store';
 
 /**
  * The in-app `ToolContext` (docs/03 §2): the chat agent reads and writes the live store, so its
@@ -8,7 +8,7 @@ import type { AtelierState } from './store';
  * the canvas once it exists (Phase 5).
  */
 export function createStoreContext(
-  store: StoreApi<AtelierState>,
+  store: StoreApi<AFrameState>,
   extras: Partial<ToolContext> = {},
 ): ToolContext {
   return {

@@ -1,6 +1,6 @@
 ---
 name: tokens
-description: Creating and using design tokens (colours, fonts, spacing, radii) in Atelier, extracting a design system from an existing design, and mapping tokens to exported code.
+description: Creating and using design tokens (colours, fonts, spacing, radii) in AFrame, extracting a design system from an existing design, and mapping tokens to exported code.
 ---
 
 # Tokens

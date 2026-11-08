@@ -86,8 +86,8 @@ export class McpEnv {
     if (all.length === 0) {
       throw new CoreError(
         'NOT_FOUND',
-        'There are no Atelier projects yet.',
-        'Open the Atelier app once, or call create_project.',
+        'There are no AFrame projects yet.',
+        'Open the AFrame app once, or call create_project.',
       );
     }
     if (ref !== undefined && ref !== '') {
@@ -183,7 +183,7 @@ export class McpEnv {
         throw new CoreError(
           'NOT_FOUND',
           `The project file for ${pid} is missing.`,
-          'Open the project in Atelier to restore it.',
+          'Open the project in AFrame to restore it.',
         );
       const parsed = parseProjectText(text);
       if (!parsed.ok) {
@@ -191,13 +191,13 @@ export class McpEnv {
         if (first?.code === 'SCHEMA_NEWER')
           throw new CoreError(
             'SCHEMA_NEWER',
-            'This project was saved by a newer Atelier.',
-            'Update Atelier.',
+            'This project was saved by a newer AFrame.',
+            'Update AFrame.',
           );
         throw new CoreError(
           'INVALID_VALUE',
           `The project file is damaged: ${first?.message ?? 'unreadable'}.`,
-          'Open it in Atelier: it offers to restore the previous version.',
+          'Open it in AFrame: it offers to restore the previous version.',
         );
       }
       lastRev = revOf(text);
@@ -266,7 +266,7 @@ export class McpEnv {
         const file = await this.saveScreenshot(r.pngBase64);
         return { pngBase64: r.pngBase64, width: r.width, height: r.height, path: file };
       },
-      readUserFile: createImageReader({ atelierHome: this.home.root }),
+      readUserFile: createImageReader({ aframeHome: this.home.root }),
       writeUserFiles: (root, files, options) => writeUserFiles(root, files, options ?? {}),
       exportImage: async (opts) => {
         const r = (await this.bridge.request(
@@ -303,7 +303,7 @@ export class McpEnv {
     };
   }
 
-  /** Shipped skills and the ones in ~/.atelier/skills (theirs win), read fresh each time. */
+  /** Shipped skills and the ones in ~/.aframe/skills (theirs win), read fresh each time. */
   skillList(): Skill[] {
     return allSkills(
       this.home.root,

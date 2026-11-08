@@ -94,7 +94,7 @@ pub fn write_state(home: &Home, snap: &Snapshot, version: &str) -> Result<(), St
 /// Heartbeat every 2 s, and immediately (at most every 200 ms) when the project or selection changes.
 pub fn spawn_heartbeat(home: Home, state: Arc<SharedState>, version: String) {
     thread::Builder::new()
-        .name("atelier-heartbeat".into())
+        .name("aframe-heartbeat".into())
         .spawn(move || {
             let mut last_write: Option<Instant> = None;
             loop {

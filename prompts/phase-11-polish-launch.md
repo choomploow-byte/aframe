@@ -12,7 +12,7 @@ Something strangers can install in two minutes and love.
 4. **Error handling**: global error boundary with "Copy diagnostics", log rotation, corruption recovery flows, MCP version mismatch warning.
 5. **Auto-update** (`tauri-plugin-updater`) with signed manifests; update notification UX; MCP bundle refresh on update.
 6. **Signing/notarisation** in release workflow (document required secrets; works unsigned for alpha with clear notes).
-7. **Release workflow**: tag -> build 3 OSes -> GitHub Release with checksums; publish `atelier-mcp` to npm (provenance); changelog automation.
+7. **Release workflow**: tag -> build 3 OSes -> GitHub Release with checksums; publish `aframe-mcp` to npm (provenance); changelog automation.
 8. **Docs site/README**: hero GIF, quick start, "Connect Claude Code" paste block, FAQ, troubleshooting matrix (docs/09), contributing, roadmap, skills gallery. `docs/user-guide.md` with every feature.
 9. **Security review**: walk the docs/18 checklist; run `npm audit`/`cargo audit`; CSP verification; fuzz the doc loader with malformed JSON.
 10. **Alpha test kit**: feedback form template, script to capture diagnostics, 10 test tasks for testers.

@@ -33,7 +33,7 @@ Legend: **MVP** = must ship in v0.1. **v0.2** = next. **Later** = roadmap.
 |---|---|
 | MCP server exposing all design tools (see doc 05) | MVP |
 | One-line install for Claude Code; Codex support | MVP |
-| Server `instructions` so the agent understands Atelier with zero setup | MVP |
+| Server `instructions` so the agent understands AFrame with zero setup | MVP |
 | Screenshot tool (frame or node, optional annotation overlay) | MVP |
 | `get_selection` ("improve what I have selected") | MVP |
 | Annotations: pins and regions with comments; agent reads/resolves them | MVP |

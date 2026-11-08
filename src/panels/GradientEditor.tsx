@@ -1,7 +1,7 @@
 import { Plus, X } from 'lucide-react';
 import { resolveColor } from '@core/tokens';
 import { isValidColor } from '@core/validate';
-import { useAtelier } from '../store/store';
+import { useAFrame } from '../store/store';
 import { ColorField } from '../ui/ColorField';
 import { NumberField, TextField } from '../ui/fields';
 import { buildGradient, parseGradient, type GradientModel } from './gradient';
@@ -20,7 +20,7 @@ const MAX_STOPS = 5;
  * silently rewriting it.
  */
 export function GradientEditor({ value, onChange, disabled }: GradientEditorProps) {
-  const tokens = useAtelier((s) => s.doc.tokens);
+  const tokens = useAFrame((s) => s.doc.tokens);
   const model = parseGradient(value);
   if (!model) {
     return (

@@ -161,6 +161,6 @@ export const openAnnotations = (doc: Doc): Annotation[] =>
 /** The prompt a person gives an external agent when notes are waiting. */
 export function addressNotesPrompt(open: number): string {
   return open === 1
-    ? 'in atelier, address my open annotation'
-    : 'in atelier, address my open annotations';
+    ? 'in aframe, address my open annotation'
+    : 'in aframe, address my open annotations';
 }

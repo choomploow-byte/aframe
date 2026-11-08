@@ -99,15 +99,15 @@ const write = (dir, files) => {
 /** The canvas's own picture of a node: the screenshot the agent's tool takes. */
 async function canvasShot(doc, nodeId) {
   await appPage.evaluate((d) => {
-    window.__atelier.projects.detachForTests();
-    window.__atelier.store.getState().loadDoc(d);
+    window.__aframe.projects.detachForTests();
+    window.__aframe.store.getState().loadDoc(d);
   }, doc);
   await appPage.evaluate(() => document.fonts.ready);
   await settle(appPage);
   await sleep(200);
   const out = await appPage.evaluate(async (id) => {
     const { captureScreenshot } = await import('/src/canvas/screenshot.ts');
-    const s = window.__atelier.store.getState();
+    const s = window.__aframe.store.getState();
     return captureScreenshot(s.doc, s.viewport.zoom, { nodeId: id, scale: 1, maxWidth: 4096 });
   }, nodeId);
   return PNG.sync.read(Buffer.from(out.pngBase64, 'base64'));
@@ -250,14 +250,14 @@ for (const fx of fixtures) {
     { id: 'n_round', type: 'frame', name: 'Round', w: 200, h: 100, radius: 40, fill: '#ff0000' },
   ]);
   await appPage.evaluate((d) => {
-    window.__atelier.projects.detachForTests();
-    window.__atelier.store.getState().loadDoc(d);
+    window.__aframe.projects.detachForTests();
+    window.__aframe.store.getState().loadDoc(d);
   }, doc);
   await settle(appPage);
   const run = (params) =>
     appPage.evaluate(async (pr) => {
       const { captureExport } = await import('/src/canvas/screenshot.ts');
-      const s = window.__atelier.store.getState();
+      const s = window.__aframe.store.getState();
       try {
         return await captureExport(s.doc, s.viewport.zoom, pr);
       } catch (e) {

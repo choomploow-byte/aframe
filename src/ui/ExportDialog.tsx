@@ -4,7 +4,7 @@ import { base64ToBytes } from '@core/assets';
 import { EXPORT_FORMATS, exportDesign, kebab, type ExportFormat } from '@core/export';
 import { exportTarget, useExportTarget, type ExportMode } from '../export/dialog-state';
 import { getExportSink, type SaveOutcome, type SinkFile } from '../platform/export-sink';
-import { store, useAtelier } from '../store/store';
+import { store, useAFrame } from '../store/store';
 import { STRINGS } from '../strings';
 import { Dialog } from './Dialog';
 import { Segmented, Select, Toggle } from './fields';
@@ -166,7 +166,7 @@ function SaveBar({ files, suggestedName, sink, disabled, label }: SaveProps) {
 }
 
 function CodeTab({ nodeId }: { nodeId: string }) {
-  const doc = useAtelier((s) => s.doc);
+  const doc = useAFrame((s) => s.doc);
   const sink = useSink();
   const [format, setFormat] = useState<ExportFormat>('react-css');
   const [name, setName] = useState('');
@@ -296,7 +296,7 @@ function CodeTab({ nodeId }: { nodeId: string }) {
 }
 
 function ImageTab({ nodeId }: { nodeId: string }) {
-  const doc = useAtelier((s) => s.doc);
+  const doc = useAFrame((s) => s.doc);
   const sink = useSink();
   const [format, setFormat] = useState<'png' | 'svg'>('png');
   const [scale, setScale] = useState<Scale>('2');
@@ -427,7 +427,7 @@ function ImageTab({ nodeId }: { nodeId: string }) {
 
 export function ExportDialog() {
   const target = useExportTarget();
-  const doc = useAtelier((s) => s.doc);
+  const doc = useAFrame((s) => s.doc);
   const node = target.nodeId === null ? undefined : doc.nodes[target.nodeId];
   if (!node || target.nodeId === null) {
     return (

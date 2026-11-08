@@ -2,7 +2,7 @@
 
 | Term | Meaning |
 |---|---|
-| **Atelier** | Placeholder product name |
+| **AFrame** | Placeholder product name |
 | **Agent** | An AI (Claude Code, Codex, in-app chat) acting through tools |
 | **MCP** | Model Context Protocol: standard for giving agents tools/resources |
 | **Host** | The program running the agent and launching MCP servers (Claude Code, Codex, Cursor) |

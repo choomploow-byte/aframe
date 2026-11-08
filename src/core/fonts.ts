@@ -1,5 +1,5 @@
 /**
- * The fonts that ship with Atelier (docs/11), described so a tool can list them and the renderer
+ * The fonts that ship with AFrame (docs/11), described so a tool can list them and the renderer
  * can avoid faking weights a family does not have. Pure data: `scripts/gen-fonts-css.mjs` registers
  * the same families for the canvas, and a test keeps the two lists in step.
  */

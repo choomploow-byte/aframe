@@ -1,6 +1,6 @@
 /**
  * The icon set (docs/04 "Icons"): lookup, search and "did you mean". The data is generated
- * (`icon-data.ts`, from Font Awesome Free solid plus a few icons drawn for Atelier).
+ * (`icon-data.ts`, from Font Awesome Free solid plus a few icons drawn for AFrame).
  */
 import { ICON_DATA } from './icon-data';
 
@@ -24,7 +24,7 @@ export interface IconDef {
   d: string;
   /** Icons drawn with holes inside shapes use the even-odd rule. */
   rule?: 'evenodd';
-  source: 'fontawesome-free' | 'atelier';
+  source: 'fontawesome-free' | 'aframe';
 }
 
 const BY_NAME = new Map<string, IconDef>(ICON_DATA.map((i) => [i.name, i]));

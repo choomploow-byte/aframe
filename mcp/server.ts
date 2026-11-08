@@ -1,5 +1,5 @@
 /**
- * The Atelier MCP server (docs/05): every tool from the shared core, plus resources and prompts.
+ * The AFrame MCP server (docs/05): every tool from the shared core, plus resources and prompts.
  * Transport is stdio, so NOTHING may be written to stdout except protocol messages: all logging
  * goes to stderr.
  */
@@ -16,7 +16,7 @@ import type { Presence } from './presence';
 const PROJECT_PARAM = z
   .string()
   .optional()
-  .describe('Project id or exact name. Default: the project open in Atelier, else the newest.');
+  .describe('Project id or exact name. Default: the project open in AFrame, else the newest.');
 
 /** Tools that change nothing (hosts can run them without asking). */
 const READ_ONLY = new Set([
@@ -93,9 +93,9 @@ const PROMPTS: { name: string; match: RegExp; title: string }[] = [
   },
 ];
 
-export function createAtelierServer(env: McpEnv, presence: Presence): McpServer {
+export function createAFrameServer(env: McpEnv, presence: Presence): McpServer {
   const server = new McpServer(
-    { name: 'atelier', version: MCP_VERSION },
+    { name: 'aframe', version: MCP_VERSION },
     { instructions: SERVER_INSTRUCTIONS },
   );
 
@@ -104,10 +104,10 @@ export function createAtelierServer(env: McpEnv, presence: Presence): McpServer 
   // Resources: skills as documents, and the design outline of each project.
   server.registerResource(
     'skill',
-    new ResourceTemplate('atelier://skills/{name}', {
+    new ResourceTemplate('aframe://skills/{name}', {
       list: () => ({
         resources: env.skillList().map((s) => ({
-          uri: `atelier://skills/${s.name}`,
+          uri: `aframe://skills/${s.name}`,
           name: s.name,
           description: s.description,
           mimeType: 'text/markdown',
@@ -115,7 +115,7 @@ export function createAtelierServer(env: McpEnv, presence: Presence): McpServer 
       }),
     }),
     {
-      title: 'Atelier design skill',
+      title: 'AFrame design skill',
       description: 'Design knowledge to load before designing.',
       mimeType: 'text/markdown',
     },
@@ -127,10 +127,10 @@ export function createAtelierServer(env: McpEnv, presence: Presence): McpServer 
   );
   server.registerResource(
     'project-design',
-    new ResourceTemplate('atelier://project/{id}/design', {
+    new ResourceTemplate('aframe://project/{id}/design', {
       list: async () => ({
         resources: (await env.listAll()).map((p) => ({
-          uri: `atelier://project/${p.id}/design`,
+          uri: `aframe://project/${p.id}/design`,
           name: p.name,
           mimeType: 'application/json',
         })),

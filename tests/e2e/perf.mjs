@@ -12,12 +12,12 @@ const t = await start();
 const { page } = t;
 const r = reporter();
 
-await page.evaluate((n) => window.__atelier.loadStress(n), NODES);
+await page.evaluate((n) => window.__aframe.loadStress(n), NODES);
 await page.evaluate(() => document.fonts.ready);
 await settle(page);
 
 const nodeCount = await page.evaluate(
-  () => Object.keys(window.__atelier.store.getState().doc.nodes).length,
+  () => Object.keys(window.__aframe.store.getState().doc.nodes).length,
 );
 r.info('browser', t.userAgent);
 r.info('nodes in document', nodeCount);
@@ -94,10 +94,10 @@ const zoom = await measure('zoom (ctrl+wheel)', 90, (i) =>
 await page.keyboard.up('Control');
 
 // 3. Drag the whole artboard (a document update every frame).
-await page.evaluate(() => window.__atelier.canvas().fitAll());
+await page.evaluate(() => window.__aframe.canvas().fitAll());
 await settle(page);
 const board = await idByName(page, 'Stress artboard');
-await page.evaluate((id) => window.__atelier.store.getState().setSelection([id]), board);
+await page.evaluate((id) => window.__aframe.store.getState().setSelection([id]), board);
 await settle(page);
 const label = await page.evaluate((id) => {
   const el = document.querySelector(`[data-artboard-label="${id}"]`);
@@ -115,10 +115,10 @@ await page.mouse.up();
 await settle(page);
 
 // 4. Resize an auto-layout card: every frame re-flows the cards of its row.
-await page.evaluate(() => window.__atelier.store.getState().setSelection([]));
+await page.evaluate(() => window.__aframe.store.getState().setSelection([]));
 const card = await idByName(page, 'Card 5');
-await page.evaluate((id) => window.__atelier.store.getState().setSelection([id]), card);
-await page.evaluate(() => window.__atelier.canvas().fitSelection());
+await page.evaluate((id) => window.__aframe.store.getState().setSelection([id]), card);
+await page.evaluate(() => window.__aframe.canvas().fitSelection());
 await settle(page);
 const handle = await page.evaluate(() => {
   const h = document.querySelector('[data-handle="e"]').getBoundingClientRect();

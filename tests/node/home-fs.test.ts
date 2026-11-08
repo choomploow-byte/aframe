@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FsError } from '../../src/platform/fs-types';
 import { acquireLock, HomeFs, parseRev, sweepTempFiles } from '../../mcp/home-fs';
 
-const P = 'projects/p_test1/project.atelier.json';
+const P = 'projects/p_test1/project.aframe.json';
 const doc = (rev: number, marker = 'm'): string =>
   JSON.stringify({ schema: 1, rev, id: 'p_test1', marker });
 
@@ -15,7 +15,7 @@ let dir: string;
 let home: HomeFs;
 
 beforeEach(async () => {
-  dir = await fs.mkdtemp(path.join(os.tmpdir(), 'atelier-node-'));
+  dir = await fs.mkdtemp(path.join(os.tmpdir(), 'aframe-node-'));
   home = new HomeFs(path.join(dir, 'home'), { lockStaleMs: 300, lockWaitMs: 1500 });
   await home.ensure();
 });
@@ -25,7 +25,7 @@ afterEach(async () => {
 
 describe('confinement', () => {
   it('accepts nested relative paths', () => {
-    expect(() => home.confine('projects/p_abc12/project.atelier.json')).not.toThrow();
+    expect(() => home.confine('projects/p_abc12/project.aframe.json')).not.toThrow();
     expect(() => home.confine('./a/./b.txt')).not.toThrow();
     expect(() => home.confine('')).not.toThrow();
   });

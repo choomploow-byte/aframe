@@ -1,6 +1,6 @@
-// Bundles the MCP server into ONE file, mcp/dist/atelier-mcp.mjs: ESM, Node 20+, no node_modules
+// Bundles the MCP server into ONE file, mcp/dist/aframe-mcp.mjs: ESM, Node 20+, no node_modules
 // needed on the user's machine, shebang and a version header the app uses to decide whether to
-// replace the copy in ~/.atelier/mcp. Also regenerates mcp/generated.ts (skills, instructions).
+// replace the copy in ~/.aframe/mcp. Also regenerates mcp/generated.ts (skills, instructions).
 import { execFileSync } from 'node:child_process';
 import { chmodSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { build } from 'esbuild';
@@ -14,7 +14,7 @@ mkdirSync(`${root}mcp/dist`, { recursive: true });
 
 await build({
   entryPoints: [`${root}mcp/entry.ts`],
-  outfile: `${root}mcp/dist/atelier-mcp.mjs`,
+  outfile: `${root}mcp/dist/aframe-mcp.mjs`,
   bundle: true,
   platform: 'node',
   format: 'esm',
@@ -22,7 +22,7 @@ await build({
   alias: { '@core': `${root}src/core` },
   banner: {
     // `require` for the few CommonJS dependencies inside the bundle (ajv and friends).
-    js: `#!/usr/bin/env node\n// atelier-mcp-version: ${version}\nimport { createRequire as __atelierCreateRequire } from 'node:module';\nconst require = __atelierCreateRequire(import.meta.url);`,
+    js: `#!/usr/bin/env node\n// aframe-mcp-version: ${version}\nimport { createRequire as __aframeCreateRequire } from 'node:module';\nconst require = __aframeCreateRequire(import.meta.url);`,
   },
   // At the end, so the version header on the first lines stays where the app looks for it.
   footer: { js: ATTRIBUTION },
@@ -30,6 +30,6 @@ await build({
   logLevel: 'warning',
   minify: false,
 });
-chmodSync(`${root}mcp/dist/atelier-mcp.mjs`, 0o755);
-const kb = Math.round(statSync(`${root}mcp/dist/atelier-mcp.mjs`).size / 1024);
-console.log(`build-mcp: mcp/dist/atelier-mcp.mjs (${kb} KB, v${version})`);
+chmodSync(`${root}mcp/dist/aframe-mcp.mjs`, 0o755);
+const kb = Math.round(statSync(`${root}mcp/dist/aframe-mcp.mjs`).size / 1024);
+console.log(`build-mcp: mcp/dist/aframe-mcp.mjs (${kb} KB, v${version})`);

@@ -24,7 +24,7 @@ Each phase: **goal, deliverables, acceptance criteria, how to verify, estimate**
 **Accept:** a user can build a landing-page hero by hand from scratch in < 5 min; every property in doc 04 is editable; theme toggle works with no unstyled flashes.
 
 ## Game-UI toolkit (built between Phases 5 and 6; decision log #79-#95)
-**Goal:** make Atelier good at chunky, glossy game interfaces.
+**Goal:** make AFrame good at chunky, glossy game interfaces.
 **Delivered:** an icon set and `icon` nodes, four display fonts and `list_fonts`, pattern fills, effect presets, reusable components with states and overrides, state screenshots, seven genre templates with token sets and component kits, editing fixes and lint rules. Details: `docs/04`, `docs/05`. Not built: the motion preview (stretch goal).
 
 ## Phase 4: Persistence, Tauri shell and sync (2 sessions)
@@ -35,12 +35,12 @@ Each phase: **goal, deliverables, acceptance criteria, how to verify, estimate**
 ## Phase 5: MCP server, bridge and installer (2-3 sessions)
 **Goal:** Claude Code can read/edit designs.
 **Deliver:** `mcp/server.ts` with all read/write tools (doc 05), server `instructions`, atomic file I/O, request/response bridge, app-side request handler (screenshot, export_image, get_selection fallback), esbuild bundle, `install/uninstall/doctor` CLI for Claude Code + Codex + Cursor, Connect dialog with copy-paste prompt and test-connection, skill file installed.
-**Accept:** from a fresh Claude Code: paste install text -> tools appear -> "in atelier, add a hero section" edits the canvas live; `screenshot` returns an image the agent can describe; works with app closed for doc tools; `doctor` is green; `scripts/test-mcp.mjs` passes in CI.
+**Accept:** from a fresh Claude Code: paste install text -> tools appear -> "in aframe, add a hero section" edits the canvas live; `screenshot` returns an image the agent can describe; works with app closed for doc tools; `doctor` is green; `scripts/test-mcp.mjs` passes in CI.
 
 ## Phase 6: Annotations, references, selection (1-2 sessions)
 **Goal:** the human-feedback loop (your signature feature).
 **Deliver:** annotation tool + overlay + Notes tab; `get/add/resolve_annotation`; references panel (notes/scope, compare overlay); `get_selection`; screenshot `annotations:true` compositing; "Ask AI to address notes" action; "Claude Code is editing..." indicator and changed-node pulse.
-**Accept:** drop a pin on a button saying "make this pop", run "in atelier, address my annotations" in Claude Code -> button changes, annotation resolved with reply visible in the UI. **First public demo-able milestone.**
+**Accept:** drop a pin on a button saying "make this pop", run "in aframe, address my annotations" in Claude Code -> button changes, annotation resolved with reply visible in the UI. **First public demo-able milestone.**
 
 ## Phase 7: Inbuilt chat and API keys (2 sessions)
 **Status: built (2026-11-08), not yet run against a live provider.** Everything is tested against scripted providers; the first real request needs your key (see docs/08).
@@ -67,9 +67,9 @@ Each phase: **goal, deliverables, acceptance criteria, how to verify, estimate**
 **Accept:** 3 real-world Figma files convert with a report and < 20% manual fixing; running-app import gives a usable starting frame for a standard Vite/Next page.
 
 ## Phase 11: Polish, packaging, launch (2-3 sessions)
-**Status: built (2026-11-08) except what needs your accounts and machines.** Done and tested: accessibility audit and fixes, recovery page with diagnostics, fuzzing, performance check (2,000 nodes stays interactive), `atelier-mcp` npm package, release workflow (never run), rename tool (proved on a clone), user guide, demo script, alpha kit, README. Not done: auto-update, code signing and notarisation, publishing to npm, clean-VM installs on any OS, macOS and Linux builds. Culling was not added: the measured numbers did not call for it. See docs/14 for the checklist and docs/release.md.
+**Status: built (2026-11-08) except what needs your accounts and machines.** Done and tested: accessibility audit and fixes, recovery page with diagnostics, fuzzing, performance check (2,000 nodes stays interactive), `aframe-mcp` npm package, release workflow (never run), rename tool (proved on a clone), user guide, demo script, alpha kit, README. Not done: auto-update, code signing and notarisation, publishing to npm, clean-VM installs on any OS, macOS and Linux builds. Culling was not added: the measured numbers did not call for it. See docs/14 for the checklist and docs/release.md.
 **Goal:** something strangers can install and love.
-**Deliver:** onboarding + sample projects/templates, empty/error states, command palette completeness, perf pass (doc 19), accessibility pass, auto-update, signing/notarisation, docs site (README + `docs/`), demo GIF/video script, issue templates, contributor guide, Release workflow for 3 OSes, `atelier-mcp` on npm.
+**Deliver:** onboarding + sample projects/templates, empty/error states, command palette completeness, perf pass (doc 19), accessibility pass, auto-update, signing/notarisation, docs site (README + `docs/`), demo GIF/video script, issue templates, contributor guide, Release workflow for 3 OSes, `aframe-mcp` on npm.
 **Accept:** clean-machine install on Win/macOS/Linux < 2 min; Lighthouse-style a11y checks on the UI pass; cold start < 2 s; docs enable a new contributor to run dev in 10 min.
 
 ---

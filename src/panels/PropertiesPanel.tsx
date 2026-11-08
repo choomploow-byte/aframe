@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { getCanvasApi } from '../canvas/canvas-api';
-import { useAtelier } from '../store/store';
+import { useAFrame } from '../store/store';
 import { STRINGS } from '../strings';
 import { buildPropCtx } from './prop-context';
 import {
@@ -19,8 +19,8 @@ import { ComponentSection, EffectPresetsSection, IconSection } from './toolkit-s
 
 /** The Design tab: sections for whatever is selected, with "Mixed" where a multi-selection differs. */
 export function PropertiesPanel() {
-  const doc = useAtelier((s) => s.doc);
-  const selection = useAtelier((s) => s.selection);
+  const doc = useAFrame((s) => s.doc);
+  const selection = useAFrame((s) => s.selection);
   // The measurer only exists while the canvas is mounted; sections call it lazily.
   const ctx = useMemo(
     () => buildPropCtx(doc, selection, (id) => getCanvasApi()?.measure(id) ?? null),

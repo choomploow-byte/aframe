@@ -20,7 +20,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerE
 import type { NodeType } from '@core/types';
 import { deleteSelection } from '../store/commands';
 import { renameLayer, toggleLayerFlag } from '../store/panel-commands';
-import { store, useAtelier } from '../store/store';
+import { store, useAFrame } from '../store/store';
 import { STRINGS } from '../strings';
 import { openContextMenu } from '../ui/context-menu-state';
 import {
@@ -60,8 +60,8 @@ function positionIn(rowEl: HTMLElement, y: number, container: boolean): DropPosi
 }
 
 export function LayersPanel() {
-  const doc = useAtelier((s) => s.doc);
-  const selection = useAtelier((s) => s.selection);
+  const doc = useAFrame((s) => s.doc);
+  const selection = useAFrame((s) => s.selection);
   const [expanded, setExpanded] = useState<Set<string>>(
     () => new Set(store.getState().doc.nodes[store.getState().doc.rootId]?.children ?? []),
   );

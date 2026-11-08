@@ -7,7 +7,7 @@ import { useSyncExternalStore } from 'react';
  */
 export type ThemePreference = 'system' | 'light' | 'dark';
 
-export const THEME_KEY = 'atelier.theme';
+export const THEME_KEY = 'aframe.theme';
 const listeners = new Set<() => void>();
 
 function read(): ThemePreference {

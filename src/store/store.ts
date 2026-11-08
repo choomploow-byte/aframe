@@ -61,7 +61,7 @@ export interface DispatchOptions {
 
 export type EditResult = { ok: true } | { ok: false; error: OpError };
 
-export interface AtelierState {
+export interface AFrameState {
   doc: Doc;
   selection: string[];
   tool: ToolId;
@@ -135,11 +135,11 @@ function restored(current: Doc, target: Doc, at: string): Doc {
   return bumpRev({ ...target, rev: current.rev }, 'app', at);
 }
 
-export function createAtelierStore(options: StoreOptions = {}): StoreApi<AtelierState> {
+export function createAFrameStore(options: StoreOptions = {}): StoreApi<AFrameState> {
   const now = options.now ?? ((): number => Date.now());
   const isoNow = options.isoNow ?? ((): string => new Date().toISOString());
 
-  return createStore<AtelierState>()((set, get) => {
+  return createStore<AFrameState>()((set, get) => {
     /** Installs `next` as the document, recording history unless a transaction is open. */
     const install = (
       next: Doc,
@@ -296,9 +296,9 @@ export function createAtelierStore(options: StoreOptions = {}): StoreApi<Atelier
   });
 }
 
-/** The app's store. Tests build their own with `createAtelierStore`. */
-export const store = createAtelierStore();
+/** The app's store. Tests build their own with `createAFrameStore`. */
+export const store = createAFrameStore();
 
-export function useAtelier<T>(selector: (state: AtelierState) => T): T {
+export function useAFrame<T>(selector: (state: AFrameState) => T): T {
   return useStore(store, selector);
 }

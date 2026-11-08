@@ -28,12 +28,12 @@ const { check } = r;
 
 const setSelection = (ids) =>
   page
-    .evaluate((x) => window.__atelier.store.getState().setSelection(x), ids)
+    .evaluate((x) => window.__aframe.store.getState().setSelection(x), ids)
     .then(() => settle(page));
-const setTool = (tool) => page.evaluate((x) => window.__atelier.store.getState().setTool(x), tool);
+const setTool = (tool) => page.evaluate((x) => window.__aframe.store.getState().setTool(x), tool);
 const resetSample = async () => {
-  await page.evaluate(() => window.__atelier.loadSample());
-  await page.evaluate(() => window.__atelier.canvas().fitAll());
+  await page.evaluate(() => window.__aframe.loadSample());
+  await page.evaluate(() => window.__aframe.canvas().fitAll());
   await settle(page);
 };
 /** Zoom 1 with world point (wx, wy) at the centre of the canvas. */
@@ -199,7 +199,7 @@ await group('draw tools, undo and redo', async () => {
   await setSelection([]);
   const b = await canvasBox(page);
   const before = await state(page);
-  const pageId = await page.evaluate(() => window.__atelier.store.getState().doc.rootId);
+  const pageId = await page.evaluate(() => window.__aframe.store.getState().doc.rootId);
   const emptyY = b.y + b.h - 220; // below the artboards at the fit-all zoom
   const start1 = { x: b.x + 330, y: emptyY };
   await press(page, 'f');
@@ -324,7 +324,7 @@ await group('move, snap, nudge', async () => {
   await resetSample();
   // A free-positioned scratch artboard with two rects.
   const ids = await page.evaluate(() => {
-    const s = window.__atelier.store.getState();
+    const s = window.__aframe.store.getState();
     const res = s.dispatch(
       [
         {
@@ -427,7 +427,7 @@ await group('move, snap, nudge', async () => {
 await group('resize', async () => {
   await resetSample();
   const ids = await page.evaluate(() => {
-    const s = window.__atelier.store.getState();
+    const s = window.__aframe.store.getState();
     return s.dispatch(
       [
         {
@@ -662,7 +662,7 @@ await group('view: pan, zoom, fit', async () => {
   await page.mouse.move(cx + 100, cy + 50);
   const worldUnder = await page.evaluate(
     ([x, y]) => {
-      const s = window.__atelier.store.getState();
+      const s = window.__aframe.store.getState();
       const r = document.querySelector('[data-testid="canvas"]').getBoundingClientRect();
       return {
         x: (x - r.x - s.viewport.x) / s.viewport.zoom,
@@ -762,7 +762,7 @@ await group('view: pan, zoom, fit', async () => {
 await group('edit commands via shortcuts', async () => {
   await resetSample();
   const ids = await page.evaluate(() => {
-    const s = window.__atelier.store.getState();
+    const s = window.__aframe.store.getState();
     return s.dispatch(
       [
         {
@@ -899,7 +899,7 @@ await group('edit commands via shortcuts', async () => {
 await group('more gestures: alt-drag copy, multi-move, locked nodes, hover', async () => {
   await resetSample();
   const ids = await page.evaluate(() => {
-    const s = window.__atelier.store.getState();
+    const s = window.__aframe.store.getState();
     return s.dispatch(
       [
         {
@@ -998,7 +998,7 @@ await group('more gestures: alt-drag copy, multi-move, locked nodes, hover', asy
   // Locked nodes: selectable, never moved, no handles, arrows ignored.
   await page.evaluate(
     (id) =>
-      window.__atelier.store.getState().dispatch([{ op: 'update', id, set: { locked: true } }]),
+      window.__aframe.store.getState().dispatch([{ op: 'update', id, set: { locked: true } }]),
     ids.b,
   );
   await setSelection([ids.b]);

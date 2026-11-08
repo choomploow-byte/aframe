@@ -2,7 +2,7 @@
  * The asset library (docs/06 "library"): a folder of the user's own images (textures, overlays,
  * particles, brushes) that an agent can search and place. This file is the pure part: turning a file
  * name into a clean name, a category and tags, and searching an index. The files themselves live in
- * the user's Atelier home, not in the project and not in the app; see `mcp/library.ts`.
+ * the user's AFrame home, not in the project and not in the app; see `mcp/library.ts`.
  */
 
 export const LIBRARY_CATEGORIES = [

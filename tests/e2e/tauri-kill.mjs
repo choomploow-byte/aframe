@@ -1,6 +1,6 @@
 // Killing the real desktop app in the middle of saving must never corrupt a project.
 //
-// Launches the built Atelier executable (Windows, WebView2) against a throwaway home folder, fills a
+// Launches the built AFrame executable (Windows, WebView2) against a throwaway home folder, fills a
 // project with a multi-megabyte image so each save takes real time, keeps editing so saves are always
 // in flight, then terminates the process abruptly (TerminateProcess, no chance to clean up) at
 // random moments. After every kill the project file and its backup must be complete documents,
@@ -21,13 +21,13 @@ if (process.platform !== 'win32') {
   console.log('SKIP  this test drives the Windows (WebView2) build');
   process.exit(0);
 }
-const EXE = process.env.ATELIER_EXE ?? 'src-tauri/target/debug/atelier.exe';
+const EXE = process.env.AFRAME_EXE ?? 'src-tauri/target/debug/aframe.exe';
 if (!existsSync(EXE)) {
   console.error(`No executable at ${EXE}. Build it first (see the header of this file).`);
   process.exit(2);
 }
 const ROUNDS = Number(process.env.KILLS ?? 6);
-const home = mkdtempSync(join(tmpdir(), 'atelier-kill-'));
+const home = mkdtempSync(join(tmpdir(), 'aframe-kill-'));
 const r = reporter();
 const { check, info } = r;
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -67,7 +67,7 @@ async function launch(basePort) {
     child = spawn(EXE, [], {
       env: {
         ...process.env,
-        ATELIER_HOME: home,
+        AFRAME_HOME: home,
         WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${port}`,
       },
       stdio: 'ignore',
@@ -84,7 +84,7 @@ async function launch(basePort) {
         const page = (await browser.pages()).find((p) => !p.url().startsWith('devtools'));
         if (page) {
           info('debug port answered', `${Date.now() - launchedAt} ms (attempt ${attempt + 1})`);
-          await page.waitForFunction(() => window.__atelier?.sync?.()?.attached === true, {
+          await page.waitForFunction(() => window.__aframe?.sync?.()?.attached === true, {
             timeout: 30_000,
           });
           return { browser, page };
@@ -104,7 +104,7 @@ function projectFiles() {
   const projects = join(home, 'projects');
   const id = readdirSync(projects).find((n) => /^p_/.test(n));
   if (!id) return null;
-  return { id, dir: join(projects, id), file: join(projects, id, 'project.atelier.json') };
+  return { id, dir: join(projects, id), file: join(projects, id, 'project.aframe.json') };
 }
 const readJson = (path) => {
   try {
@@ -139,7 +139,7 @@ try {
       const image = noisePngDataUrl(1400);
       info('embedded image', `${(image.length / 1024 / 1024).toFixed(1)} MB as a data URL`);
       await page.evaluate((url) => {
-        const s = window.__atelier.store.getState();
+        const s = window.__aframe.store.getState();
         const ops = [
           {
             op: 'create',
@@ -173,15 +173,14 @@ try {
         const id = `a_${Math.random().toString(36).slice(2, 8)}`;
         s.edit((doc) => ({ ...doc, assets: { ...doc.assets, [id]: url } }), 'Add image');
       }, image);
-      await page.waitForFunction(
-        () => window.__atelier.sync().status.getState().state === 'saved',
-        { timeout: 30_000 },
-      );
+      await page.waitForFunction(() => window.__aframe.sync().status.getState().state === 'saved', {
+        timeout: 30_000,
+      });
     }
 
     // Keep a save almost always in flight: edit, then save right away, over and over.
     await page.evaluate(() => {
-      const ids = Object.values(window.__atelier.store.getState().doc.nodes)
+      const ids = Object.values(window.__aframe.store.getState().doc.nodes)
         .filter((n) => n.name?.startsWith('Box'))
         .map((n) => n.id);
       window.__running = true;
@@ -191,11 +190,11 @@ try {
           tick += 1;
           const id = ids[tick % ids.length];
           if (id) {
-            window.__atelier.store
+            window.__aframe.store
               .getState()
               .dispatch([{ op: 'update', id, set: { x: tick % 400 } }], { label: 'Edit' });
           }
-          await window.__atelier.sync().flush();
+          await window.__aframe.sync().flush();
           await new Promise((r) => setTimeout(r, 15));
         }
       })();
@@ -242,7 +241,7 @@ try {
   writeFileSync(join(projectFiles().dir, '.lock'), '{"pid":424242}');
   const { browser, page } = await launch(9399);
   const opened = await page.evaluate(() => {
-    const s = window.__atelier.store.getState();
+    const s = window.__aframe.store.getState();
     return { nodes: Object.keys(s.doc.nodes).length, assets: Object.keys(s.doc.assets).length };
   });
   check(
@@ -252,7 +251,7 @@ try {
   );
   const t1 = Date.now();
   await page.evaluate(() => {
-    const s = window.__atelier.store.getState();
+    const s = window.__aframe.store.getState();
     s.dispatch(
       [
         {
@@ -264,7 +263,7 @@ try {
       { label: 'Rename' },
     );
   });
-  await page.waitForFunction(() => window.__atelier.sync().status.getState().state === 'saved', {
+  await page.waitForFunction(() => window.__aframe.sync().status.getState().state === 'saved', {
     timeout: 20_000,
   });
   const savedIn = Date.now() - t1;

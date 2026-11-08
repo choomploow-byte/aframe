@@ -176,7 +176,7 @@ export function importSvg(source: string, fileName = 'SVG'): ImportResult {
         note(
           'approximated',
           `colour "${value}" on ${what}`,
-          'not a colour Atelier reads; black was used',
+          'not a colour AFrame reads; black was used',
         );
         hex = '#000000';
       }
@@ -372,7 +372,7 @@ export function importSvg(source: string, fileName = 'SVG'): ImportResult {
         const w = num(el.attrs.width);
         const h = num(el.attrs.height);
         if (!w || !h || w <= 0 || h <= 0) {
-          note('skipped', `rect ${label}`, 'it has no size Atelier can read');
+          note('skipped', `rect ${label}`, 'it has no size AFrame can read');
           return null;
         }
         budget.take();
@@ -533,7 +533,7 @@ export function importSvg(source: string, fileName = 'SVG'): ImportResult {
           name: text.slice(0, 40),
           text,
           x: round(left),
-          // SVG places text by its baseline; Atelier by its top.
+          // SVG places text by its baseline; AFrame by its top.
           y: round(m.ty + m.sy * y - originY - size * 0.8),
           w: estW,
           fontSize: round(size),
@@ -583,7 +583,7 @@ export function importSvg(source: string, fileName = 'SVG'): ImportResult {
         };
       }
       default:
-        note('skipped', `${el.name} ${label}`, 'an element Atelier does not draw');
+        note('skipped', `${el.name} ${label}`, 'an element AFrame does not draw');
         return null;
     }
   };
@@ -608,7 +608,7 @@ export function importSvg(source: string, fileName = 'SVG'): ImportResult {
           clip: true,
           children,
         };
-  if (spec === null) note('skipped', 'the whole file', 'it has nothing Atelier can draw');
+  if (spec === null) note('skipped', 'the whole file', 'it has nothing AFrame can draw');
   return { name, spec, assets, report, colors: tally.repeated() };
 }
 

@@ -1,9 +1,9 @@
 ---
 name: layout-and-spacing
-description: Auto-layout structure, grids, containers, spacing recipes, responsive behaviour and sizing modes in Atelier. Load when structuring or restructuring a screen.
+description: Auto-layout structure, grids, containers, spacing recipes, responsive behaviour and sizing modes in AFrame. Load when structuring or restructuring a screen.
 ---
 
-# Layout and Spacing in Atelier
+# Layout and Spacing in AFrame
 
 ## Mental model
 Everything is **frames with auto-layout**. A page = column of sections; a section = frame (padding) containing a centred container; a container = row or column of items. Avoid `layout: "none"` except for decorative layering and top-level canvas placement.
@@ -55,7 +55,7 @@ Rule: inner gap < outer gap. If two groups touch, increase the outer gap first.
 - Vertically centre icon+text rows (`align: center`). Baseline-align mixed text sizes if needed.
 - Make sibling cards share height (`align: stretch`) and pin their buttons to the bottom (column card + spacer frame `h: fill`).
 
-## Responsive approach in Atelier
+## Responsive approach in AFrame
 Create separate frames per breakpoint (Desktop 1440, Tablet 820, Mobile 390) from the same tokens.
 Mobile conversions: rows → columns; 3-col grids → 1 column; side padding 20-24; nav → logo + menu icon; hero type 56 → 36-40; tap targets ≥ 44px; remove decorative elements; keep one primary CTA above the fold.
 

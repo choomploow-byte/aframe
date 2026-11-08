@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Atelier",
+  "productName": "AFrame",
   "version": "0.2.0",
-  "identifier": "dev.atelier.app",
+  "identifier": "dev.aframe.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://127.0.0.1:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Atelier",
+        "title": "AFrame",
         "width": 1360,
         "height": 860,
         "minWidth": 900,

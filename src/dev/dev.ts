@@ -17,7 +17,7 @@ export async function installDevTools(): Promise<void> {
   // With it, the app opens a real project instead (see bootProject in main.tsx).
   else if (!projects.persistenceEnabled()) store.getState().loadDoc(loaded.doc);
 
-  (window as unknown as { __atelier: unknown }).__atelier = {
+  (window as unknown as { __aframe: unknown }).__aframe = {
     store,
     commands,
     canvas: getCanvasApi,

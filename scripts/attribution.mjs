@@ -4,4 +4,4 @@
 export const ATTRIBUTION =
   '/*! Icons: Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com - ' +
   'License https://fontawesome.com/license/free (Icons: CC BY 4.0) - Copyright 2026 Fonticons, Inc. ' +
-  'Five further icons were drawn for Atelier (MIT). Fonts and the rest: THIRD-PARTY-NOTICES.md */';
+  'Five further icons were drawn for AFrame (MIT). Fonts and the rest: THIRD-PARTY-NOTICES.md */';

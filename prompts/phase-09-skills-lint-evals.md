@@ -6,7 +6,7 @@
 Make the AI's output consistently good, and prove it.
 
 ## Tasks
-1. **Skills pipeline**: build step converts `skills/*.md` -> `src/core/skills/*.ts` string modules (frontmatter parsed for name/description). `list_skills`/`load_skill` implemented; user skills folder `~/.atelier/skills/` merged in (user overrides shipped). MCP resources `atelier://skills/<name>`.
+1. **Skills pipeline**: build step converts `skills/*.md` -> `src/core/skills/*.ts` string modules (frontmatter parsed for name/description). `list_skills`/`load_skill` implemented; user skills folder `~/.aframe/skills/` merged in (user overrides shipped). MCP resources `aframe://skills/<name>`.
 2. **Review and improve the shipped skills** with the actual tool names and node properties (consistency checklist in docs/20). Make them concrete: numbers, ratios, do/don't pairs, tiny worked examples in tool-call form.
 3. **`lint_design`**: implement all rules in docs/13 with fix suggestions as `Op[]`; contrast with background resolution through ancestors and gradient handling; tests with seeded bad fixtures.
 4. **UI**: Lint results panel (click to focus node, "Fix" button applying `fix` ops), badge count in the top bar.

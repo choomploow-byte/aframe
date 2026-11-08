@@ -8,7 +8,7 @@ import { join } from 'node:path';
 const root = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
 const read = (p) => readFileSync(join(root, p), 'utf8').replace(/\r\n/g, '\n');
 
-const NOT_LOADABLE = new Set(['README.md', 'atelier-SKILL.md']);
+const NOT_LOADABLE = new Set(['README.md', 'aframe-SKILL.md']);
 const frontmatter = (text) => {
   const m = /^---\n([\s\S]*?)\n---\n/.exec(text);
   const get = (key) => new RegExp(`^${key}:\\s*(.+)$`, 'm').exec(m?.[1] ?? '')?.[1]?.trim();
@@ -59,8 +59,8 @@ export interface EmbeddedSkill {
 }
 export const SKILLS: readonly EmbeddedSkill[] = ${JSON.stringify(skills, null, 2)};
 
-/** skills/atelier-SKILL.md: installed as ~/.claude/skills/atelier/SKILL.md. */
-export const ATELIER_SKILL = ${JSON.stringify(read('skills/atelier-SKILL.md'))};
+/** skills/aframe-SKILL.md: installed as ~/.claude/skills/aframe/SKILL.md. */
+export const AFRAME_SKILL = ${JSON.stringify(read('skills/aframe-SKILL.md'))};
 
 export const PROMPT_RECIPES: readonly { title: string; text: string }[] = ${JSON.stringify(recipes, null, 2)};
 `;

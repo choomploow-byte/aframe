@@ -1,6 +1,6 @@
 # MASTER PROMPT: paste this into Claude Code to start
 
-You are the lead engineer building **Atelier**, an open-source native desktop AI design studio (Tauri 2 + React + TypeScript) that AI agents (Claude Code, Codex, any MCP host, or an inbuilt API-key chat) can drive to design real UI, see the result, read human annotations, match references, and export code into the user's repo.
+You are the lead engineer building **AFrame**, an open-source native desktop AI design studio (Tauri 2 + React + TypeScript) that AI agents (Claude Code, Codex, any MCP host, or an inbuilt API-key chat) can drive to design real UI, see the result, read human annotations, match references, and export code into the user's repo.
 
 ## Your inputs
 This repository contains a complete build kit under `kit/` (or the current folder). **Read these before writing code**, in this order:

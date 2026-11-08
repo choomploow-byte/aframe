@@ -111,7 +111,7 @@ export function describeNotice(n: SyncNotice): {
     case 'external': {
       const who =
         n.writer === 'app'
-          ? 'The project file was changed outside Atelier.'
+          ? 'The project file was changed outside AFrame.'
           : 'The AI changed the design.';
       if (n.tookTheirs) {
         return {
@@ -376,7 +376,7 @@ export async function importProjectFile(file: File): Promise<void> {
   }
   const parsed = parseProjectText(await file.text());
   if (!parsed.ok) {
-    const why = parsed.errors[0]?.message ?? 'It is not an Atelier project file.';
+    const why = parsed.errors[0]?.message ?? 'It is not an AFrame project file.';
     showToast(`${file.name} could not be imported. ${why}`, { kind: 'error' });
     return;
   }
@@ -387,7 +387,7 @@ export async function importProjectFile(file: File): Promise<void> {
   }
 }
 
-/** Downloads the open project as a `.atelier.json` file (a copy to keep or share). */
+/** Downloads the open project as a `.aframe.json` file (a copy to keep or share). */
 export function exportProjectFile(): void {
   const doc = store.getState().doc;
   const blob = new Blob([serializeDoc(doc)], { type: 'application/json' });
@@ -399,7 +399,7 @@ export function exportProjectFile(): void {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '') || 'project';
   a.href = url;
-  a.download = `${slug}.atelier.json`;
+  a.download = `${slug}.aframe.json`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }

@@ -15,10 +15,10 @@
 | `puppeteer-core` (dev) | Phase 0 | Browser tests against system Chrome and the WebView2 window |
 | `@tauri-apps/api` | Phase 4 | The official IPC wrapper (`invoke`, `listen`) the Tauri file adapter uses; imported lazily so the browser dev build never loads it |
 | Rust `serde`, `serde_json` | Phase 4 | Serialising `app-state.json` and the command results; reading only the `rev` field of a project file during a compare-and-write |
-| Rust `dirs` | Phase 4 | The user's home directory for `~/.atelier` (the one platform detail not worth hand-rolling) |
+| Rust `dirs` | Phase 4 | The user's home directory for `~/.aframe` (the one platform detail not worth hand-rolling) |
 | Rust `tauri-plugin-single-instance` | Phase 4 | A second launch focuses the running window; two apps on one home would fight over the same files. Registered first, as its docs require |
 | Rust `tauri-plugin-window-state` | Phase 4 | Remembers window size and position between runs |
-| `@modelcontextprotocol/server`, `@modelcontextprotocol/client` | Phase 5 | The MCP SDK v2 (stable line, Node 20+, zod 4): the server is bundled into `atelier-mcp.mjs`; the client is a dev dependency used by the integration and live tests (it is the same code hosts use). Verified by a spike before anything was built on it |
+| `@modelcontextprotocol/server`, `@modelcontextprotocol/client` | Phase 5 | The MCP SDK v2 (stable line, Node 20+, zod 4): the server is bundled into `aframe-mcp.mjs`; the client is a dev dependency used by the integration and live tests (it is the same code hosts use). Verified by a spike before anything was built on it |
 | `esbuild` (dev) | Phase 5 | Bundles the server and its dependencies into one file |
 | `html-to-image` | Phase 5 | Rasterises cloned artboards for the `screenshot` tool. Last released April 2025: a known risk, mitigated by cloning into a controlled container, a timer for animation frames, and the real-window test; a native capture is the documented fallback |
 | `@fontsource/lilita-one`, `@fontsource/luckiest-guy`, `@fontsource/bungee`, `@fontsource-variable/fredoka` | Game-UI toolkit | The display families for game UI (SIL OFL 1.1, except Luckiest Guy which is Apache 2.0), registered as plain-name aliases by `scripts/gen-fonts-css.mjs` (woff2 only for the static ones) |
@@ -79,7 +79,7 @@ Versions below are the *intended major versions at time of writing*. Claude Code
 Windows = WebView2 (Chromium), macOS/Linux = WebKit. `html-to-image` and some CSS (e.g. `backdrop-filter`, `gap` in old WebKit, font metrics) can differ. Keep a cross-platform screenshot fixture test in CI (Linux+Windows+macOS runners). If WebKit fidelity is a blocker for screenshots, add an optional Chromium-based renderer sidecar for screenshots only.
 
 ## Monorepo or not?
-Single package for MVP; `core/` as an internal folder imported via relative paths by app and MCP bundle. If/when publishing `atelier-mcp` and `@atelier/core` to npm, convert to pnpm workspaces: `packages/core`, `packages/mcp`, `apps/desktop`.
+Single package for MVP; `core/` as an internal folder imported via relative paths by app and MCP bundle. If/when publishing `aframe-mcp` and `@aframe/core` to npm, convert to pnpm workspaces: `packages/core`, `packages/mcp`, `apps/desktop`.
 
 ## Scripts (package.json)
 `dev` (vite), `build:mcp` (esbuild), `typecheck`, `test`, `test:e2e`, `tauri:dev`, `tauri:build`, `icons`, `lint`, `format`.

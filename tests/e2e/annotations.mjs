@@ -17,10 +17,10 @@ const shot = async (name) => {
   if (SHOT_DIR) await page.screenshot({ path: join(SHOT_DIR, `${name}.png`) });
 };
 const doc = () =>
-  page.evaluate(() => JSON.parse(JSON.stringify(window.__atelier.store.getState().doc)));
+  page.evaluate(() => JSON.parse(JSON.stringify(window.__aframe.store.getState().doc)));
 const dispatch = (ops, label = 'test') =>
   page.evaluate(
-    (o, l) => window.__atelier.store.getState().dispatch(o, { label: l }).ok,
+    (o, l) => window.__aframe.store.getState().dispatch(o, { label: l }).ok,
     ops,
     label,
   );
@@ -31,7 +31,7 @@ const pinRect = (id) =>
     const b = el.getBoundingClientRect();
     return { x: b.x + b.width / 2, y: b.y + b.height / 2, w: b.width, h: b.height };
   }, id);
-const zoomNow = () => page.evaluate(() => window.__atelier.store.getState().viewport.zoom);
+const zoomNow = () => page.evaluate(() => window.__aframe.store.getState().viewport.zoom);
 const tab = (name) =>
   page.evaluate((n) => {
     [...document.querySelectorAll('[role="tab"]')]
@@ -40,7 +40,7 @@ const tab = (name) =>
   }, name);
 
 // ---- a design to annotate -----------------------------------------------------------------------
-await page.evaluate(() => window.__atelier.loadBlank());
+await page.evaluate(() => window.__aframe.loadBlank());
 await settle(page);
 const root = (await doc()).rootId;
 await dispatch([
@@ -64,7 +64,7 @@ await dispatch([
   },
 ]);
 await settle(page);
-await page.evaluate(() => window.__atelier.canvas().fitAll());
+await page.evaluate(() => window.__aframe.canvas().fitAll());
 await settle(page);
 const buttonId = await idByName(page, 'Button');
 const cardId = await idByName(page, 'Card');
@@ -74,7 +74,7 @@ await page.focus('[data-testid="canvas"]');
 await press(page, 'a');
 check(
   'A selects the Annotate tool',
-  (await page.evaluate(() => window.__atelier.store.getState().tool)) === 'annotate',
+  (await page.evaluate(() => window.__aframe.store.getState().tool)) === 'annotate',
 );
 check(
   'the toolbar shows it as enabled',
@@ -183,7 +183,7 @@ await press(page, 'v');
   await dispatch([{ op: 'update', id: buttonId, set: { x: 160, y: 140 } }], 'move button');
   await settle(page);
   const after = await pinRect(id);
-  const zoom = await page.evaluate(() => window.__atelier.store.getState().viewport.zoom);
+  const zoom = await page.evaluate(() => window.__aframe.store.getState().viewport.zoom);
   check(
     'moving the button moves the pin with it',
     Math.abs(after.x - before.x - 100 * zoom) < 2 && Math.abs(after.y - before.y - 60 * zoom) < 2,
@@ -204,7 +204,7 @@ await press(page, 'v');
   const id = (await doc()).annotations[0].id;
   const small = await pinRect(id);
   await page.evaluate(() => {
-    const s = window.__atelier.store.getState();
+    const s = window.__aframe.store.getState();
     s.setViewport({ ...s.viewport, zoom: s.viewport.zoom * 3 });
   });
   await settle(page);
@@ -219,7 +219,7 @@ await press(page, 'v');
     `${small.w} vs ${big.w}`,
   );
   check('a region grows with the zoom', region > 200, String(region));
-  await page.evaluate(() => window.__atelier.canvas().fitAll());
+  await page.evaluate(() => window.__aframe.canvas().fitAll());
   await settle(page);
 }
 
@@ -241,12 +241,12 @@ await press(page, 'v');
   await shot('notes-tab');
 
   // clicking a note selects its node and focuses its card
-  await page.evaluate(() => window.__atelier.store.getState().setSelection([]));
+  await page.evaluate(() => window.__aframe.store.getState().setSelection([]));
   await page.click('[data-testid="note-row"]:nth-child(2) .nrow__main');
   await settle(page);
   check(
     'clicking a note selects the node it is on',
-    (await page.evaluate(() => window.__atelier.store.getState().selection[0])) === cardId,
+    (await page.evaluate(() => window.__aframe.store.getState().selection[0])) === cardId,
   );
   check('and opens its card on the canvas', !!(await page.$('[data-testid="note-card"]')));
   const pin = await pinRect((await doc()).annotations[1].id);
@@ -264,7 +264,7 @@ await press(page, 'v');
   // an AI reply shows in the panel and on the card
   const id1 = (await doc()).annotations[0].id;
   await page.evaluate((id) => {
-    const s = window.__atelier.store.getState();
+    const s = window.__aframe.store.getState();
     s.adoptExternal(
       {
         ...s.doc,
@@ -331,7 +331,7 @@ await press(page, 'v');
   );
   check(
     '"Ask AI" gives the sentence to say',
-    /in atelier, address my open annotations/.test(toast),
+    /in aframe, address my open annotations/.test(toast),
     toast,
   );
 
@@ -347,7 +347,7 @@ await press(page, 'v');
   const png =
     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mNkYPhfz0AEYBxVSF+FAP5FDvcfRYWgAAAAAElFTkSuQmCC';
   await page.evaluate((url) => {
-    const s = window.__atelier.store.getState();
+    const s = window.__aframe.store.getState();
     const d = s.doc;
     s.adoptExternal(
       {
@@ -384,7 +384,7 @@ await press(page, 'v');
 
   // compare
   await page.evaluate(
-    (id) => window.__atelier.store.getState().setSelection([id]),
+    (id) => window.__aframe.store.getState().setSelection([id]),
     await idByName(page, 'Screen'),
   );
   await page.click('[data-action="compare-reference"]');

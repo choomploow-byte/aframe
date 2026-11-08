@@ -26,7 +26,7 @@ jobs:
       # built MCP server driven by the real SDK client, and the installers), against temp directories.
       - run: npm run test:unit
       # Chrome is preinstalled on ubuntu-latest; the browser suites run headless. The suites use a
-      # throwaway ATELIER_HOME each, never a real projects folder.
+      # throwaway AFRAME_HOME each, never a real projects folder.
       - run: npm run test:e2e
         env:
           CI: 'true'
@@ -88,7 +88,7 @@ jobs:
       - run: npm run tauri:build -- --bundles ${{ matrix.bundles }}
       - uses: actions/upload-artifact@v4
         with:
-          name: atelier-${{ matrix.os }}
+          name: aframe-${{ matrix.os }}
           path: src-tauri/target/release/bundle/**
           if-no-files-found: error
       # Installs the NSIS installer silently, starts the installed app, checks it, uninstalls.

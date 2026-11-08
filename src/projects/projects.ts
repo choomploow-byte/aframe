@@ -1,5 +1,5 @@
 /**
- * Projects on disk: `projects/<id>/project.atelier.json` (+ `.bak`). Everything goes through the
+ * Projects on disk: `projects/<id>/project.aframe.json` (+ `.bak`). Everything goes through the
  * `HomeApi`, so the same code runs against the Tauri commands, the dev HTTP adapter and, in tests,
  * a real temp directory.
  */

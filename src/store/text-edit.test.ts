@@ -1,11 +1,11 @@
 import { deepFreeze, sampleDoc } from '@core/testing';
 import { describe, expect, it } from 'vitest';
 import { beginTextEdit, cancelTextEdit, commitTextEdit } from './text-edit';
-import { createAtelierStore } from './store';
+import { createAFrameStore } from './store';
 
 function setup() {
   let t = 0;
-  const store = createAtelierStore({ doc: deepFreeze(sampleDoc()), now: () => (t += 1000) });
+  const store = createAFrameStore({ doc: deepFreeze(sampleDoc()), now: () => (t += 1000) });
   return { store, get: () => store.getState() };
 }
 

@@ -1,6 +1,6 @@
 import { buildDoc, deepFreeze, sampleDoc } from '@core/testing';
 import { describe, expect, it } from 'vitest';
-import { createAtelierStore } from './store';
+import { createAFrameStore } from './store';
 import {
   addToken,
   deleteTokenCommand,
@@ -25,7 +25,7 @@ function setup() {
       ],
     },
   ]);
-  const store = createAtelierStore({
+  const store = createAFrameStore({
     doc: deepFreeze(base),
     now: () => (t += 1000),
     isoNow: () => '2026-07-07T00:00:00.000Z',
@@ -154,7 +154,7 @@ describe('tokenFromSelection', () => {
 
   it('works on the sample document too', () => {
     let t = 0;
-    const store = createAtelierStore({ doc: deepFreeze(sampleDoc()), now: () => (t += 1000) });
+    const store = createAFrameStore({ doc: deepFreeze(sampleDoc()), now: () => (t += 1000) });
     store.getState().dispatch([{ op: 'update', id: 'n_recta', set: { fill: '#ABCDEF' } }]);
     store.getState().setSelection(['n_recta']);
     expect(tokenFromSelection(store)).toMatchObject({ ok: true });

@@ -19,10 +19,10 @@ const r = reporter();
 const { check, info } = r;
 const SHOT_DIR = process.env.SHOT_DIR;
 if (SHOT_DIR) mkdirSync(SHOT_DIR, { recursive: true });
-const work = mkdtempSync(join(tmpdir(), 'atelier-import-'));
+const work = mkdtempSync(join(tmpdir(), 'aframe-import-'));
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 const doc = () =>
-  page.evaluate(() => JSON.parse(JSON.stringify(window.__atelier.store.getState().doc)));
+  page.evaluate(() => JSON.parse(JSON.stringify(window.__aframe.store.getState().doc)));
 const q = (sel) => page.$(sel);
 const text = (sel) => page.$eval(sel, (el) => el.textContent ?? '').catch(() => null);
 
@@ -45,12 +45,12 @@ async function upload(testId, file) {
 async function addAndGetId() {
   await page.click('[data-action="import-add"]');
   await settle(page);
-  return page.evaluate(() => window.__atelier.store.getState().selection[0]);
+  return page.evaluate(() => window.__aframe.store.getState().selection[0]);
 }
 const captured = async (nodeId) => {
   const out = await page.evaluate(async (id) => {
     const { captureScreenshot } = await import('/src/canvas/screenshot.ts');
-    const s = window.__atelier.store.getState();
+    const s = window.__aframe.store.getState();
     return captureScreenshot(s.doc, s.viewport.zoom, { nodeId: id, scale: 1, maxWidth: 4096 });
   }, nodeId);
   return PNG.sync.read(Buffer.from(out.pngBase64, 'base64'));
@@ -90,7 +90,7 @@ async function diffAgainstSvg(svgText, nodeId, label, tolerance) {
   );
 }
 
-await page.evaluate(() => window.__atelier.loadBlank());
+await page.evaluate(() => window.__aframe.loadBlank());
 await settle(page);
 
 // ---- SVG ----------------------------------------------------------------------------------------------
@@ -146,7 +146,7 @@ check(
       x.type === 'image' && String(pathsDoc.assets[x.assetId]).startsWith('data:image/svg+xml'),
   ),
 );
-await page.evaluate(() => window.__atelier.store.getState().undo());
+await page.evaluate(() => window.__aframe.store.getState().undo());
 await settle(page);
 check(
   'one undo removes the whole import',
@@ -178,7 +178,7 @@ await page.keyboard.press('Escape');
 await settle(page);
 
 // ---- Figma (a recorded file) ------------------------------------------------------------------------------
-await page.evaluate(() => window.__atelier.loadBlank());
+await page.evaluate(() => window.__aframe.loadBlank());
 await settle(page);
 await openImport('Figma');
 check(
@@ -219,7 +219,7 @@ check(
   'the headline keeps its font and size',
   kids[0].fontFamily === 'Fraunces' && kids[0].fontSize === 60 && kids[0].fontWeight === 700,
 );
-await page.evaluate(() => window.__atelier.store.getState().undo());
+await page.evaluate(() => window.__aframe.store.getState().undo());
 await settle(page);
 await openImport('Figma');
 const badJson = join(work, 'bad.json');
@@ -346,7 +346,7 @@ check(
 );
 
 // ---- Canva or any image: add it, and hand it to the assistant (or say what to tell an external one) ----------------------
-await page.evaluate(() => window.__atelier.loadBlank());
+await page.evaluate(() => window.__aframe.loadBlank());
 await settle(page);
 const png = new PNG({ width: 60, height: 40 });
 png.data.fill(180);
@@ -373,7 +373,7 @@ await page.keyboard.press('Escape');
 await settle(page);
 
 await page.evaluate(async () => {
-  const chat = await window.__atelier.chat();
+  const chat = await window.__aframe.chat();
   window.__chat = chat;
   window.__sent = [];
   chat.transport.setTransportForTests((_p, body) => {

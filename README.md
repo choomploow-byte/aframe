@@ -1,4 +1,4 @@
-# Atelier
+# AFrame
 
 Open-source, local-first AI design studio. Let Claude Code, Codex or a chat with your own API key design real UI on a canvas you can see, annotate and approve, then export it as code into your repo.
 
@@ -11,23 +11,23 @@ Open-source, local-first AI design studio. Let Claude Code, Codex or a chat with
 - **You steer.** Drop numbered notes on anything; the AI reads them, fixes them and replies. Attach reference images with a note and a scope. Press **Check** for contrast, text size, spacing and alignment problems, with one-click fixes.
 - **Code out.** Export a frame as HTML + CSS, React + CSS Modules or React + Tailwind (colours stay variables, images become files, class names stay stable between exports), or as PNG or SVG. Verified: every format builds with Vite and renders within 2% of the canvas.
 - **Bring designs in.** SVG as editable layers, a Figma frame, a captured web page (prototype), or any image for the AI to rebuild.
-- **Local first.** Projects are plain JSON files under `~/.atelier`. No account, no servers of ours, no telemetry.
+- **Local first.** Projects are plain JSON files under `~/.aframe`. No account, no servers of ours, no telemetry.
 
 Start with [`docs/user-guide.md`](docs/user-guide.md); there is a two-minute walkthrough in [`docs/demo-script.md`](docs/demo-script.md).
 
 ## Install
 
 1. Download the installer from the [releases page](https://github.com/choomploow-byte/atelier/releases) and run it. It is not code-signed yet, so Windows SmartScreen will say "unknown publisher": choose *More info*, then *Run anyway*. Checksums are next to the installer.
-2. Open Atelier and press **Explore the sample project**.
-3. Connect an AI: press **Connect AI** and paste the text it shows into Claude Code or Codex, or press the **Chat** tab and add an API key. Then ask: *"in atelier, improve my design"*.
+2. Open AFrame and press **Explore the sample project**.
+3. Connect an AI: press **Connect AI** and paste the text it shows into Claude Code or Codex, or press the **Chat** tab and add an API key. Then ask: *"in aframe, improve my design"*.
 
 Or only the MCP server, without the app, for an agent that will edit files (screenshots and image export need the app open):
 
 ```bash
-npx -y atelier-mcp install     # needs Node 20+; registers with Claude Code, Codex and Cursor
+npx -y aframe-mcp install     # needs Node 20+; registers with Claude Code, Codex and Cursor
 ```
 
-(`atelier-mcp` is built and tested from a clean install but has not been published to npm yet.)
+(`aframe-mcp` is built and tested from a clean install but has not been published to npm yet.)
 
 ## Develop
 
@@ -51,15 +51,15 @@ npm run test:perf     # frame timing on a 500-node document (optimised build); P
 npm run probe:css     # proves the nodeToCss layout contract in a real browser
 ```
 
-Atelier saves projects under `~/.atelier`. While developing, point it at a throwaway folder so
-tests and experiments never touch your own projects: set `ATELIER_HOME` (the browser dev server
-already defaults to `~/.atelier-dev`, and every browser test uses its own temporary folder).
+AFrame saves projects under `~/.aframe`. While developing, point it at a throwaway folder so
+tests and experiments never touch your own projects: set `AFRAME_HOME` (the browser dev server
+already defaults to `~/.aframe-dev`, and every browser test uses its own temporary folder).
 
 Checking the real desktop window on Windows (WebView2), without clicking around. `npm run tauri:dev`
-exposes `window.__atelier`, so the same suites can attach to the running window:
+exposes `window.__aframe`, so the same suites can attach to the running window:
 
 ```powershell
-$env:ATELIER_HOME = Join-Path $env:TEMP 'atelier-e2ehome'   # a throwaway folder, empty for the persistence suite
+$env:AFRAME_HOME = Join-Path $env:TEMP 'aframe-e2ehome'   # a throwaway folder, empty for the persistence suite
 $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS='--remote-debugging-port=9222'
 npm run tauri:dev                                       # in one terminal
 $env:CDP_URL='http://127.0.0.1:9222'                    # in another:
@@ -78,7 +78,7 @@ cd src-tauri; cargo test               # the native side: path confinement, lock
 ```
 
 For performance numbers use an optimised desktop build (as above, then launch
-`src-tauri/target/debug/atelier.exe` with the debug port).
+`src-tauri/target/debug/aframe.exe` with the debug port).
 
 Specs live in [`docs/`](docs/), standing rules for contributors and coding agents in [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md).
 
@@ -87,15 +87,15 @@ Specs live in [`docs/`](docs/), standing rules for contributors and coding agent
 The app's **Connect AI** button shows the exact text to paste into Claude Code or Codex. By hand:
 
 ```bash
-npm run build:mcp                                  # mcp/dist/atelier-mcp.mjs: the whole server, one file
-node mcp/dist/atelier-mcp.mjs install              # Claude Code, Codex, Cursor: whichever are installed
-node mcp/dist/atelier-mcp.mjs doctor               # checks Node, the app, each host
-node mcp/dist/atelier-mcp.mjs uninstall            # removes exactly what install added
+npm run build:mcp                                  # mcp/dist/aframe-mcp.mjs: the whole server, one file
+node mcp/dist/aframe-mcp.mjs install              # Claude Code, Codex, Cursor: whichever are installed
+node mcp/dist/aframe-mcp.mjs doctor               # checks Node, the app, each host
+node mcp/dist/aframe-mcp.mjs uninstall            # removes exactly what install added
 ```
 
 What an agent can do with it, beyond frames and text: place icons (`search_icons`), set type in display fonts (`list_fonts`), fill with patterns, add bevel and gloss presets, build reusable components with hover and pressed states (`define_component`, `create_instance`) and check them with `screenshot` and a `state`. New projects can start from a game HUD, shop or inventory, a product landing, a SaaS dashboard, a mobile app or a pricing page. Third-party licences: [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 
-The desktop app carries the same file and puts it in `~/.atelier/mcp/` on launch, which is the path
+The desktop app carries the same file and puts it in `~/.aframe/mcp/` on launch, which is the path
 the AI tools are pointed at. Working on the server: `npm run test:mcp` (the built file driven by the
 real MCP client, the installers, and the real `claude` CLI if present) and `npm run test:e2e:mcp` (an
 agent editing the running app). What only a real model session can show is in

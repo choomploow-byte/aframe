@@ -29,7 +29,7 @@
 
 ## Accessibility: two separate concerns
 
-### 1. Accessibility of the editor (Atelier's own UI)
+### 1. Accessibility of the editor (AFrame's own UI)
 - Full keyboard operability: tab order across panels; arrow keys in layer tree; Enter to rename; Esc to exit modes.
 - Roles/labels: `role="tree"` for layers, `aria-selected`, `aria-expanded`; buttons have accessible names; toolbars `role="toolbar"`.
 - Focus-visible styles in accent colour with 2px offset; never remove outlines.
@@ -38,7 +38,7 @@
 - Screen-reader announcements (`aria-live=polite`) for "AI updated 12 layers", "Annotation resolved".
 - Text scaling: UI uses rem; test at 125%/150% OS scaling on Windows.
 
-### 2. Accessibility of what Atelier produces (core product value for vibe coders)
+### 2. Accessibility of what AFrame produces (core product value for vibe coders)
 - `lint_design` contrast, text-size, tap-target rules (doc 13).
 - Exporters emit semantic HTML (`button`, `nav`, `main`, headings in order), `alt` text, `aria-label` for icon-only controls, visible focus styles in generated CSS, `lang` attr.
 - Skill `accessibility.md` teaches agents to design with these constraints first.

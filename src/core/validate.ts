@@ -464,7 +464,7 @@ export function validateDoc(input: unknown): ValidationResult {
         `Document schema ${doc.schema} is newer than this app understands.`,
         'schema',
         'SCHEMA_NEWER',
-        'Update Atelier.',
+        'Update AFrame.',
       );
     } else {
       fail(`Unsupported document schema ${show(doc.schema)}.`, 'schema');

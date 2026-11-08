@@ -1,6 +1,6 @@
 /**
  * The design skills as the in-app assistant sees them: the files in skills/ (bundled into the app at
- * build time, the same ones the MCP server ships) plus the person's own in `~/.atelier/skills/`,
+ * build time, the same ones the MCP server ships) plus the person's own in `~/.aframe/skills/`,
  * which win on a name clash. Skills are loaded on demand through `load_skill`.
  */
 import {
@@ -39,7 +39,7 @@ export function chatSkills(): Skill[] {
   return mergeSkills(shippedSkills(), user);
 }
 
-/** Reads `~/.atelier/skills/` through the app's confined file API. Never throws: no folder means none. */
+/** Reads `~/.aframe/skills/` through the app's confined file API. Never throws: no folder means none. */
 export async function refreshUserSkills(): Promise<void> {
   try {
     const fs = await getFs();

@@ -11,7 +11,7 @@ A local, open-source design canvas that is **agent-native**:
 - Output lands as real code in the user's repo.
 
 ## Positioning statement
-*For developers who build with AI but can't design, Atelier is the open-source design studio that lets your own AI agent design, see, and refine real UI, then writes it into your codebase. Unlike hosted AI builders, it runs on your machine with your own model and keys.*
+*For developers who build with AI but can't design, AFrame is the open-source design studio that lets your own AI agent design, see, and refine real UI, then writes it into your codebase. Unlike hosted AI builders, it runs on your machine with your own model and keys.*
 
 ## Differentiators (in priority order)
 1. **Bring your own agent**: Claude Code, Codex, Cursor, or an API key in the inbuilt chat.
@@ -21,7 +21,7 @@ A local, open-source design canvas that is **agent-native**:
 5. **Taste skills**: community-extensible design knowledge.
 
 ## Competitive landscape (verify before launch, this moves fast)
-| Product | What it is | Gap Atelier fills |
+| Product | What it is | Gap AFrame fills |
 |---|---|---|
 | v0 (Vercel), Lovable, Bolt | Hosted prompt-to-app builders | Hosted, subscription, one model, not a visual editor |
 | Figma (+ Figma Make, Dev Mode MCP) | Pro design tool with AI features | Not agent-native, steep for non-designers, closed |

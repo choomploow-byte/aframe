@@ -3,7 +3,7 @@
 Two ways in, one behaviour.
 
 ## Path A: external agent via MCP (Claude Code, Codex, Cursor, others)
-Covered in docs 05, 06, 09. The agent brings its own model, context and permissions. Atelier is a tool provider.
+Covered in docs 05, 06, 09. The agent brings its own model, context and permissions. AFrame is a tool provider.
 
 ## Path B: inbuilt chat with the user's API key
 **Built (Phase 7).** The conversation and the agent loop run in the page (`src/chat/`); the network calls and the API key do not: they go through the desktop app's Rust side (`src-tauri/src/ai.rs`). It uses the **same tool handlers** from `core/tools.ts` with an in-app `ToolContext` over the live store, minus the file and project tools (`CHAT_EXCLUDED` in `tool-context.ts`: no `export_code`, `import_image`, `open_project`...).
@@ -61,9 +61,9 @@ Provider calls are made by the Rust command `ai_send` (`ureq`), not by the page,
 | Channel | Mechanism |
 |---|---|
 | MCP hosts | `list_skills` / `load_skill` tools; skills also exposed as MCP resources; server `instructions` tell the agent to load `design-fundamentals` first |
-| Claude Code | `~/.claude/skills/atelier/SKILL.md` installed by `install`, auto-triggers on "design", "UI", "atelier" mentions and teaches the loop |
+| Claude Code | `~/.claude/skills/aframe/SKILL.md` installed by `install`, auto-triggers on "design", "UI", "aframe" mentions and teaches the loop |
 | In-app chat | Core skill text is part of the system prompt; others loaded on demand via `load_skill` |
-| Users | Drop `.md` files in `~/.atelier/skills/`; picked up by `list_skills` (frontmatter: name, description) |
+| Users | Drop `.md` files in `~/.aframe/skills/`; picked up by `list_skills` (frontmatter: name, description) |
 
 ## Agent behaviours that make or break quality
 1. **Look before and after.** Screenshot first (what exists), screenshot last (did it work).
@@ -88,8 +88,8 @@ Decompose reference into: palette, type (families, weights, scale), spacing rhyt
 
 ## Guardrails
 - Tool results containing user/imported text are wrapped and labelled as data. 
-- `export_code` confined to the confirmed `outDir`; no shell execution tools exist in Atelier.
-- No network tool in the MCP server (it only touches the atelier home and explicitly given paths).
+- `export_code` confined to the confirmed `outDir`; no shell execution tools exist in AFrame.
+- No network tool in the MCP server (it only touches the aframe home and explicitly given paths).
 - Rate/size limits on `apply_changes` (500 ops) and on image imports (20 MB).
 
 ## Evaluation (build a tiny eval harness early)

@@ -4,7 +4,7 @@
 // Run:                        node tests/e2e/installer-smoke.mjs
 //
 // Installs silently into a throwaway folder (per-user, no admin), starts the installed
-// executable against a throwaway ATELIER_HOME, checks the window and the product metadata, then
+// executable against a throwaway AFRAME_HOME, checks the window and the product metadata, then
 // runs the uninstaller. Windows only.
 import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
@@ -29,7 +29,7 @@ if (!setup) {
 const r = reporter();
 const { check, info } = r;
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
-const work = mkdtempSync(join(tmpdir(), 'atelier-install-'));
+const work = mkdtempSync(join(tmpdir(), 'aframe-install-'));
 const installDir = join(work, 'app');
 const home = join(work, 'home');
 const ps = (command) =>
@@ -57,7 +57,7 @@ try {
     stdio: 'ignore',
     windowsVerbatimArguments: true,
   });
-  const exe = join(installDir, 'atelier.exe');
+  const exe = join(installDir, 'aframe.exe');
   for (let i = 0; i < 40 && !existsSync(join(installDir, 'uninstall.exe')); i++) await sleep(250);
   check('the program was installed', existsSync(exe), exe);
   check('with an uninstaller', existsSync(join(installDir, 'uninstall.exe')));
@@ -67,7 +67,7 @@ try {
       `$v=(Get-Item '${exe}').VersionInfo; @{name=$v.ProductName; version=$v.ProductVersion; desc=$v.FileDescription} | ConvertTo-Json -Compress`,
     ),
   );
-  check('the product name is Atelier', meta.name === 'Atelier', JSON.stringify(meta));
+  check('the product name is AFrame', meta.name === 'AFrame', JSON.stringify(meta));
   const want = JSON.parse(readFileSync('package.json', 'utf8')).version;
   check(`the version is ${want}`, String(meta.version).startsWith(want), JSON.stringify(meta));
   const icon = ps(
@@ -79,7 +79,7 @@ try {
   app = spawn(exe, [], {
     env: {
       ...process.env,
-      ATELIER_HOME: home,
+      AFRAME_HOME: home,
       WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: '--remote-debugging-port=9411',
     },
     stdio: 'ignore',
@@ -100,7 +100,7 @@ try {
   check('the window opened', page !== null);
   if (page) {
     await page.waitForSelector('.shell', { timeout: 20_000 });
-    check('the window is titled Atelier', (await page.title()) === 'Atelier', await page.title());
+    check('the window is titled AFrame', (await page.title()) === 'AFrame', await page.title());
     await page
       .waitForSelector('[data-testid="save-status"]', { timeout: 20_000 })
       .catch(() => undefined);

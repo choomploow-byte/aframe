@@ -3,7 +3,7 @@ import { resolveColor } from '@core/tokens';
 import { Ban } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { normalizeHexInput, parseHex, readableOn, toHex } from '../panels/color';
-import { useAtelier } from '../store/store';
+import { useAFrame } from '../store/store';
 import { NumberField } from './fields';
 import { Popover } from './Popover';
 
@@ -33,7 +33,7 @@ export function ColorField({
   disabled,
   field,
 }: ColorFieldProps) {
-  const tokens = useAtelier((s) => s.doc.tokens);
+  const tokens = useAFrame((s) => s.doc.tokens);
   const anchor = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const [text, setText] = useState<string | null>(null);

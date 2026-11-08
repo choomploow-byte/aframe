@@ -5,7 +5,7 @@ import { useConnect } from '../connect/agents';
 import { openExportDialog } from '../export/dialog-state';
 import { exportProjectFile, useProjects } from '../projects/session';
 import { renameProject } from '../store/panel-commands';
-import { store, useAtelier } from '../store/store';
+import { store, useAFrame } from '../store/store';
 import { STRINGS } from '../strings';
 import { LogoMark, Wordmark } from './Brand';
 import { ContextMenu } from './ContextMenu';
@@ -56,9 +56,9 @@ function SaveStatus() {
 /** Projects, project name and save status, undo/redo, export menu (a stub until Phase 8), theme and Connect AI. */
 export function TopBar() {
   const lint = useLintCounts();
-  const canUndo = useAtelier((s) => s.history.past.length > 0);
-  const canRedo = useAtelier((s) => s.history.future.length > 0);
-  const name = useAtelier((s) => s.doc.name);
+  const canUndo = useAFrame((s) => s.history.past.length > 0);
+  const canRedo = useAFrame((s) => s.history.future.length > 0);
+  const name = useAFrame((s) => s.doc.name);
   const theme = useThemePreference();
   const connected = useConnect((s) => s.connected);
   const ThemeIcon = THEME_ICON[theme];
@@ -181,7 +181,7 @@ export function TopBar() {
             },
             { id: 'image', label: 'Image (PNG or SVG)…', run: () => openExportDialog('image') },
             { kind: 'separator' },
-            { id: 'project', label: 'Project file (.atelier.json)', run: exportProjectFile },
+            { id: 'project', label: 'Project file (.aframe.json)', run: exportProjectFile },
           ]}
         />
       )}

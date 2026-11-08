@@ -55,4 +55,4 @@ When writing skills, **paraphrase and synthesise in original words**; do not cop
 | DOM-to-code | Any "Figma-to-React" converter write-ups |
 
 ## Internal cross-references
-`docs/05` tools ⇄ `docs/04` model ⇄ `docs/06` sync ⇄ `docs/09` install ⇄ `skills/atelier-SKILL.md` (must stay consistent: see doc 20 checklist).
+`docs/05` tools ⇄ `docs/04` model ⇄ `docs/06` sync ⇄ `docs/09` install ⇄ `skills/aframe-SKILL.md` (must stay consistent: see doc 20 checklist).

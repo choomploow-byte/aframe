@@ -29,17 +29,17 @@ const r = reporter();
 const { check } = r;
 const SHOT_DIR = process.env.SHOT_DIR;
 if (SHOT_DIR) mkdirSync(SHOT_DIR, { recursive: true });
-const tmp = mkdtempSync(join(tmpdir(), 'atelier-e2e-'));
+const tmp = mkdtempSync(join(tmpdir(), 'aframe-e2e-'));
 
 // ---- helpers --------------------------------------------------------------------------------
 const F = (name) => `[data-field="${name}"]`;
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 const doc = () =>
-  page.evaluate(() => JSON.parse(JSON.stringify(window.__atelier.store.getState().doc)));
+  page.evaluate(() => JSON.parse(JSON.stringify(window.__aframe.store.getState().doc)));
 const nodes = async () => (await doc()).nodes;
 const setSelection = (ids) =>
   page
-    .evaluate((x) => window.__atelier.store.getState().setSelection(x), ids)
+    .evaluate((x) => window.__aframe.store.getState().setSelection(x), ids)
     .then(() => settle(page));
 const selectByName = async (name) => {
   const id = await idByName(page, name);
@@ -48,8 +48,8 @@ const selectByName = async (name) => {
   return id;
 };
 const resetSample = async () => {
-  await page.evaluate(() => window.__atelier.loadSample());
-  await page.evaluate(() => window.__atelier.canvas().fitAll());
+  await page.evaluate(() => window.__aframe.loadSample());
+  await page.evaluate(() => window.__aframe.canvas().fitAll());
   await settle(page);
 };
 const openTab = async (id) => {
@@ -124,18 +124,18 @@ const pngBytes = (w, h, rgba) => [
 
 // ---------------------------------------------------------------------------------------------
 await group('welcome and first run', async () => {
-  await page.evaluate(() => window.__atelier.loadBlank());
+  await page.evaluate(() => window.__aframe.loadBlank());
   await settle(page);
   check('an empty canvas shows the welcome', !!(await page.$('[data-testid="welcome"]')));
   check(
-    'welcome offers three ways to begin',
-    (await page.$$('[data-testid="welcome"] .welcome__card')).length === 3,
+    'welcome offers five ways to begin',
+    (await page.$$('[data-testid="welcome"] .welcome__card')).length === 5,
   );
   await page.click('[data-action="welcome-draw"]');
   check('"Draw a frame" picks the frame tool', (await state(page)).tool === 'frame');
   await press(page, 'v');
   await page.click('[data-action="welcome-sample"]');
-  await page.waitForFunction(() => window.__atelier.store.getState().doc.id === 'p_sample');
+  await page.waitForFunction(() => window.__aframe.store.getState().doc.id === 'p_sample');
   await settle(page);
   check(
     '"Open the sample" loads it and the welcome goes away',
@@ -153,8 +153,8 @@ await group('theme: toggle, persistence, no flash', async () => {
   await resetSample();
   const pref = () => page.$eval('[data-testid="theme-toggle"]', (e) => e.dataset.themePref);
   const attr = () => page.evaluate(() => document.documentElement.getAttribute('data-theme'));
-  const stored = () => page.evaluate(() => localStorage.getItem('atelier.theme'));
-  await page.evaluate(() => localStorage.removeItem('atelier.theme'));
+  const stored = () => page.evaluate(() => localStorage.getItem('aframe.theme'));
+  await page.evaluate(() => localStorage.removeItem('aframe.theme'));
   check('starts on "system"', (await pref()) === 'system');
   await page.click('[data-testid="theme-toggle"]');
   check('first click → light', (await attr()) === 'light' && (await stored()) === 'light');
@@ -180,7 +180,7 @@ await group('theme: toggle, persistence, no flash', async () => {
     };
   });
   await page.reload({ waitUntil: 'networkidle0' });
-  await page.waitForFunction(() => window.__atelier?.store.getState().doc.id === 'p_sample');
+  await page.waitForFunction(() => window.__aframe?.store.getState().doc.id === 'p_sample');
   const first = await page.evaluate(() => window.__themeFirst);
   check(
     'saved theme applied before <body> existed (no flash)',
@@ -193,7 +193,7 @@ await group('theme: toggle, persistence, no flash', async () => {
   await page.click('[data-testid="theme-toggle"]');
   await page.click('[data-testid="theme-toggle"]'); // light → dark so the rest runs in dark? keep light:
   await page.click('[data-testid="theme-toggle"]');
-  await page.evaluate(() => window.__atelier.canvas().fitAll());
+  await page.evaluate(() => window.__aframe.canvas().fitAll());
   await settle(page);
 });
 
@@ -209,7 +209,7 @@ await group('every doc-04 property is reachable from the panels', async () => {
   }
   // Rectangle and ellipse via the draw tools.
   await page.evaluate(() => {
-    const s = window.__atelier.store.getState();
+    const s = window.__aframe.store.getState();
     s.dispatch(
       [
         {
@@ -259,7 +259,7 @@ await group('every doc-04 property is reachable from the panels', async () => {
   const input = await page.$('[data-testid="asset-file-input"]');
   await input.uploadFile(png);
   await page.waitForFunction(
-    () => Object.keys(window.__atelier.store.getState().doc.assets).length > 0,
+    () => Object.keys(window.__aframe.store.getState().doc.assets).length > 0,
   );
   await page.click('.asset__thumb');
   await settle(page);
@@ -329,7 +329,7 @@ await group('every doc-04 property is reachable from the panels', async () => {
 // ---------------------------------------------------------------------------------------------
 await group('build a landing hero by hand (panels + canvas only)', async () => {
   const t0 = Date.now();
-  await page.evaluate(() => window.__atelier.loadBlank());
+  await page.evaluate(() => window.__aframe.loadBlank());
   await settle(page);
   await setViewport(page, { zoom: 0.5, x: 40, y: 40 });
 
@@ -450,7 +450,7 @@ await group('build a landing hero by hand (panels + canvas only)', async () => {
     order[0] === headId && order[1] === btnId,
     JSON.stringify(order),
   );
-  await page.evaluate(() => window.__atelier.canvas().fitAll());
+  await page.evaluate(() => window.__aframe.canvas().fitAll());
   await shot('hero-built');
 });
 
@@ -730,7 +730,7 @@ await group('tokens: edit, rename, extract, delete', async () => {
     Object.keys((await doc()).tokens.colors).length === colourCount + 1,
   );
   await page.evaluate(() => {
-    const s = window.__atelier.store.getState();
+    const s = window.__aframe.store.getState();
     s.dispatch(
       [
         {
@@ -787,7 +787,7 @@ await group('assets: import by picker, paste and drop; reject non-images', async
   // Picker with a valid PNG.
   await input.uploadFile(writePng('a.png', 8, 8));
   await page.waitForFunction(
-    (n) => Object.keys(window.__atelier.store.getState().doc.assets).length === n + 1,
+    (n) => Object.keys(window.__aframe.store.getState().doc.assets).length === n + 1,
     {},
     base,
   );
@@ -815,7 +815,7 @@ await group('assets: import by picker, paste and drop; reject non-images', async
   await input.uploadFile(svg);
   await page
     .waitForFunction(
-      (n) => Object.keys(window.__atelier.store.getState().doc.assets).length === n + 2,
+      (n) => Object.keys(window.__aframe.store.getState().doc.assets).length === n + 2,
       { timeout: 3000 },
       base,
     )
@@ -849,7 +849,7 @@ await group('assets: import by picker, paste and drop; reject non-images', async
   await page
     .waitForFunction(
       (n) =>
-        Object.values(window.__atelier.store.getState().doc.nodes).filter((x) => x.type === 'image')
+        Object.values(window.__aframe.store.getState().doc.nodes).filter((x) => x.type === 'image')
           .length ===
         n + 1,
       { timeout: 3000 },
@@ -902,7 +902,7 @@ await group('assets: import by picker, paste and drop; reject non-images', async
   await page
     .waitForFunction(
       (n) =>
-        Object.values(window.__atelier.store.getState().doc.nodes).filter((x) => x.type === 'image')
+        Object.values(window.__aframe.store.getState().doc.nodes).filter((x) => x.type === 'image')
           .length ===
         n + 2,
       { timeout: 3000 },
@@ -1161,7 +1161,7 @@ await group('accessibility audit', async () => {
 await group('light/dark screenshots with the panels in use', async () => {
   for (const theme of ['light', 'dark']) {
     await page.evaluate((th) => {
-      localStorage.setItem('atelier.theme', th);
+      localStorage.setItem('aframe.theme', th);
       document.documentElement.setAttribute('data-theme', th);
     }, theme);
     await resetSample();
@@ -1169,7 +1169,7 @@ await group('light/dark screenshots with the panels in use', async () => {
     await shot(`${theme}-properties`);
   }
   await page.evaluate(() => {
-    localStorage.removeItem('atelier.theme');
+    localStorage.removeItem('aframe.theme');
     document.documentElement.removeAttribute('data-theme');
   });
 });

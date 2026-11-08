@@ -51,9 +51,7 @@ impl DirLock {
                         continue;
                     }
                     if started.elapsed() >= wait {
-                        return Err(
-                            "LOCKED: another Atelier process is writing this project".into()
-                        );
+                        return Err("LOCKED: another AFrame process is writing this project".into());
                     }
                     sleep(POLL);
                 }

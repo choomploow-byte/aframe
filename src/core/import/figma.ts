@@ -1,6 +1,6 @@
 /**
  * Figma import from the REST API's file JSON (`GET /v1/files/:key`): frames, auto-layout, text styles,
- * fills, strokes, radii and effects become Atelier layers with the same settings; what has no
+ * fills, strokes, radii and effects become AFrame layers with the same settings; what has no
  * equivalent is approximated or replaced, and the report says which. The pictures Figma only gives as
  * links (image fills, vector shapes) are passed in by the caller (the desktop app fetches them), so
  * this stays pure and testable against recorded JSON.
@@ -468,7 +468,7 @@ function convert(
         ctx,
         'approximated',
         `font ${family}`,
-        "it is not one of Atelier's bundled fonts; it is named as-is and falls back to a similar one",
+        "it is not one of AFrame's bundled fonts; it is named as-is and falls back to a similar one",
       );
     }
     if (isObject(n.characterStyleOverrides) || arr(n.characterStyleOverrides).length > 0) {
@@ -652,6 +652,6 @@ function convert(
     };
   }
 
-  note(ctx, 'skipped', what, 'a kind of layer Atelier does not have');
+  note(ctx, 'skipped', what, 'a kind of layer AFrame does not have');
   return null;
 }

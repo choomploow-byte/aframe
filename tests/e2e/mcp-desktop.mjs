@@ -2,8 +2,8 @@
 // server, the way Claude Code would. No dev hooks are used: only MCP calls and, to look at the
 // window, a debug connection.
 //
-//   $env:ATELIER_HOME = '<folder>'; $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = '--remote-debugging-port=9333'
-//   <start the release exe>                      # src-tauri/target/release/atelier.exe
+//   $env:AFRAME_HOME = '<folder>'; $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = '--remote-debugging-port=9333'
+//   <start the release exe>                      # src-tauri/target/release/aframe.exe
 //   $env:CDP_URL = 'http://127.0.0.1:9333'; node tests/e2e/mcp-desktop.mjs
 //
 // It checks what only the real window can prove: that html-to-image works under the production
@@ -19,9 +19,9 @@ import puppeteer from 'puppeteer-core';
 import { PNG } from 'pngjs';
 import { reporter } from './harness.mjs';
 
-const HOME = process.env.ATELIER_HOME;
+const HOME = process.env.AFRAME_HOME;
 const CDP = process.env.CDP_URL;
-if (!HOME || !CDP) throw new Error('Set ATELIER_HOME and CDP_URL (see the header of this file).');
+if (!HOME || !CDP) throw new Error('Set AFRAME_HOME and CDP_URL (see the header of this file).');
 const r = reporter();
 const { check, info } = r;
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -31,7 +31,7 @@ if (SHOT_DIR) mkdirSync(SHOT_DIR, { recursive: true });
 const browser = await puppeteer.connect({ browserURL: CDP, defaultViewport: null });
 const page = (await browser.pages()).find((p) => !p.url().startsWith('devtools'));
 if (!page) throw new Error('no app page');
-const installed = path.join(HOME, 'mcp', 'atelier-mcp.mjs');
+const installed = path.join(HOME, 'mcp', 'aframe-mcp.mjs');
 
 async function until(fn, timeout = 6000) {
   const t0 = performance.now();
@@ -45,11 +45,11 @@ async function until(fn, timeout = 6000) {
 console.log('\n# the app installed its embedded server');
 const text = await fs.readFile(installed, 'utf8').catch(() => '');
 check(
-  '~/.atelier/mcp/atelier-mcp.mjs is the real server, not the placeholder',
+  '~/.aframe/mcp/aframe-mcp.mjs is the real server, not the placeholder',
   // (The real server's own source mentions the placeholder marker, so look at how the file starts.)
-  text.slice(0, 200).includes('// atelier-mcp-version: ') &&
-    !text.slice(0, 120).includes('atelier-generated placeholder'),
-  !text.includes('atelier-generated placeholder'),
+  text.slice(0, 200).includes('// aframe-mcp-version: ') &&
+    !text.slice(0, 120).includes('aframe-generated placeholder'),
+  !text.includes('aframe-generated placeholder'),
   `${text.length} bytes`,
 );
 const ver = spawnSync(process.execPath, [installed, '--version'], { encoding: 'utf8' });
@@ -60,12 +60,12 @@ check(
 );
 const doc = spawnSync(process.execPath, [installed, 'doctor'], {
   encoding: 'utf8',
-  env: { ...process.env, ATELIER_HOME: HOME },
+  env: { ...process.env, AFRAME_HOME: HOME },
 });
 check(
   'doctor sees the running app',
-  /\[ok\]\s+Atelier app: running/.test(doc.stdout),
-  doc.stdout.split('\n').find((l) => l.includes('Atelier app')) ?? doc.stdout.slice(0, 200),
+  /\[ok\]\s+AFrame app: running/.test(doc.stdout),
+  doc.stdout.split('\n').find((l) => l.includes('AFrame app')) ?? doc.stdout.slice(0, 200),
 );
 
 const client = new Client({ name: 'desktop-test', version: '1.0.0' });
@@ -73,7 +73,7 @@ await client.connect(
   new StdioClientTransport({
     command: process.execPath,
     args: [installed],
-    env: { ...process.env, ATELIER_HOME: HOME },
+    env: { ...process.env, AFRAME_HOME: HOME },
     stderr: 'ignore',
   }),
 );

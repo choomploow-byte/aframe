@@ -1,5 +1,5 @@
 // The npm package for the MCP server: pack it, install the tarball somewhere clean, and run it from
-// there the way `npx -y atelier-mcp` would. No network and no publishing.
+// there the way `npx -y aframe-mcp` would. No network and no publishing.
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -19,7 +19,7 @@ const run = (cmd: string, args: string[], cwd: string, env: NodeJS.ProcessEnv = 
   });
 
 beforeAll(() => {
-  work = fs.mkdtempSync(path.join(os.tmpdir(), 'atelier-npm-'));
+  work = fs.mkdtempSync(path.join(os.tmpdir(), 'aframe-npm-'));
   const pkgDir = path.join(work, 'pkg');
   run(process.execPath, [path.join(root, 'scripts', 'pack-mcp.mjs'), pkgDir], root);
   const packed = run(npm, ['pack', '--silent'], pkgDir).trim().split('\n').pop() as string;
@@ -27,11 +27,11 @@ beforeAll(() => {
   fs.mkdirSync(project);
   fs.writeFileSync(path.join(project, 'package.json'), '{"name":"clean","private":true}');
   run(npm, ['install', path.join(pkgDir, packed), '--no-audit', '--no-fund', '--silent'], project);
-  installed = path.join(project, 'node_modules', 'atelier-mcp');
+  installed = path.join(project, 'node_modules', 'aframe-mcp');
 }, 180_000);
 afterAll(() => fs.rmSync(work, { recursive: true, force: true }));
 
-describe('the packed atelier-mcp', () => {
+describe('the packed aframe-mcp', () => {
   it('has the right metadata and only the files it should ship', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(installed, 'package.json'), 'utf8')) as Record<
       string,
@@ -41,22 +41,22 @@ describe('the packed atelier-mcp', () => {
       version: string;
     };
     expect(pkg).toMatchObject({
-      name: 'atelier-mcp',
+      name: 'aframe-mcp',
       version: rootPkg.version,
       license: 'MIT',
-      bin: { 'atelier-mcp': 'atelier-mcp.mjs' },
+      bin: { 'aframe-mcp': 'aframe-mcp.mjs' },
       engines: { node: '>=20' },
     });
     expect(fs.readdirSync(installed).sort()).toEqual([
       'LICENSE',
       'README.md',
       'THIRD-PARTY-NOTICES.md',
-      'atelier-mcp.mjs',
+      'aframe-mcp.mjs',
       'package.json',
     ]);
     expect(
       fs
-        .readFileSync(path.join(installed, 'atelier-mcp.mjs'), 'utf8')
+        .readFileSync(path.join(installed, 'aframe-mcp.mjs'), 'utf8')
         .startsWith('#!/usr/bin/env node\n'),
     ).toBe(true);
   });
@@ -65,29 +65,29 @@ describe('the packed atelier-mcp', () => {
     const rootPkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')) as {
       version: string;
     };
-    const bin = path.join(installed, 'atelier-mcp.mjs');
+    const bin = path.join(installed, 'aframe-mcp.mjs');
     expect(run(process.execPath, [bin, '--version'], work).trim()).toContain(rootPkg.version);
     expect(run(process.execPath, [bin, '--help'], work)).toContain('install [hosts]');
     const config = JSON.parse(
       run(process.execPath, [bin, 'print-config'], work).replace(/^[^{]*/, ''),
-    ) as { mcpServers: { atelier: { command: string } } };
-    expect(config.mcpServers.atelier.command).toBe('node');
+    ) as { mcpServers: { aframe: { command: string } } };
+    expect(config.mcpServers.aframe.command).toBe('node');
   });
 
   it('installs into a throwaway home without touching a real one, and removes exactly what it added', () => {
     const home = path.join(work, 'fake-home');
     fs.mkdirSync(path.join(home, '.cursor'), { recursive: true });
-    const bin = path.join(installed, 'atelier-mcp.mjs');
-    const env = { HOME: home, USERPROFILE: home, ATELIER_HOME: path.join(home, '.atelier') };
+    const bin = path.join(installed, 'aframe-mcp.mjs');
+    const env = { HOME: home, USERPROFILE: home, AFRAME_HOME: path.join(home, '.aframe') };
     run(process.execPath, [bin, 'install', '--cursor'], work, env);
     const cursor = JSON.parse(fs.readFileSync(path.join(home, '.cursor', 'mcp.json'), 'utf8')) as {
       mcpServers: Record<string, unknown>;
     };
-    expect(Object.keys(cursor.mcpServers)).toContain('atelier');
+    expect(Object.keys(cursor.mcpServers)).toContain('aframe');
     run(process.execPath, [bin, 'uninstall', '--cursor'], work, env);
     const after = JSON.parse(fs.readFileSync(path.join(home, '.cursor', 'mcp.json'), 'utf8')) as {
       mcpServers?: Record<string, unknown>;
     };
-    expect(Object.keys(after.mcpServers ?? {})).not.toContain('atelier');
+    expect(Object.keys(after.mcpServers ?? {})).not.toContain('aframe');
   });
 });

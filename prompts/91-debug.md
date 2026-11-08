@@ -13,7 +13,7 @@ Sync misbehaving: {symptom}. Check docs/06. Enable verbose sync logging, then re
 
 ## MCP host problem
 ```
-The MCP server doesn't work in {Claude Code | Codex | Cursor}: {symptom}. Run `node atelier-mcp.mjs doctor`. Verify: Node version, path quoting/spaces, that stdout contains only protocol messages (anything else on stdout breaks MCP - logs must go to stderr), the host's current config format (check official docs), tool listing via the SDK test client, and image result handling. Report findings, fix, and add the case to the troubleshooting matrix in docs/09 and to `doctor`.
+The MCP server doesn't work in {Claude Code | Codex | Cursor}: {symptom}. Run `node aframe-mcp.mjs doctor`. Verify: Node version, path quoting/spaces, that stdout contains only protocol messages (anything else on stdout breaks MCP - logs must go to stderr), the host's current config format (check official docs), tool listing via the SDK test client, and image result handling. Report findings, fix, and add the case to the troubleshooting matrix in docs/09 and to `doctor`.
 ```
 
 ## Screenshot looks different from the canvas

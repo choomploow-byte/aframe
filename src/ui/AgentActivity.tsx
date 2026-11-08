@@ -1,6 +1,6 @@
 import { Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useAtelier } from '../store/store';
+import { useAFrame } from '../store/store';
 
 const SHOW_FOR_MS = 3000;
 
@@ -9,9 +9,9 @@ const SHOW_FOR_MS = 3000;
  * the document itself (`meta.lastWriter` / `updatedAt`), so it works for anything that writes the file.
  */
 export function AgentActivity() {
-  const writer = useAtelier((s) => s.doc.meta.lastWriter);
-  const rev = useAtelier((s) => s.doc.rev);
-  const docId = useAtelier((s) => s.doc.id);
+  const writer = useAFrame((s) => s.doc.meta.lastWriter);
+  const rev = useAFrame((s) => s.doc.rev);
+  const docId = useAFrame((s) => s.doc.id);
   const previous = useRef({ rev, docId });
   const [seenAt, setSeenAt] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());

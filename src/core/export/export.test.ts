@@ -193,12 +193,12 @@ describe('exportDesign', () => {
     expect(theme).toContain("@import 'tailwindcss';");
     expect(theme).toContain('@theme {');
     expect(theme).toContain('--color-primary: #c96442');
-    expect(file(out.files, 'atelier.css')).toContain('font-family');
+    expect(file(out.files, 'aframe.css')).toContain('font-family');
   });
 
   it('adds a README with files, fonts and warnings', () => {
     const out = exportDesign(design(), 'n_screen', 'react-css');
-    const readme = file(out.files, 'README-atelier.md');
+    const readme = file(out.files, 'README-aframe.md');
     expect(readme).toContain('# Landing Page');
     expect(readme).toContain('- `LandingPage.tsx`');
     expect(readme).toContain('Notes from the export');

@@ -35,10 +35,10 @@ export async function start({ width = 1360, height = 860, persist = false } = {}
   const errors = [];
   // Every run gets a throwaway home, so no test can ever touch a real projects folder, even by
   // accident. `persist` boots the real app (projects, autosave, sync) against it; without it the
-  // app stays in memory (`?nopersist`). Attached to a desktop window, its ATELIER_HOME is whatever
+  // app stays in memory (`?nopersist`). Attached to a desktop window, its AFRAME_HOME is whatever
   // it was started with.
-  const home = !process.env.CDP_URL ? mkdtempSync(join(tmpdir(), 'atelier-e2e-home-')) : undefined;
-  if (home) process.env.ATELIER_HOME = home;
+  const home = !process.env.CDP_URL ? mkdtempSync(join(tmpdir(), 'aframe-e2e-home-')) : undefined;
+  if (home) process.env.AFRAME_HOME = home;
   if (process.env.CDP_URL) {
     const browser = await puppeteer.connect({
       browserURL: process.env.CDP_URL,
@@ -49,16 +49,16 @@ export async function start({ width = 1360, height = 860, persist = false } = {}
     if (!page) throw new Error(`no app page at ${process.env.CDP_URL}`);
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
     page.on('pageerror', (e) => errors.push(String(e)));
-    await page.waitForFunction(() => window.__atelier !== undefined, { timeout: 30000 });
+    await page.waitForFunction(() => window.__aframe !== undefined, { timeout: 30000 });
     if (persist) {
-      // The real app, against the ATELIER_HOME the window was started with.
-      await page.waitForFunction(() => window.__atelier?.sync?.()?.attached === true, {
+      // The real app, against the AFRAME_HOME the window was started with.
+      await page.waitForFunction(() => window.__aframe?.sync?.()?.attached === true, {
         timeout: 30000,
       });
     } else {
-      await page.evaluate(() => window.__atelier.loadSample());
-      await page.waitForFunction(() => window.__atelier.store.getState().doc.id === 'p_sample');
-      await page.evaluate(() => window.__atelier.canvas().fitAll());
+      await page.evaluate(() => window.__aframe.loadSample());
+      await page.waitForFunction(() => window.__aframe.store.getState().doc.id === 'p_sample');
+      await page.evaluate(() => window.__aframe.canvas().fitAll());
     }
     await page.evaluate(() => document.fonts.ready);
     await settle(page);
@@ -66,7 +66,7 @@ export async function start({ width = 1360, height = 860, persist = false } = {}
       page,
       errors,
       userAgent: await page.evaluate(() => navigator.userAgent),
-      home: process.env.ATELIER_HOME,
+      home: process.env.AFRAME_HOME,
       close: async () => browser.disconnect(),
     };
   }
@@ -104,12 +104,12 @@ export async function start({ width = 1360, height = 860, persist = false } = {}
   if (persist) {
     // The app polls its files, so the network is never idle: wait for the app itself.
     await page.goto(url, { waitUntil: 'load' });
-    await page.waitForFunction(() => window.__atelier?.sync?.()?.attached === true, {
+    await page.waitForFunction(() => window.__aframe?.sync?.()?.attached === true, {
       timeout: 30000,
     });
   } else {
     await page.goto(new URL('?nopersist', url).href, { waitUntil: 'networkidle0' });
-    await page.waitForFunction(() => window.__atelier?.store.getState().doc.id === 'p_sample');
+    await page.waitForFunction(() => window.__aframe?.store.getState().doc.id === 'p_sample');
   }
   await page.evaluate(() => document.fonts.ready);
   await settle(page);
@@ -136,7 +136,7 @@ export async function settle(page) {
 /** A JSON-safe slice of the store. */
 export function state(page) {
   return page.evaluate(() => {
-    const s = window.__atelier.store.getState();
+    const s = window.__aframe.store.getState();
     return {
       rev: s.doc.rev,
       selection: s.selection,
@@ -152,7 +152,7 @@ export function state(page) {
 
 export function node(page, id) {
   return page.evaluate((nid) => {
-    const n = window.__atelier.store.getState().doc.nodes[nid];
+    const n = window.__aframe.store.getState().doc.nodes[nid];
     return n ? JSON.parse(JSON.stringify(n)) : null;
   }, id);
 }
@@ -160,7 +160,7 @@ export function node(page, id) {
 /** Finds a node id by its layer name (first match). */
 export function idByName(page, name) {
   return page.evaluate((n) => {
-    const nodes = window.__atelier.store.getState().doc.nodes;
+    const nodes = window.__aframe.store.getState().doc.nodes;
     return Object.values(nodes).find((x) => x.name === n)?.id ?? null;
   }, name);
 }
@@ -202,7 +202,7 @@ export async function worldToClient(page, wx, wy) {
 }
 
 export async function setViewport(page, viewport) {
-  await page.evaluate((vp) => window.__atelier.store.getState().setViewport(vp), viewport);
+  await page.evaluate((vp) => window.__aframe.store.getState().setViewport(vp), viewport);
   await settle(page);
 }
 

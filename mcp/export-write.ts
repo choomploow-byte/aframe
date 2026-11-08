@@ -145,7 +145,7 @@ export async function writeUserFiles(
     await fs.mkdir(path.dirname(item.target), { recursive: true });
     const tmp = path.join(
       path.dirname(item.target),
-      `.atelier-${randomBytes(6).toString('hex')}.tmp`,
+      `.aframe-${randomBytes(6).toString('hex')}.tmp`,
     );
     try {
       await fs.writeFile(tmp, item.bytes, { flag: 'wx' });

@@ -18,12 +18,12 @@ import { idByName, press, reporter, settle, start } from './harness.mjs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 execFileSync(process.execPath, [path.join(root, 'scripts/build-mcp.mjs')], { stdio: 'ignore' });
-const BUNDLE = path.join(root, 'mcp/dist/atelier-mcp.mjs');
+const BUNDLE = path.join(root, 'mcp/dist/aframe-mcp.mjs');
 
 const t = await start({ width: 1360, height: 900, persist: true });
 const { page } = t;
 const HOME = t.home;
-if (!HOME) throw new Error('Set ATELIER_HOME to the folder the app uses.');
+if (!HOME) throw new Error('Set AFRAME_HOME to the folder the app uses.');
 const r = reporter();
 const { check, info } = r;
 const SHOT_DIR = process.env.SHOT_DIR;
@@ -43,7 +43,7 @@ await client.connect(
   new StdioClientTransport({
     command: process.execPath,
     args: [BUNDLE],
-    env: { ...process.env, ATELIER_HOME: HOME },
+    env: { ...process.env, AFRAME_HOME: HOME },
     stderr: 'ignore',
   }),
 );
@@ -65,7 +65,7 @@ async function call(name, args = {}) {
 }
 const docState = () =>
   page.evaluate(() => {
-    const s = window.__atelier.store.getState();
+    const s = window.__aframe.store.getState();
     return {
       id: s.doc.id,
       name: s.doc.name,
@@ -196,7 +196,7 @@ await group('an agent builds a hero and the canvas shows it', async () => {
     toast.some((x) => /AI changed the design/.test(x) && /Undo/.test(x)),
     toast.join('|'),
   );
-  await page.evaluate(() => window.__atelier.canvas().fitAll());
+  await page.evaluate(() => window.__aframe.canvas().fitAll());
   await shot('agent-hero');
 
   await press(page, 'Control+z');
@@ -325,7 +325,7 @@ await group('screenshots show what the canvas shows', async () => {
   await call('add_annotation', { text: 'check this corner', x: 200, y: 120 });
   await until(
     async () =>
-      (await page.evaluate(() => window.__atelier.store.getState().doc.annotations.length)) > 0,
+      (await page.evaluate(() => window.__aframe.store.getState().doc.annotations.length)) > 0,
   );
   const pinned = await call('screenshot', { nodeId: frame.id, annotations: true });
   if (SHOT_DIR)
@@ -349,7 +349,7 @@ await group('screenshots show what the canvas shows', async () => {
 // ---------------------------------------------------------------------------------------------
 await group('what the user selects reaches the agent', async () => {
   const id = await idByName(page, 'Orange Box');
-  await page.evaluate((n) => window.__atelier.store.getState().setSelection([n]), id);
+  await page.evaluate((n) => window.__aframe.store.getState().setSelection([n]), id);
   const ms = await until(async () => (await call('get_selection')).json.ids?.includes(id), {
     timeout: 4000,
   });
@@ -402,7 +402,7 @@ await group('the Connect dialog and the pill', async () => {
   await page.click(pill);
   await page.waitForSelector('[data-testid="text-claude"]');
   const text = await page.$eval('[data-testid="text-claude"]', (e) => e.textContent);
-  const expected = path.join(HOME, 'mcp', 'atelier-mcp.mjs');
+  const expected = path.join(HOME, 'mcp', 'aframe-mcp.mjs');
   check(
     'the paste-into-Claude text has the real path filled in',
     text.includes(`node "${expected}" install --claude`),
@@ -410,7 +410,7 @@ await group('the Connect dialog and the pill', async () => {
   );
   check(
     'and the kit’s wording',
-    /Please set up the Atelier design app for me/.test(text) && /take a screenshot/.test(text),
+    /Please set up the AFrame design app for me/.test(text) && /take a screenshot/.test(text),
   );
   await page.click('.dialog [role="tab"]:nth-of-type(2)');
   await page.waitForSelector('[data-testid="text-codex"]');
@@ -425,7 +425,7 @@ await group('the Connect dialog and the pill', async () => {
   const json = JSON.parse(await page.$eval('[data-testid="text-json"]', (e) => e.textContent));
   check(
     'the generic tab is valid MCP JSON',
-    json.mcpServers.atelier.command === 'node' && json.mcpServers.atelier.args[0] === expected,
+    json.mcpServers.aframe.command === 'node' && json.mcpServers.aframe.args[0] === expected,
   );
 
   await page.click('.dialog [role="tab"]:nth-of-type(1)');
@@ -510,7 +510,7 @@ await group('the game-UI toolkit, driven by an agent', async () => {
   const appeared = await until(
     async () =>
       page.evaluate(() => {
-        const n = Object.values(window.__atelier.store.getState().doc.nodes).find(
+        const n = Object.values(window.__aframe.store.getState().doc.nodes).find(
           (x) => x.name === 'Agent Buy Button',
         );
         return !!n && !!document.querySelector(`[data-node-id="${n.id}"]`);
@@ -520,7 +520,7 @@ await group('the game-UI toolkit, driven by an agent', async () => {
   check('the instance appears on the open canvas', appeared !== null, String(appeared));
   await settle(page);
   const look = await page.evaluate(() => {
-    const n = Object.values(window.__atelier.store.getState().doc.nodes).find(
+    const n = Object.values(window.__aframe.store.getState().doc.nodes).find(
       (x) => x.name === 'Agent Buy Button',
     );
     const el = document.querySelector(`[data-node-id="${n.id}"]`);
@@ -748,14 +748,14 @@ await group('the game-UI toolkit, driven by an agent', async () => {
 await group('the signature loop: a person pins a note, an agent addresses it', async () => {
   // The person: Annotate tool, click on the agent's button, type, Enter.
   const buttonNode = await page.evaluate(() => {
-    const n = Object.values(window.__atelier.store.getState().doc.nodes).find(
+    const n = Object.values(window.__aframe.store.getState().doc.nodes).find(
       (x) => x.name === 'Agent Buy Button',
     );
     return n?.id ?? null;
   });
   check('there is a button to annotate', !!buttonNode);
-  await page.evaluate((id) => window.__atelier.store.getState().setSelection([id]), buttonNode);
-  await page.evaluate(() => window.__atelier.canvas().fitSelection());
+  await page.evaluate((id) => window.__aframe.store.getState().setSelection([id]), buttonNode);
+  await page.evaluate(() => window.__aframe.canvas().fitSelection());
   await settle(page);
   await page.focus('[data-testid="canvas"]');
   await page.keyboard.press('a');
@@ -771,7 +771,7 @@ await group('the signature loop: a person pins a note, an agent addresses it', a
   await settle(page);
   await page.keyboard.press('v');
   const noteInApp = await until(
-    async () => page.evaluate(() => window.__atelier.store.getState().doc.annotations.length === 1),
+    async () => page.evaluate(() => window.__aframe.store.getState().doc.annotations.length === 1),
     { timeout: 3000 },
   );
   check('the note is in the app', noteInApp !== null);
@@ -855,7 +855,7 @@ await group('the signature loop: a person pins a note, an agent addresses it', a
   const sawReply = await until(
     async () =>
       page.evaluate(() => {
-        const a = window.__atelier.store.getState().doc.annotations[0];
+        const a = window.__aframe.store.getState().doc.annotations[0];
         return a?.status === 'resolved' && a.reply === 'Added a gloss and a 3D edge.';
       }),
     { timeout: 5000 },
@@ -890,7 +890,7 @@ await group('the signature loop: a person pins a note, an agent addresses it', a
   const sawOwn = await until(
     async () =>
       page.evaluate(() => {
-        const n = window.__atelier.store
+        const n = window.__aframe.store
           .getState()
           .doc.annotations.find((a) => a.author === 'agent');
         return !!n && !!document.querySelector(`[data-annotation-id="${n.id}"]`);

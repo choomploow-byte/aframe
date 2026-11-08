@@ -8,11 +8,11 @@ const { page } = t;
 const r = reporter();
 const { check } = r;
 
-await page.evaluate(() => window.__atelier.loadSample());
+await page.evaluate(() => window.__aframe.loadSample());
 await settle(page);
 // A note and a layer with text that must never appear in diagnostics.
 await page.evaluate(() => {
-  const s = window.__atelier.store.getState();
+  const s = window.__aframe.store.getState();
   s.edit(
     (d) => ({
       ...d,
@@ -33,7 +33,7 @@ await page.evaluate(() => {
     'note',
   );
 });
-await page.evaluate(() => window.__atelier.crash());
+await page.evaluate(() => window.__aframe.crash());
 await settle(page);
 check(
   'a render crash shows the recovery page, not a blank window',
@@ -64,7 +64,7 @@ await settle(page);
 const diag = await page.evaluate(() => window.__diag);
 check(
   'diagnostics hold the version, system, size of the design and the error',
-  /^Atelier /.test(diag) &&
+  /^AFrame /.test(diag) &&
     /Platform:/.test(diag) &&
     /\d+ layers/.test(diag) &&
     /Test crash/.test(diag),

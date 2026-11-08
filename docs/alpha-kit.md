@@ -1,6 +1,6 @@
 # Alpha test kit
 
-For the first people who try Atelier. Ten tasks, a feedback form and how to send a useful report.
+For the first people who try AFrame. Ten tasks, a feedback form and how to send a useful report.
 
 ## Who to invite
 
@@ -37,7 +37,7 @@ If you have a Figma file, also try **Import > Figma** with one frame, and tell u
 Copy this into an issue or an email:
 
 ```
-Atelier version: (bottom of the keyboard shortcuts sheet, Ctrl+/)      Windows / macOS / Linux:
+AFrame version: (bottom of the keyboard shortcuts sheet, Ctrl+/)      Windows / macOS / Linux:
 How I connected: Claude Code / Codex / Cursor / built-in chat (provider and model):
 Tasks tried (numbers):
 What worked well:
@@ -51,7 +51,7 @@ Would I use this on a real project? What is missing?
 
 - **Recovery page** (the app failed): press **Copy diagnostics** and paste it. It holds the version, your
   system and the error: never your design, notes or keys.
-- **The AI could not connect:** run `npx -y atelier-mcp doctor` (or `node atelier-mcp.mjs doctor` from the
+- **The AI could not connect:** run `npx -y aframe-mcp doctor` (or `node aframe-mcp.mjs doctor` from the
   installed app's folder) and paste its output.
 - **A bad result:** note the task, the model and the prompt. If you can, attach the screenshot the AI
   took (open the tool line in the chat) and say what looked wrong.

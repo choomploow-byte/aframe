@@ -3,7 +3,7 @@ import { resolveFont } from '@core/tokens';
 import { ChevronDown } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { BUNDLED_FONTS, loadFonts } from '../canvas/fonts';
-import { useAtelier } from '../store/store';
+import { useAFrame } from '../store/store';
 import { Popover } from './Popover';
 
 interface FontPickerProps {
@@ -25,7 +25,7 @@ export function FontPicker({
   disabled,
   field,
 }: FontPickerProps) {
-  const tokens = useAtelier((s) => s.doc.tokens);
+  const tokens = useAFrame((s) => s.doc.tokens);
   const anchor = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const family =

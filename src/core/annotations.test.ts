@@ -116,8 +116,8 @@ describe('annotation operations', () => {
     d = updateAnnotation(d, d.annotations[1]?.id as string, { status: 'resolved' });
     expect(placeAnnotations(d.annotations, () => null).map((p) => p.number)).toEqual([1, null, 2]);
     expect(openAnnotations(d)).toHaveLength(2);
-    expect(addressNotesPrompt(1)).toBe('in atelier, address my open annotation');
-    expect(addressNotesPrompt(3)).toBe('in atelier, address my open annotations');
+    expect(addressNotesPrompt(1)).toBe('in aframe, address my open annotation');
+    expect(addressNotesPrompt(3)).toBe('in aframe, address my open annotations');
   });
 });
 

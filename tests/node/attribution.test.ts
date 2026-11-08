@@ -14,14 +14,14 @@ describe('icon attribution', () => {
   const needle = 'Font Awesome Free 7.3.1';
 
   it('is in the MCP server bundle', () => {
-    const bundle = readFileSync('mcp/dist/atelier-mcp.mjs', 'utf8');
+    const bundle = readFileSync('mcp/dist/aframe-mcp.mjs', 'utf8');
     expect(bundle).toContain(ATTRIBUTION);
     // after the code, so the version header on the first lines is where the app looks for it
     expect(bundle.indexOf(ATTRIBUTION)).toBeGreaterThan(bundle.length - ATTRIBUTION.length - 5);
   });
 
   it('is in the app bundle', async () => {
-    const out = mkdtempSync(join(tmpdir(), 'atelier-attr-'));
+    const out = mkdtempSync(join(tmpdir(), 'aframe-attr-'));
     try {
       await build({
         logLevel: 'silent',

@@ -75,11 +75,11 @@ function compare(name, actual) {
 
 const setSelection = (ids) =>
   page
-    .evaluate((x) => window.__atelier.store.getState().setSelection(x), ids)
+    .evaluate((x) => window.__aframe.store.getState().setSelection(x), ids)
     .then(() => settle(page));
 
 // 1. Both artboards, fitted: layout, fonts, colours, fills, radii, strokes.
-await page.evaluate(() => window.__atelier.canvas().fitAll());
+await page.evaluate(() => window.__aframe.canvas().fitAll());
 await settle(page);
 compare('sample-fit', await shot());
 
@@ -98,7 +98,7 @@ void hero;
 // 4. Dark theme.
 await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
 await setSelection([]);
-await page.evaluate(() => window.__atelier.canvas().fitAll());
+await page.evaluate(() => window.__aframe.canvas().fitAll());
 await settle(page);
 compare('sample-fit-dark', await shot());
 

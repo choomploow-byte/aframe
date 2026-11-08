@@ -13,7 +13,7 @@ import {
 import { useState } from 'react';
 import { STRINGS } from '../strings';
 import { addArtboard } from '../store/commands';
-import { store, useAtelier, type ToolId } from '../store/store';
+import { store, useAFrame, type ToolId } from '../store/store';
 import { getCanvasApi } from './canvas-api';
 import { DEVICE_PRESETS } from './presets';
 
@@ -44,7 +44,7 @@ const TOOLS: readonly ToolDef[] = [
 
 /** The floating tool pill at the bottom centre of the canvas (docs/07). */
 export function Toolbar() {
-  const tool = useAtelier((s) => s.tool);
+  const tool = useAFrame((s) => s.tool);
   const [presetsOpen, setPresetsOpen] = useState(false);
 
   const addPreset = (preset: (typeof DEVICE_PRESETS)[number]): void => {

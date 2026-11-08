@@ -5,23 +5,23 @@ Goal: the app and any number of MCP server processes cooperate on the same proje
 **Status: built in Phase 4** (the app side and the shared Node module the MCP server will use). What the MCP server itself does with this arrives in Phase 5. Changes against the original draft are listed at the end ("Changes from the first draft"). The implementation lives in `src-tauri/src/{home,fsops,lock,appstate,bridge,layout}.rs` (desktop), `mcp/home-fs.ts` (Node: dev adapter and MCP server) and `src/{platform,projects,sync}/` (webview); the three file implementations are kept in step by tests that exercise the same rules.
 
 ## Home directory
-`~/.atelier/` (override with `ATELIER_HOME`; the browser dev adapter defaults to `~/.atelier-dev`, never the real one)
+`~/.aframe/` (override with `AFRAME_HOME`; the browser dev adapter defaults to `~/.aframe-dev`, never the real one)
 ```
-~/.atelier/
+~/.aframe/
   app-state.json                written ONLY by the app: { appHeartbeat: ISO, appPid, appVersion, currentProject, selection: [ids] }
   settings.json                 written only by the webview: { lastProject }
   agents/<pid>.json             one per MCP process, written only by that process (Phase 5)
   projects/
     <id>/
-      project.atelier.json      the Doc
-      project.atelier.json.bak  the previous valid version (rolling, 1 deep)
+      project.aframe.json      the Doc
+      project.aframe.json.bak  the previous valid version (rolling, 1 deep)
       .lock                     advisory lock, present for milliseconds while a writer works
   requests/req_<id>.json        agent -> app
   responses/<id>.json           app -> agent
-  mcp/atelier-mcp.mjs           bundled server (a marked placeholder until Phase 5)
+  mcp/aframe-mcp.mjs           bundled server (a marked placeholder until Phase 5)
   skills/*.md                   shipped + user skills (README placeholder until Phase 9)
   exports/                      default export location
-  library/                      the user's own images + index.json (created by `atelier-mcp library add`; read only by the MCP server, by id, never by a path an agent supplies)
+  library/                      the user's own images + index.json (created by `aframe-mcp library add`; read only by the MCP server, by id, never by a path an agent supplies)
   logs/
 ```
 Project ids match `^p_[A-Za-z0-9]{3,16}$`; they become folder names, so nothing else is accepted.
@@ -30,7 +30,7 @@ Project ids match `^p_[A-Za-z0-9]{3,16}$`; they become folder names, so nothing 
 All paths from the webview are relative to the home. A path is refused if it is empty (for writes and deletes), absolute, rooted (`/x`, `\x`), contains a drive prefix, `..`, a NUL, or a `:` (Windows alternate data streams), or if the deepest existing ancestor resolves (symlinks, junctions) outside the real home. Deleting or writing "the home itself" is refused. Tauri commands are individually granted in `capabilities/default.json` (`allow-fs-read` etc.); there is no fs, shell, dialog or opener plugin.
 
 ## Document writes
-A write of `project.atelier.json` is a **compare-and-write on `rev` under the project lock**, done by the same algorithm in Rust (`fsops::write_doc`) and Node (`HomeFs.writeDoc`):
+A write of `project.aframe.json` is a **compare-and-write on `rev` under the project lock**, done by the same algorithm in Rust (`fsops::write_doc`) and Node (`HomeFs.writeDoc`):
 1. Take `<project>/.lock` (exclusive create). On contention wait (15 ms polls, up to 3 s). Windows reports "Access is denied" instead of "exists" while the other side deletes the lock: treat as contention. A lock older than **5 s** belongs to a dead process and is taken over (writers hold it for milliseconds; a hard-killed process therefore delays saving by at most ~5 s).
 2. Read the current file. If the caller passed `expectRev` and the file's `rev` differs (or it is unreadable), **write nothing** and return `{ conflict: true, diskRev }`.
 3. If the current file is a valid document, write it to `.bak` (atomically). A corrupt file never replaces a good backup.
@@ -56,7 +56,7 @@ Other files (`app-state.json`, `settings.json`, responses) use the plain atomic 
 - **Save conflict:** if the file moved between the check and the write, the compare-and-write refuses; the app merges what it finds and writes again (up to 5 rounds).
 - **Damaged or deleted file while open:** the screen version is written back (the `.bak` is untouched) and a toast says so.
 - **Failed save:** the status turns to "Can't save" with the reason, the document stays in memory, and the save retries (1 s for a lock, 3 s otherwise).
-- **Closing:** the native side asks the page to save first (`atelier://close-requested`), the page flushes and answers `app_quit`; a 4 s grace period quits anyway so a hung page can never block closing.
+- **Closing:** the native side asks the page to save first (`aframe://close-requested`), the page flushes and answers `app_quit`; a 4 s grace period quits anyway so a hung page can never block closing.
 
 ## Request/response (things only the live app can do)
 Used for: `screenshot` (Phase 5), `export_image` (Phase 8), `get_selection`, `get_node_bounds`, `open_project`, and `ping`.
@@ -73,9 +73,9 @@ Response file `responses/<id>.json`:
 or `{ "ok": false, "error": { "code": "NODE_NOT_FOUND", "message": "..." } }`.
 
 ### Flow
-1. The MCP server checks app liveness: `app-state.json.appHeartbeat` within the last 5 s (the app refreshes it every 2 s from a **native thread**, immediately on a project/selection change at most every 200 ms). Not alive -> immediate `APP_NOT_RUNNING` ("Open Atelier").
+1. The MCP server checks app liveness: `app-state.json.appHeartbeat` within the last 5 s (the app refreshes it every 2 s from a **native thread**, immediately on a project/selection change at most every 200 ms). Not alive -> immediate `APP_NOT_RUNNING` ("Open AFrame").
 2. It writes the request (atomic), then polls `responses/<id>.json` every 100 ms (15 s timeout; 30 s for huge screenshots).
-3. A native thread lists `requests/` every 250 ms and emits an `atelier://request` event per new, well-formed file (name `req_[A-Za-z0-9]{1,40}.json`, at most 256 KB) once until the file disappears. The page re-requests announcements on start (`bridge_resync`) for files that arrived before it was listening. (In a browser dev session the page polls instead.)
+3. A native thread lists `requests/` every 250 ms and emits an `aframe://request` event per new, well-formed file (name `req_[A-Za-z0-9]{1,40}.json`, at most 256 KB) once until the file disappears. The page re-requests announcements on start (`bridge_resync`) for files that arrived before it was listening. (In a browser dev session the page polls instead.)
 4. The page validates (`sync/requests.ts`): the id must match the file name, the `type` must be on the allow-list, params are checked field by field, requests older than 2 minutes are dropped. It **saves pending edits first**, runs the handler, writes the response, deletes the request. Each id is handled once. Types that are allowed but not built yet answer `NOT_IMPLEMENTED` immediately instead of timing out. Implemented now: `ping`, `get_selection`, `open_project`.
 5. The MCP server reads the response, deletes it, returns the result.
 6. Housekeeping: the native side deletes request/response files older than 2 minutes about once a minute; both sides sweep stale `.tmp` files.
@@ -98,11 +98,11 @@ Each MCP process is independent. Doc writes take the project lock for a few mill
 ## Platform notes
 - Windows: rename-over-existing and delete can fail while another process holds the file or folder (antivirus, indexer, sync clients). Renames retry for up to ~1.5 s, folder deletes 8 times. Lock creation reports "Access is denied" during another writer's delete: treated as contention.
 - Paths: always relative with forward slashes at the API; expand `~` yourself.
-- OneDrive and other synced folders are a bad home for `~/.atelier` (handles held during sync); the default is the user profile, not Documents.
-- Tauri side: custom commands `atelier_home`, `fs_read`, `fs_read_head`, `fs_write` (atomic), `fs_write_doc` (compare-and-write), `fs_list`, `fs_remove`, `fs_stat`, `app_state_set`, `bridge_resync`, `app_quit`. All file commands are confined as above.
+- OneDrive and other synced folders are a bad home for `~/.aframe` (handles held during sync); the default is the user profile, not Documents.
+- Tauri side: custom commands `aframe_home`, `fs_read`, `fs_read_head`, `fs_write` (atomic), `fs_write_doc` (compare-and-write), `fs_list`, `fs_remove`, `fs_stat`, `app_state_set`, `bridge_resync`, `app_quit`. All file commands are confined as above.
 
 ## Dev-mode adapter
-In `vite dev`, `scripts/vite-dev-fs.ts` exposes the same operations over `POST /__fs/<op>` using `mcp/home-fs.ts` (the code the MCP server will share), so the app, autosave, sync and the agent bridge run in a normal browser. It only answers requests that carry the header `x-atelier-dev: 1` from a localhost origin (a custom header forces a CORS preflight that is never approved, so other websites cannot reach it). `src/platform/fs.ts` picks the adapter by checking `window.__TAURI_INTERNALS__`. The browser has no native heartbeat thread: the page's periodic report stands in for it.
+In `vite dev`, `scripts/vite-dev-fs.ts` exposes the same operations over `POST /__fs/<op>` using `mcp/home-fs.ts` (the code the MCP server will share), so the app, autosave, sync and the agent bridge run in a normal browser. It only answers requests that carry the header `x-aframe-dev: 1` from a localhost origin (a custom header forces a CORS preflight that is never approved, so other websites cannot reach it). `src/platform/fs.ts` picks the adapter by checking `window.__TAURI_INTERNALS__`. The browser has no native heartbeat thread: the page's periodic report stands in for it.
 
 ## Test matrix (what is automated, and where)
 | Case | Where | Status |

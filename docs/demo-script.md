@@ -9,7 +9,7 @@ Close other windows. Light theme reads better on video.
 
 | Time | Do | Say |
 |---|---|---|
-| 0:00 | Open Atelier on the welcome screen. | "Atelier is a design canvas that an AI can drive. Nothing leaves my computer except what I send to the AI I chose." |
+| 0:00 | Open AFrame on the welcome screen. | "AFrame is a design canvas that an AI can drive. Nothing leaves my computer except what I send to the AI I chose." |
 | 0:10 | **Explore the sample project.** Select the cramped pricing page. | "Here is a pricing page I would be embarrassed to ship. Cramped, flat, hard to read." |
 | 0:20 | Press **Check**. Point at the count; open the list; press **Fix automatically**. | "It finds contrast, spacing and size problems and fixes the safe ones in one click. One undo takes them back." |
 | 0:40 | Open **Chat** (Ctrl+L). Press *Improve the selected frame*. | "Now the AI. It looks at the design, edits it with the same tools Claude Code uses, and checks itself with a screenshot." |

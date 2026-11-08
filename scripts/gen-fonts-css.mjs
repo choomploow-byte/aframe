@@ -53,7 +53,7 @@ for (const [pkg, family] of STATIC_FONTS) {
     if (!block) throw new Error(`${pkg}: no @font-face in ${subset}-400.css`);
     const rewritten = block
       .replace(/font-family: '[^']+'/, `font-family: '${family}'`)
-      // woff2 only: every webview Atelier runs in supports it, and the woff copy would double the size.
+      // woff2 only: every webview AFrame runs in supports it, and the woff copy would double the size.
       .replace(
         /url\(\.\/files\/([^)]+\.woff2)\) format\('woff2'\),\s*url\([^)]+\) format\('woff'\)/,
         `url(../../node_modules/@fontsource/${pkg}/files/$1) format('woff2')`,

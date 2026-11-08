@@ -26,7 +26,7 @@ let dir: string;
 let fsx: TestAdapter;
 
 beforeEach(async () => {
-  dir = await fs.mkdtemp(path.join(os.tmpdir(), 'atelier-proj-'));
+  dir = await fs.mkdtemp(path.join(os.tmpdir(), 'aframe-proj-'));
   fsx = createTestAdapter(path.join(dir, 'home'));
   await fsx.home_.ensure();
 });
@@ -153,7 +153,7 @@ describe('damaged files', () => {
     expect(await fs.readFile(fsx.home_.confine(projectFile(doc.id)), 'utf8')).toBe('garbage');
   });
 
-  it('a file from a newer Atelier is refused with its own reason, not treated as damage', async () => {
+  it('a file from a newer AFrame is refused with its own reason, not treated as damage', async () => {
     const doc = await newProject(fsx);
     await fs.writeFile(
       fsx.home_.confine(projectFile(doc.id)),

@@ -244,9 +244,9 @@ function FigmaTab() {
   return (
     <div className="import__panel">
       <p className="dialog__muted">
-        Atelier reads a frame from your Figma file: layout, text styles, colours, corners and
-        shadows come across as layers; shapes drawn as vectors come in as pictures. Components
-        arrive as plain frames.
+        AFrame reads a frame from your Figma file: layout, text styles, colours, corners and shadows
+        come across as layers; shapes drawn as vectors come in as pictures. Components arrive as
+        plain frames.
       </p>
       {desktop ? (
         <>
@@ -404,7 +404,7 @@ function WebTab() {
     <div className="import__panel">
       <p className="dialog__muted">
         A prototype for starting from the app you already built. Capture your running page with the
-        script in the Atelier repository, then choose the file it writes. Sizes are fixed at the
+        script in the AFrame repository, then choose the file it writes. Sizes are fixed at the
         captured width, flex layouts become auto-layout, and pictures become grey placeholders.
       </p>
       <pre className="copyblock__text import__code">
@@ -443,7 +443,7 @@ function CanvaTab() {
   return (
     <div className="import__panel">
       <p className="dialog__muted" data-testid="canva-note">
-        Canva designs come in as images and are rebuilt by AI. Atelier cannot open a Canva file
+        Canva designs come in as images and are rebuilt by AI. AFrame cannot open a Canva file
         itself: Canva keeps its format closed.
       </p>
       <ol className="import__steps">
@@ -471,14 +471,14 @@ function CanvaTab() {
               } else {
                 try {
                   await navigator.clipboard.writeText(
-                    'in atelier, rebuild the image I just added as an editable design',
+                    'in aframe, rebuild the image I just added as an editable design',
                   );
                   setDone(
-                    'The image is on your canvas. Say this to Claude Code or Codex (copied): "in atelier, rebuild the image I just added as an editable design".',
+                    'The image is on your canvas. Say this to Claude Code or Codex (copied): "in aframe, rebuild the image I just added as an editable design".',
                   );
                 } catch {
                   setDone(
-                    'The image is on your canvas. Ask your AI: "in atelier, rebuild the image I just added as an editable design".',
+                    'The image is on your canvas. Ask your AI: "in aframe, rebuild the image I just added as an editable design".',
                   );
                 }
               }

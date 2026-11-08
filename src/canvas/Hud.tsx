@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useAtelier } from '../store/store';
+import { useAFrame } from '../store/store';
 
 /** Hidden debug HUD (Ctrl+Alt+D): frame rate, node count, zoom (docs/19 "Measurement"). */
 export function Hud() {
-  const visible = useAtelier((s) => s.hud);
-  const nodes = useAtelier((s) => s.doc.nodes);
-  const zoom = useAtelier((s) => s.viewport.zoom);
-  const selected = useAtelier((s) => s.selection.length);
+  const visible = useAFrame((s) => s.hud);
+  const nodes = useAFrame((s) => s.doc.nodes);
+  const zoom = useAFrame((s) => s.viewport.zoom);
+  const selected = useAFrame((s) => s.selection.length);
   const count = useMemo(() => Object.keys(nodes).length, [nodes]);
   const [fps, setFps] = useState(0);
   const frames = useRef({ n: 0, t: 0 });

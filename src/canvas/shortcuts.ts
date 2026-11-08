@@ -107,7 +107,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
     match: (e) => mod(e) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'c',
     run: ({ store }) => {
       const specs = copySelection(store);
-      if (specs) writeSystemClipboard(JSON.stringify({ atelier: 1, nodes: specs }));
+      if (specs) writeSystemClipboard(JSON.stringify({ aframe: 1, nodes: specs }));
     },
   },
   {
@@ -117,7 +117,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
     match: (e) => mod(e) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'x',
     run: ({ store }) => {
       const specs = cutSelection(store);
-      if (specs) writeSystemClipboard(JSON.stringify({ atelier: 1, nodes: specs }));
+      if (specs) writeSystemClipboard(JSON.stringify({ aframe: 1, nodes: specs }));
     },
   },
   {

@@ -3,11 +3,11 @@ import { deepFreeze, sampleDoc } from '@core/testing';
 import type { Node, Op } from '@core/types';
 import { describe, expect, it } from 'vitest';
 import { createStoreContext } from './context';
-import { createAtelierStore } from './store';
+import { createAFrameStore } from './store';
 
 function setup() {
   let t = 0;
-  const store = createAtelierStore({
+  const store = createAFrameStore({
     doc: deepFreeze(sampleDoc()),
     now: () => t,
     isoNow: () => '2026-04-04T00:00:00.000Z',

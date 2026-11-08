@@ -8,7 +8,7 @@ import {
 import { Check, RotateCcw, Trash2, X } from 'lucide-react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { annotationUi, useAnnotationUi } from '../annotations/ui-state';
-import { store, useAtelier } from '../store/store';
+import { store, useAFrame } from '../store/store';
 import { showToast } from '../ui/toast';
 import type { Measurer } from './measure';
 import { worldToScreen } from './viewport';
@@ -20,9 +20,9 @@ import { worldToScreen } from './viewport';
  * design, never exported, and only drawn into a screenshot when the agent asks for it.
  */
 export function AnnotationLayer({ measurer }: { measurer: Measurer }) {
-  const doc = useAtelier((s) => s.doc);
-  const viewport = useAtelier((s) => s.viewport);
-  const tool = useAtelier((s) => s.tool);
+  const doc = useAFrame((s) => s.doc);
+  const viewport = useAFrame((s) => s.viewport);
+  const tool = useAFrame((s) => s.tool);
   const composer = useAnnotationUi((s) => s.composer);
   const focusId = useAnnotationUi((s) => s.focusId);
   const [placed, setPlaced] = useState<PlacedAnnotation[]>([]);

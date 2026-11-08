@@ -1,6 +1,6 @@
 /**
  * React + Tailwind (v4, CSS-first). Each declaration is mapped to a utility ONLY when the mapping is
- * exact; everything else goes, verbatim, into a small `atelier.css` class on the same element, so
+ * exact; everything else goes, verbatim, into a small `aframe.css` class on the same element, so
  * nothing is ever guessed (docs/10: "fall back rather than guess"). Tokens become the `@theme`
  * block, so `var(--color-primary)` is the `bg-primary` / `text-primary` utility.
  */
@@ -131,7 +131,7 @@ function themeCss(ir: IrResult): string {
   return `@import 'tailwindcss';\n\n@theme {\n${body}\n}\n`;
 }
 
-/** `Name.tsx` (utility classes), `theme.css` (@theme from the tokens), `atelier.css` (the leftovers). */
+/** `Name.tsx` (utility classes), `theme.css` (@theme from the tokens), `aframe.css` (the leftovers). */
 export function toReactTailwind(ir: IrResult, componentName: string): ExportFile[] {
   // Class lists per element, then the exact leftovers as plain classes.
   const classOf = new Map<string, string>();
@@ -149,7 +149,7 @@ export function toReactTailwind(ir: IrResult, componentName: string): ExportFile
   const source = componentSource(
     ir,
     componentName,
-    ["import './theme.css';", "import './atelier.css';"],
+    ["import './theme.css';", "import './aframe.css';"],
     {
       className: (n) => JSON.stringify(classOf.get(n.id) ?? ''),
       imageVar: imageIdentifier,
@@ -159,7 +159,7 @@ export function toReactTailwind(ir: IrResult, componentName: string): ExportFile
     { path: `${componentName}.tsx`, content: source },
     { path: 'theme.css', content: themeCss(ir) },
     {
-      path: 'atelier.css',
+      path: 'aframe.css',
       content: `/* Declarations with no exact Tailwind utility (gradients, patterns, shadows, filters...), kept verbatim. */\n${extra.join('\n\n')}\n`,
     },
     ...ir.assets,

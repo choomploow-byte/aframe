@@ -18,7 +18,7 @@ export interface ChatSettings {
   acknowledged: boolean;
 }
 
-const KEY = 'atelier.chat.settings.v1';
+const KEY = 'aframe.chat.settings.v1';
 
 const DEFAULTS: ChatSettings = {
   provider: 'anthropic',

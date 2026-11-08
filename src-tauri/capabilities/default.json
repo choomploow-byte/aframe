@@ -5,7 +5,7 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
-    "allow-atelier-home",
+    "allow-aframe-home",
     "allow-fs-read",
     "allow-fs-read-head",
     "allow-fs-write",

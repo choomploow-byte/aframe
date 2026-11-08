@@ -14,7 +14,7 @@ const put = (file: string, text: string): void => {
 };
 
 beforeEach(() => {
-  home = fs.mkdtempSync(path.join(os.tmpdir(), 'atelier-skills-'));
+  home = fs.mkdtempSync(path.join(os.tmpdir(), 'aframe-skills-'));
 });
 afterEach(() => fs.rmSync(home, { recursive: true, force: true }));
 

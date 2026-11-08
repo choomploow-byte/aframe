@@ -1,11 +1,11 @@
-# Atelier user guide
+# AFrame user guide
 
 Every feature, in the order you will meet it. Where something is a prototype or has not been tried on
 a real-world case, it says so.
 
 ## Your first five minutes
 
-1. **Open Atelier.** An empty canvas offers six ways to begin: draw a frame, explore the sample
+1. **Open AFrame.** An empty canvas offers six ways to begin: draw a frame, explore the sample
    project, connect Claude Code or Codex, use an API key, or bring a design in.
 2. **Look around.** Left: Layers, Assets, Tokens, Icons. Middle: the canvas. Right: Design (properties),
    Notes and Chat. Top: the project name, undo and redo, Ctrl+K for every command, Import, Check, Export,
@@ -42,7 +42,7 @@ There are two ways, and both use the same tools.
 ### Claude Code, Codex, Cursor (their own model and account)
 
 Press **Connect AI**, choose your tool and paste the text into it. It installs a small MCP server and
-a skill. Afterwards say things like *"in atelier, make a pricing page"*, *"improve my design"*, *"match
+a skill. Afterwards say things like *"in aframe, make a pricing page"*, *"improve my design"*, *"match
 the reference I added"*, *"address my open annotations"*. The agent sees your selection, takes
 screenshots of the canvas, edits, checks its own work and replies to your notes. The green dot in the
 Connect pill shows when an agent is talking to the app.
@@ -75,7 +75,7 @@ shows one over or beside a frame.
 ### Skills
 
 Skills are short markdown guides the AI loads on demand (typography, colour, layout, patterns,
-accessibility, critique, game UI...). Put your own in `~/.atelier/skills/`; see `skills/README.md`.
+accessibility, critique, game UI...). Put your own in `~/.aframe/skills/`; see `skills/README.md`.
 
 ## Checking a design
 
@@ -92,7 +92,7 @@ thing; **Fix automatically** repairs everything with an unambiguous fix, as one 
   to a folder you choose (a download in a browser). Colours, fonts and radii stay variables; images
   become files; class names come from your layer names and stay stable between exports. If a file already
   exists with different content, nothing is written until you choose *Replace existing files*. A
-  `README-atelier.md` lists what was generated, the fonts to install and any warnings (missing alt text,
+  `README-aframe.md` lists what was generated, the fonts to install and any warnings (missing alt text,
   absolutely placed layers).
 - **Image:** PNG at 1x, 2x or 3x with an optional transparent background, SVG (text stays live text),
   or copy the picture.
@@ -114,11 +114,11 @@ Each import shows what came across, what changed and what was left out, and is o
 
 ## Files, safety and privacy
 
-- Projects are plain JSON in `~/.atelier/projects/<id>/project.atelier.json`, saved as you work; a
+- Projects are plain JSON in `~/.aframe/projects/<id>/project.aframe.json`, saved as you work; a
   damaged file is recovered from its backup. Export a project file from the Export menu.
 - Nothing leaves your computer except what you send to an AI you chose (messages, an outline of the
   design, screenshots) and Figma requests you make. There is no telemetry.
-- Delete everything by uninstalling the app and removing `~/.atelier`; remove API keys in AI settings.
+- Delete everything by uninstalling the app and removing `~/.aframe`; remove API keys in AI settings.
 - If a screen ever fails you get a recovery page with **Copy diagnostics** (version, system and the
   error; never your design, notes or keys).
 
@@ -132,8 +132,8 @@ Ctrl+Alt+A add auto-layout · Del delete · V F R O T A H tools · arrows nudge 
 
 | Problem | Try |
 |---|---|
-| The AI says Atelier is not running | Open the app. Most tools work without it; screenshots and image export need it. |
-| Claude Code does not see Atelier | Run `node atelier-mcp.mjs doctor` (or `npx -y atelier-mcp doctor`) and follow its lines. |
+| The AI says AFrame is not running | Open the app. Most tools work without it; screenshots and image export need it. |
+| Claude Code does not see AFrame | Run `node aframe-mcp.mjs doctor` (or `npx -y aframe-mcp doctor`) and follow its lines. |
 | Chat says add a key / key rejected | AI settings: save the key again, then Test connection. Check the model name. |
 | Export refuses a folder | Folders under system locations, hidden credential folders and your home folder itself are refused: pick a project folder. |
 | Windows warns about an unknown publisher | The installer is not code-signed yet. *More info*, then *Run anyway*. |

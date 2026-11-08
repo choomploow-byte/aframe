@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { STRINGS } from '../strings';
-import { store, useAtelier } from '../store/store';
+import { store, useAFrame } from '../store/store';
 import { setCanvasApi } from './canvas-api';
 import { unionRects, type Rect } from './geometry';
 import { AnnotationLayer } from './AnnotationLayer';
@@ -26,9 +26,9 @@ import { ZoomControl } from './ZoomControl';
  */
 export function Canvas() {
   const ref = useRef<HTMLDivElement>(null);
-  const viewport = useAtelier((s) => s.viewport);
-  const rootId = useAtelier((s) => s.doc.rootId);
-  const empty = useAtelier((s) => (s.doc.nodes[s.doc.rootId]?.children.length ?? 0) === 0);
+  const viewport = useAFrame((s) => s.viewport);
+  const rootId = useAFrame((s) => s.doc.rootId);
+  const empty = useAFrame((s) => (s.doc.nodes[s.doc.rootId]?.children.length ?? 0) === 0);
   const [measurer, setMeasurer] = useState<Measurer | null>(null);
   const fitted = useRef(false);
   useShortcuts();
@@ -102,7 +102,7 @@ export function Canvas() {
 
   // Text is measured and screenshotted from the DOM, so the world stays hidden until the fonts the
   // document uses have loaded (or a short timeout passes): no first paint in a fallback face.
-  const docId = useAtelier((s) => s.doc.id);
+  const docId = useAFrame((s) => s.doc.id);
   const [fontsReadyFor, setFontsReadyFor] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;

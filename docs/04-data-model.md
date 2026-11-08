@@ -157,7 +157,7 @@ interface Reference {
 - Returns structured errors: `{ ok: false, errors: [{ op: 2, code: 'BAD_PARENT', message: '...' }] }` and applies **nothing** if any op fails (atomic batch).
 
 ## Migration
-`doc.schema` integer + `migrate(doc)` chain on load. Never write a newer schema than the app understands: refuse and say "update Atelier".
+`doc.schema` integer + `migrate(doc)` chain on load. Never write a newer schema than the app understands: refuse and say "update AFrame".
 
 ## Phase 1 decisions (resolving ambiguities in this doc; decision log #24-#34)
 1. **`radius`** accepts a `$radius.<name>` token string as well as a number or a 4-tuple. Tuple order is CSS order: top-left, top-right, bottom-right, bottom-left. `gap`/`padding` stay numeric (the spacing scale is advisory, used by lint).

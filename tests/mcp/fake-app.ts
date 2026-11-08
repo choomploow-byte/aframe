@@ -1,4 +1,4 @@
-// A stand-in for the Atelier app, for the MCP integration tests: keeps app-state.json's heartbeat
+// A stand-in for the AFrame app, for the MCP integration tests: keeps app-state.json's heartbeat
 // fresh and answers bridge requests the way the real app does (docs/06), so the server's screenshot
 // and live-selection paths can be tested without a window.
 import { PNG } from 'pngjs';

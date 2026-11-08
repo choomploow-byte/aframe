@@ -1,7 +1,7 @@
-// Generates src/core/icon-data.ts: the icon set Atelier ships (docs/04 "Icons").
+// Generates src/core/icon-data.ts: the icon set AFrame ships (docs/04 "Icons").
 //   - a curated selection of Font Awesome Free solid icons (CC BY 4.0, attribution in
 //     THIRD-PARTY-NOTICES.md and in the generated file's header)
-//   - the few icons Atelier draws itself (scripts/icons-custom.mjs, MIT)
+//   - the few icons AFrame draws itself (scripts/icons-custom.mjs, MIT)
 // Only names listed here are shipped, so the set stays small and consistent.
 // Run: node scripts/gen-icons.mjs   (needs the dev dependency @fortawesome/free-solid-svg-icons)
 import { writeFileSync } from 'node:fs';
@@ -203,7 +203,7 @@ for (const [name, def] of Object.entries(CUSTOM_ICONS)) {
     vb: [512, 512],
     d: def.d,
     ...(EVENODD.has(name) ? { rule: 'evenodd' } : {}),
-    source: 'atelier',
+    source: 'aframe',
   });
 }
 out.sort((a, b) => a.name.localeCompare(b.name));
@@ -221,7 +221,7 @@ const file = `/*!
  * Icons with source "fontawesome-free" are from Font Awesome Free ${faVersion} (solid),
  * Copyright Fonticons, Inc., https://fontawesome.com, licensed CC BY 4.0
  * (https://creativecommons.org/licenses/by/4.0/). They are unmodified apart from the selection.
- * Icons with source "atelier" were drawn for this project and are MIT licensed.
+ * Icons with source "aframe" were drawn for this project and are MIT licensed.
  */
 import type { IconDef } from './icons';
 

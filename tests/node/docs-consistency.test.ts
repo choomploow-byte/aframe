@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
-  ATELIER_SKILL,
+  AFRAME_SKILL,
   MCP_VERSION,
   PROMPT_RECIPES,
   SERVER_INSTRUCTIONS,
@@ -33,7 +33,7 @@ describe('the embedded copy matches its sources', () => {
   it('skills', () => {
     const files = fs
       .readdirSync(path.join(root, 'skills'))
-      .filter((f) => f.endsWith('.md') && f !== 'README.md' && f !== 'atelier-SKILL.md')
+      .filter((f) => f.endsWith('.md') && f !== 'README.md' && f !== 'aframe-SKILL.md')
       .sort();
     expect(SKILLS.map((s) => s.name)).toEqual(files.map((f) => f.replace(/\.md$/, '')));
     for (const f of files) {
@@ -45,7 +45,7 @@ describe('the embedded copy matches its sources', () => {
   });
 
   it('the Claude skill, server instructions and prompt recipes', () => {
-    expect(ATELIER_SKILL).toBe(read('skills/atelier-SKILL.md'));
+    expect(AFRAME_SKILL).toBe(read('skills/aframe-SKILL.md'));
     expect(read('prompts/mcp-server-instructions.md')).toContain(SERVER_INSTRUCTIONS);
     for (const r of PROMPT_RECIPES)
       expect(read('prompts/design-agent-prompts.md')).toContain(r.text);
@@ -57,8 +57,8 @@ describe('the embedded copy matches its sources', () => {
   });
 
   it('SKILL.md names a loadable skill in its frontmatter and in its text', () => {
-    expect(ATELIER_SKILL).toMatch(/^---\nname: atelier\ndescription: .{40,}\n---\n/);
-    for (const name of SKILLS.map((s) => s.name)) expect(ATELIER_SKILL, name).toContain(name);
+    expect(AFRAME_SKILL).toMatch(/^---\nname: aframe\ndescription: .{40,}\n---\n/);
+    for (const name of SKILLS.map((s) => s.name)) expect(AFRAME_SKILL, name).toContain(name);
   });
 });
 
@@ -71,7 +71,7 @@ describe('tool names agree everywhere', () => {
   });
 
   it.each([
-    ['skills/atelier-SKILL.md', () => ATELIER_SKILL],
+    ['skills/aframe-SKILL.md', () => AFRAME_SKILL],
     ['server instructions', () => SERVER_INSTRUCTIONS],
     ['prompt recipes', () => PROMPT_RECIPES.map((r) => r.text).join('\n')],
     ['the in-app system prompt', () => read('prompts/in-app-system-prompt.md')],
@@ -83,7 +83,7 @@ describe('tool names agree everywhere', () => {
   });
 
   it('the name finder has teeth: it sees real names and flags an invented one', () => {
-    expect(mentionedTools(ATELIER_SKILL).size).toBeGreaterThan(8);
+    expect(mentionedTools(AFRAME_SKILL).size).toBeGreaterThan(8);
     expect(mentionedTools(SERVER_INSTRUCTIONS).size).toBeGreaterThan(8);
     const unknown = [...mentionedTools('use get_design then make_it_pop and set_vibes')].filter(
       (w) => !toolNames.includes(w),
@@ -123,7 +123,7 @@ describe('the install text in the app matches the kit', () => {
     const kit = read('prompts/user-install-prompt.md');
     const claude = claudePrompt('{PATH}');
     for (const line of claude.split('\n').filter((l) => l.trim() !== '')) {
-      // The kit says "atelier" in lower case where the app says "Atelier" for the product name.
+      // The kit says "aframe" in lower case where the app says "AFrame" for the product name.
       expect(kit.toLowerCase(), line).toContain(line.toLowerCase());
     }
     for (const line of codexPrompt('{PATH}')

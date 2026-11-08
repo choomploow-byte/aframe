@@ -10,4 +10,4 @@ In scope: the desktop app, the MCP server and installer, file handling (project 
 Out of scope: vulnerabilities in third-party AI providers or in agent hosts (Claude Code, Codex, etc.), social engineering, denial of service by opening absurdly large files.
 
 ## What we promise
-No telemetry. API keys never leave your device except to the provider you configure. Atelier only reads and writes inside `~/.atelier/` and folders you explicitly choose.
+No telemetry. API keys never leave your device except to the provider you configure. AFrame only reads and writes inside `~/.aframe/` and folders you explicitly choose.

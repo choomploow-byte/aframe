@@ -27,7 +27,7 @@ createRoot(rootEl).render(
 // Open the last project (or make a first one); from here on every edit is saved.
 if (persistenceEnabled()) void bootProject();
 
-// Loads the sample document and exposes window.__atelier for tests. Off in every normal build:
+// Loads the sample document and exposes window.__aframe for tests. Off in every normal build:
 // it is on for `vite dev`, and for the optimised `--mode perf` build used by the perf test
 // (.env.perf), so performance is measured on minified React rather than the dev build.
 if (import.meta.env.DEV || import.meta.env.VITE_DEVTOOLS === '1') {

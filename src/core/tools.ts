@@ -266,7 +266,7 @@ const getDesign = defineTool({
 const getNode = defineTool({
   name: 'get_node',
   description:
-    'Read one node with every property, plus its parent and children ids. Includes on-canvas bounds when the Atelier app is open.',
+    'Read one node with every property, plus its parent and children ids. Includes on-canvas bounds when the AFrame app is open.',
   inputSchema: z.object({ nodeId: z.string() }),
   handler: async (ctx, input) => {
     const doc = await ctx.getDoc();

@@ -23,7 +23,7 @@ const shot = async (name) => {
 const SECRET = 'sk-ant-TESTSECRET-do-not-leak-123';
 
 const docNow = () =>
-  page.evaluate(() => JSON.parse(JSON.stringify(window.__atelier.store.getState().doc)));
+  page.evaluate(() => JSON.parse(JSON.stringify(window.__aframe.store.getState().doc)));
 const q = (sel) => page.$(sel);
 const text = (sel) => page.$eval(sel, (el) => el.textContent ?? '').catch(() => null);
 const click = async (sel) => {
@@ -69,11 +69,11 @@ const finalText = (words) => ({
 });
 
 // ---- a design, and a scripted provider in the page ---------------------------------------------------
-await page.evaluate(() => window.__atelier.loadTemplate('pricing'));
+await page.evaluate(() => window.__aframe.loadTemplate('pricing'));
 await page.evaluate(() => document.fonts.ready);
 await settle(page);
 await page.evaluate(async () => {
-  const chat = await window.__atelier.chat();
+  const chat = await window.__aframe.chat();
   window.__chat = chat;
   window.__sent = [];
   window.__script = [];
@@ -109,7 +109,7 @@ await page.evaluate(async () => {
   chat.settings.settingsStore.getState().update({ acknowledged: false, provider: 'anthropic' });
 });
 const screenId = await page.evaluate(() => {
-  const s = window.__atelier.store.getState();
+  const s = window.__aframe.store.getState();
   return s.doc.nodes[s.doc.rootId].children.find((id) => s.doc.nodes[id].name !== 'Components');
 });
 const original = await docNow();
@@ -195,7 +195,7 @@ await page.keyboard.press('Escape');
 await settle(page);
 
 // ---- improve the selected frame -----------------------------------------------------------------------------------
-await page.evaluate((id) => window.__atelier.store.getState().setSelection([id]), screenId);
+await page.evaluate((id) => window.__aframe.store.getState().setSelection([id]), screenId);
 await settle(page);
 await reset();
 await script([
@@ -243,7 +243,7 @@ check(
 );
 check(
   'the tool list and the system prompt were sent',
-  requests[0].tools.length > 10 && /Atelier's design assistant/.test(requests[0].system),
+  requests[0].tools.length > 10 && /AFrame's design assistant/.test(requests[0].system),
 );
 check(
   'the in-app tool list leaves out file and project tools',
@@ -340,7 +340,7 @@ check(
 
 // ---- images ------------------------------------------------------------------------------------------------------------------
 await reset();
-const dir = mkdtempSync(join(tmpdir(), 'atelier-chat-'));
+const dir = mkdtempSync(join(tmpdir(), 'aframe-chat-'));
 const png = new PNG({ width: 4, height: 4 });
 png.data.fill(200);
 const imagePath = join(dir, 'ref.png');
@@ -363,8 +363,8 @@ check('and the thumbnail is cleared after sending', (await page.$$('.chat__thumb
 // ---- "Ask AI to address notes" goes to the built-in chat when it is set up -----------------------------------------------------------
 await reset();
 await page.evaluate((id) => {
-  window.__atelier.store.getState().dispatch([{ op: 'noop' }].slice(0, 0), { label: 'noop' });
-  const s = window.__atelier.store.getState();
+  window.__aframe.store.getState().dispatch([{ op: 'noop' }].slice(0, 0), { label: 'noop' });
+  const s = window.__aframe.store.getState();
   s.edit(
     (d) => ({
       ...d,
@@ -424,7 +424,7 @@ const leaks = await page.evaluate((secret) => {
       places.push('sessionStorage');
   }
   if (JSON.stringify(window.__sent).includes(secret)) places.push('request-bodies');
-  if (JSON.stringify(window.__atelier.store.getState().doc).includes(secret))
+  if (JSON.stringify(window.__aframe.store.getState().doc).includes(secret))
     places.push('document');
   if (JSON.stringify(window.__chat.session.chatStore.getState()).includes(secret))
     places.push('chat-state');
@@ -442,7 +442,7 @@ check('and it never reached the console', !t.errors.some((e) => e.includes('TEST
 // ---- a browser build cannot keep keys --------------------------------------------------------------------------------------------------------
 await page.evaluate(() => window.__chat.keys.setKeyStoreForTests(null));
 await page.evaluate(() => window.__chat.keys.refreshKeys());
-await page.evaluate(() => window.__atelier.chat().then((c) => c.session.resetChat()));
+await page.evaluate(() => window.__aframe.chat().then((c) => c.session.resetChat()));
 await settle(page);
 await press(page, 'Control+k');
 await page.keyboard.type('AI settings');

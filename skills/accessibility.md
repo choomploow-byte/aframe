@@ -26,7 +26,7 @@ description: Designing accessible UI - contrast, text size, tap targets, focus, 
 - Keep reading order = visual order (top-to-bottom, left-to-right); avoid layouts that rely on absolute positioning order.
 - Headings go in order (one H1, then H2…); don't pick heading sizes only for looks. Set `props.level` on heading text nodes when size alone is ambiguous.
 
-## How to encode it in Atelier so the exporter outputs good HTML
+## How to encode it in AFrame so the exporter outputs good HTML
 | Need | Set |
 |---|---|
 | Button | frame `role: "button"` (exports `<button>`) |

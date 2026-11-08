@@ -1,5 +1,5 @@
 // Integration test: the built MCP bundle, driven by the real SDK client over stdio, against a
-// throwaway ATELIER_HOME and a fake app. Covers the tool surface, atomicity, the app bridge,
+// throwaway AFRAME_HOME and a fake app. Covers the tool surface, atomicity, the app bridge,
 // confinement of file reads, concurrent writers, and stdout hygiene.
 import { Client } from '@modelcontextprotocol/client';
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio';
@@ -14,7 +14,7 @@ import { HomeFs } from '../../mcp/home-fs';
 import { PNG } from 'pngjs';
 import { noisePng, startFakeApp, type FakeApp } from './fake-app';
 
-const BUNDLE = fileURLToPath(new URL('../../mcp/dist/atelier-mcp.mjs', import.meta.url));
+const BUNDLE = fileURLToPath(new URL('../../mcp/dist/aframe-mcp.mjs', import.meta.url));
 
 let dir: string;
 let homeDir: string;
@@ -26,7 +26,7 @@ async function connect(env: Record<string, string> = {}): Promise<Client> {
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: [BUNDLE],
-    env: { ...process.env, ATELIER_HOME: homeDir, ...env },
+    env: { ...process.env, AFRAME_HOME: homeDir, ...env },
     stderr: 'pipe',
   });
   await client.connect(transport);
@@ -59,7 +59,7 @@ beforeAll(async () => {
   await fs.access(BUNDLE);
 });
 beforeEach(async () => {
-  dir = await fs.mkdtemp(path.join(os.tmpdir(), 'atelier-mcp-'));
+  dir = await fs.mkdtemp(path.join(os.tmpdir(), 'aframe-mcp-'));
   homeDir = path.join(dir, 'home');
   home = new HomeFs(homeDir);
   await home.ensure();
@@ -71,7 +71,7 @@ afterEach(async () => {
 afterAll(() => undefined);
 
 describe('the protocol surface', () => {
-  it('a skill the person drops in ~/.atelier/skills shows up at once and can replace a shipped one', async () => {
+  it('a skill the person drops in ~/.aframe/skills shows up at once and can replace a shipped one', async () => {
     const c = await connect();
     const before = (await ok(c, 'list_skills')).json.skills as { name: string }[];
     expect(before.some((x) => x.name === 'my-brand')).toBe(false);
@@ -94,13 +94,13 @@ describe('the protocol surface', () => {
     );
     expect((await ok(c, 'load_skill', { name: 'color' })).text).toContain('Only purple');
     const resources = await c.listResources();
-    expect(resources.resources.some((r) => r.uri === 'atelier://skills/my-brand')).toBe(true);
+    expect(resources.resources.some((r) => r.uri === 'aframe://skills/my-brand')).toBe(true);
     expect(after.filter((x) => x.name === 'color')).toHaveLength(1);
   });
 
   it('initialises, sends instructions, and lists every tool with a schema that has `project`', async () => {
     const c = await connect();
-    expect(c.getServerVersion()).toMatchObject({ name: 'atelier' });
+    expect(c.getServerVersion()).toMatchObject({ name: 'aframe' });
     const instructions = c.getInstructions() ?? '';
     expect(instructions).toContain('get_design');
     expect(instructions).toContain('screenshot');
@@ -180,14 +180,14 @@ describe('the protocol surface', () => {
     expect(JSON.stringify(p.messages)).toContain('get_design');
 
     const resources = await c.listResources();
-    expect(resources.resources.some((r) => r.uri === 'atelier://skills/typography')).toBe(true);
-    const read = await c.readResource({ uri: 'atelier://skills/typography' });
+    expect(resources.resources.some((r) => r.uri === 'aframe://skills/typography')).toBe(true);
+    const read = await c.readResource({ uri: 'aframe://skills/typography' });
     expect(JSON.stringify(read.contents)).toContain('Typography'.slice(0, 4));
   });
 
   it('never writes anything but protocol messages to stdout', async () => {
     const child = spawn(process.execPath, [BUNDLE], {
-      env: { ...process.env, ATELIER_HOME: homeDir },
+      env: { ...process.env, AFRAME_HOME: homeDir },
       stdio: ['pipe', 'pipe', 'pipe'],
     });
     let out = '';
@@ -204,7 +204,7 @@ describe('the protocol surface', () => {
     expect(lines.length).toBeGreaterThan(0);
     for (const line of lines)
       expect(() => JSON.parse(line), `stdout line: ${line.slice(0, 80)}`).not.toThrow();
-    expect(err).toContain('atelier-mcp');
+    expect(err).toContain('aframe-mcp');
   });
 });
 
@@ -258,7 +258,7 @@ describe('editing', () => {
     const page = (await ok(c, 'get_design')).json.root.id as string;
     return { c, p, page };
   }
-  const file = (id: string) => path.join(homeDir, 'projects', id, 'project.atelier.json');
+  const file = (id: string) => path.join(homeDir, 'projects', id, 'project.aframe.json');
 
   it('builds a section with one nested batch, writes the file, and bumps rev as the agent', async () => {
     const { c, p, page } = await setup();
@@ -459,7 +459,7 @@ describe('editing', () => {
         path.join(out, '.ssh'),
         os.homedir(),
         path.parse(out).root,
-        process.platform === 'win32' ? 'C:\\Windows\\Temp\\atelier' : '/etc/atelier',
+        process.platform === 'win32' ? 'C:\\Windows\\Temp\\aframe' : '/etc/aframe',
       ]) {
         const r = await call(c, 'export_code', { ...args, outDir });
         expect(r.json.code, outDir).toBe('PATH_NOT_ALLOWED');
@@ -547,7 +547,7 @@ describe('the app bridge', () => {
     expect(r.isError).toBe(true);
     expect(r.json).toMatchObject({
       code: 'APP_NOT_RUNNING',
-      hint: expect.stringContaining('open Atelier'),
+      hint: expect.stringContaining('open AFrame'),
     });
     expect((await ok(c, 'get_design')).json.name).toBe('No app');
     expect((await ok(c, 'get_selection')).json).toMatchObject({ appOnline: false, ids: [] });
@@ -778,7 +778,7 @@ describe('file reads are confined (docs/18)', () => {
     const r = await ok(c, 'import_image', { path: svg });
     expect(r.json.nodeId).toBeTruthy();
     const doc = JSON.parse(
-      await fs.readFile(path.join(homeDir, 'projects', p.id, 'project.atelier.json'), 'utf8'),
+      await fs.readFile(path.join(homeDir, 'projects', p.id, 'project.aframe.json'), 'utf8'),
     );
     expect(Object.values<string>(doc.assets)[0]).toMatch(/^data:image\/svg\+xml;base64,/);
   });

@@ -125,7 +125,7 @@ pub fn get(
 
 pub fn download(url: &str) -> Result<Picture, String> {
     if !download_allowed(url) {
-        return Err("That address is not one Atelier downloads from.".into());
+        return Err("That address is not one AFrame downloads from.".into());
     }
     let mut response = agent()
         .get(url)

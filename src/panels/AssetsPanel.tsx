@@ -5,7 +5,7 @@ import { useRef } from 'react';
 import { getCanvasApi } from '../canvas/canvas-api';
 import { annotationUi } from '../annotations/ui-state';
 import { insertAsset } from '../store/panel-commands';
-import { store, useAtelier } from '../store/store';
+import { store, useAFrame } from '../store/store';
 import { Section, Select, TextField, type Option } from '../ui/fields';
 import { importFiles } from '../ui/image-import';
 import { showToast } from '../ui/toast';
@@ -23,7 +23,7 @@ const ACCEPT = 'image/png,image/jpeg,image/gif,image/webp,image/svg+xml';
  * canvas, or mark one as a reference for the AI to match (the reference tools come in Phase 6).
  */
 export function AssetsPanel() {
-  const doc = useAtelier((s) => s.doc);
+  const doc = useAFrame((s) => s.doc);
   const input = useRef<HTMLInputElement>(null);
   const ids = Object.keys(doc.assets);
 

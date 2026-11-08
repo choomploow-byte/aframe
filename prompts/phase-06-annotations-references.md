@@ -14,13 +14,13 @@ A human can point at things and show examples; the agent sees both and responds.
 6. **References**: Assets > References UI: add (drop/paste/picker/`add_reference`), name, note, scope (style/layout/everything), delete. **Compare mode**: side-by-side and overlay with opacity slider for the selected frame vs a reference.
 7. `get_reference` returns the image + note; `list_references`; reference ids shown in the UI so users can say "follow reference 2".
 8. **`get_selection`**: selection written to `state.json` (throttled); tool returns node outlines.
-9. **"Ask AI to address N open notes"** button: if the in-app chat is configured (Phase 7) it sends the prompt; otherwise copies "in atelier, address my open annotations" to clipboard with a toast.
+9. **"Ask AI to address N open notes"** button: if the in-app chat is configured (Phase 7) it sends the prompt; otherwise copies "in aframe, address my open annotations" to clipboard with a toast.
 10. Prompts: write `prompts/design-agent-prompts.md` recipes if not present; ensure the SKILL.md and server instructions describe the annotation workflow (`get_annotations` -> fix -> screenshot -> `resolve_annotation`).
 11. Tests: annotation CRUD + persistence; follow-node behaviour; screenshot compositing positions (pixel assertions on fixture); MCP test for annotation tools.
 
 ## Acceptance
-- Drop a pin on a button with "make this pop"; in Claude Code say "in atelier, address my annotations" -> the button changes, a screenshot was taken, the annotation is resolved with a reply visible in the UI.
-- Add a reference image with note "match spacing and type, not colours"; "in atelier, follow my reference" produces a result that visibly shifts spacing/type while keeping the palette.
+- Drop a pin on a button with "make this pop"; in Claude Code say "in aframe, address my annotations" -> the button changes, a screenshot was taken, the annotation is resolved with a reply visible in the UI.
+- Add a reference image with note "match spacing and type, not colours"; "in aframe, follow my reference" produces a result that visibly shifts spacing/type while keeping the palette.
 - `get_selection` reflects the live selection within 500 ms.
 
 ## Report back with

@@ -16,25 +16,25 @@ if (SHOT_DIR) mkdirSync(SHOT_DIR, { recursive: true });
 
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 const doc = () =>
-  page.evaluate(() => JSON.parse(JSON.stringify(window.__atelier.store.getState().doc)));
+  page.evaluate(() => JSON.parse(JSON.stringify(window.__aframe.store.getState().doc)));
 const dispatch = (ops, label = 'test') =>
   page.evaluate(
     (o, l) => {
-      const r = window.__atelier.store.getState().dispatch(o, { label: l });
+      const r = window.__aframe.store.getState().dispatch(o, { label: l });
       return r.ok ? { ok: true, created: r.created ?? [], warnings: r.warnings ?? [] } : r;
     },
     ops,
     label,
   );
 const loadTemplate = async (name) => {
-  await page.evaluate((n) => window.__atelier.loadTemplate(n), name);
+  await page.evaluate((n) => window.__aframe.loadTemplate(n), name);
   await page.evaluate(() => document.fonts.ready);
   await settle(page);
   await sleep(150);
 };
 const setSelection = (ids) =>
   page
-    .evaluate((x) => window.__atelier.store.getState().setSelection(x), ids)
+    .evaluate((x) => window.__aframe.store.getState().setSelection(x), ids)
     .then(() => settle(page));
 const F = (name) => `[data-field="${name}"]`;
 const shot = async (name) => {
@@ -45,7 +45,7 @@ const shot = async (name) => {
 const capture = (params) =>
   page.evaluate(async (p) => {
     const { captureScreenshot } = await import('/src/canvas/screenshot.ts');
-    const s = window.__atelier.store.getState();
+    const s = window.__aframe.store.getState();
     const out = await captureScreenshot(s.doc, s.viewport.zoom, p);
     return out;
   }, params);
@@ -138,7 +138,7 @@ await dispatch([
 await settle(page);
 {
   const info1 = await page.evaluate(() => {
-    const nodes = window.__atelier.store.getState().doc.nodes;
+    const nodes = window.__aframe.store.getState().doc.nodes;
     const big = Object.values(nodes).find((n) => n.name === 'Missing icon');
     const el = document.querySelector(`[data-node-id="${big.id}"]`);
     return {
@@ -208,11 +208,11 @@ await settle(page);
   );
   info('Lilita One ink at 400 vs 900 on canvas (the browser may fake bold here)', ink);
   const textId = await page.evaluate(() => {
-    const d = window.__atelier.store.getState().doc;
+    const d = window.__aframe.store.getState().doc;
     const n = Object.values(d.nodes).find(
       (x) => x.type === 'text' && x.fontFamily === '$font.display',
     );
-    window.__atelier.store
+    window.__aframe.store
       .getState()
       .dispatch([{ op: 'update', id: n.id, set: { fontWeight: 900 } }], { label: 'w900' });
     return n.id;
@@ -228,7 +228,7 @@ await settle(page);
     String(cssSynth),
   );
   const textCss = await page.evaluate(() => {
-    const d = window.__atelier.store.getState().doc;
+    const d = window.__aframe.store.getState().doc;
     const label = Object.values(d.nodes).find(
       (n) => n.type === 'text' && n.fontFamily === '$font.display' && n.from,
     );
@@ -240,7 +240,7 @@ await settle(page);
 }
 
 // ---- 4. pattern fills: follow radius and clipping ---------------------------------------------------
-await page.evaluate(() => window.__atelier.loadBlank());
+await page.evaluate(() => window.__aframe.loadBlank());
 await settle(page);
 const rootId = (await doc()).rootId;
 {
@@ -634,7 +634,7 @@ await loadTemplate('game-hud');
 }
 
 // ---- 7. the panels: pattern editor, presets, icon, component ----------------------------------------------
-await page.evaluate(() => window.__atelier.loadBlank());
+await page.evaluate(() => window.__aframe.loadBlank());
 await settle(page);
 {
   const root = (await doc()).rootId;
@@ -716,7 +716,7 @@ await settle(page);
 
 // Icons tab: insert, undo is one step
 {
-  await page.evaluate(() => window.__atelier.loadBlank());
+  await page.evaluate(() => window.__aframe.loadBlank());
   await settle(page);
   await page.evaluate(() => {
     const tab = [...document.querySelectorAll('[role="tab"]')].find(
@@ -751,7 +751,7 @@ await settle(page);
   );
   check(
     'the new icon is selected',
-    (await page.evaluate(() => window.__atelier.store.getState().selection))[0] === placed.id,
+    (await page.evaluate(() => window.__aframe.store.getState().selection))[0] === placed.id,
   );
   // the properties panel shows the icon section
   check('the Icon section is shown for an icon', (await page.$(F('icon'))) !== null);
@@ -762,13 +762,13 @@ await settle(page);
     .catch(() => undefined);
   await settle(page);
   await page.keyboard.press('Escape');
-  await page.evaluate(() => window.__atelier.store.getState().undo());
+  await page.evaluate(() => window.__aframe.store.getState().undo());
   await settle(page);
 }
 
 // ---- 8. editing fixes through the same dispatch the UI uses -------------------------------------------------
 {
-  await page.evaluate(() => window.__atelier.loadBlank());
+  await page.evaluate(() => window.__aframe.loadBlank());
   await settle(page);
   const root = (await doc()).rootId;
   const made = await dispatch([
@@ -787,7 +787,7 @@ await settle(page);
   ]);
   const item = await idByName(page, 'Item');
   const res = await page.evaluate((id) => {
-    const r = window.__atelier.store
+    const r = window.__aframe.store
       .getState()
       .dispatch([{ op: 'update', id, set: { y: 40 } }], { label: 'y on layout child' });
     return { ok: r.ok, warnings: r.warnings?.map((w) => w.code) ?? null };
@@ -797,7 +797,7 @@ await settle(page);
   const bare = item.slice(2);
   const viaBare = await page.evaluate(
     (id) =>
-      window.__atelier.store
+      window.__aframe.store
         .getState()
         .dispatch([{ op: 'update', id, set: { opacity: 0.5 } }], { label: 'bare id' }).ok,
     bare,

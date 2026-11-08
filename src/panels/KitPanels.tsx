@@ -2,7 +2,7 @@ import { instancesOf } from '@core/components';
 import { Component as ComponentGlyph } from 'lucide-react';
 import { getCanvasApi } from '../canvas/canvas-api';
 import { insertIcon, insertInstance } from '../store/toolkit-commands';
-import { store, useAtelier } from '../store/store';
+import { store, useAFrame } from '../store/store';
 import { showToast } from '../ui/toast';
 import { IconGrid } from './toolkit-sections';
 
@@ -26,7 +26,7 @@ export function IconsPanel() {
 
 /** The Components tab: the masters in this project, with one-click instances. */
 export function ComponentsPanel() {
-  const doc = useAtelier((s) => s.doc);
+  const doc = useAFrame((s) => s.doc);
   const masters = Object.values(doc.nodes)
     .filter((n) => n.component !== undefined)
     .sort((a, b) => a.name.localeCompare(b.name));

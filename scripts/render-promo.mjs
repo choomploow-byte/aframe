@@ -20,8 +20,8 @@ for (const m of data.matchAll(
 const browser = await puppeteer.launch({ executablePath: findChrome(), headless: true });
 try {
   for (const [format, w, h, out] of [
-    ['landscape', 1200, 630, 'atelier-promo-landscape.png'],
-    ['square', 1080, 1080, 'atelier-promo-square.png'],
+    ['landscape', 1200, 630, 'aframe-promo-landscape.png'],
+    ['square', 1080, 1080, 'aframe-promo-square.png'],
   ]) {
     const page = await browser.newPage();
     await page.setViewport({ width: w, height: h, deviceScaleFactor: 2 });

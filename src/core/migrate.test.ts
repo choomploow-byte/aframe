@@ -19,7 +19,7 @@ describe('migrate', () => {
   it('refuses newer schemas with an update hint', () => {
     expect(migrate({ ...raw(), schema: 2 })).toMatchObject({
       ok: false,
-      error: { code: 'SCHEMA_NEWER', hint: 'Update Atelier.' },
+      error: { code: 'SCHEMA_NEWER', hint: 'Update AFrame.' },
     });
   });
 

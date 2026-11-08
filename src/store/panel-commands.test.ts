@@ -14,7 +14,7 @@ import {
   updatePropsEach,
   type ImageSource,
 } from './panel-commands';
-import { createAtelierStore } from './store';
+import { createAFrameStore } from './store';
 
 function png(w: number, h: number): Uint8Array {
   const b = new Uint8Array(33);
@@ -48,7 +48,7 @@ function measureFrom(getDoc: () => Doc) {
 
 function setup(specs?: TestSpec[]) {
   let t = 0;
-  const store = createAtelierStore({
+  const store = createAFrameStore({
     doc: deepFreeze(specs ? buildDoc(specs) : sampleDoc()),
     now: () => t,
     isoNow: () => '2026-06-06T00:00:00.000Z',

@@ -4,14 +4,14 @@ import { isEffectivelyLocked } from '@core/tree';
 import type { Doc, Node, NodeSpec, Op } from '@core/types';
 import type { StoreApi } from 'zustand/vanilla';
 import { round2, unionRects, type Point, type Rect } from '../canvas/geometry';
-import type { AtelierState } from './store';
+import type { AFrameState } from './store';
 
 /**
  * Editing commands: everything a shortcut, menu or toolbar can do to the document. Each one
  * builds core ops and dispatches them as ONE undoable step. They know nothing about the DOM:
  * anything that needs real layout (hug/fill sizes) asks the injected `measure`.
  */
-export type Store = StoreApi<AtelierState>;
+export type Store = StoreApi<AFrameState>;
 
 /** World-space rect of a rendered node (the page maps to the origin), or null if not rendered. */
 export type MeasureFn = (id: string) => Rect | null;
@@ -43,7 +43,7 @@ function editableTops(doc: Doc, ids: readonly string[]): string[] {
   );
 }
 
-function state(store: Store): AtelierState {
+function state(store: Store): AFrameState {
   return store.getState();
 }
 

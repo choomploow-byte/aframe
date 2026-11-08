@@ -25,8 +25,8 @@ const SECRET_DIRS = new Set([
 ]);
 
 export interface ReaderOptions {
-  /** The Atelier home: it contains dot-folders of its own (screenshots live there) and is allowed. */
-  atelierHome: string;
+  /** The AFrame home: it contains dot-folders of its own (screenshots live there) and is allowed. */
+  aframeHome: string;
 }
 
 function refuse(message: string, hint?: string): never {
@@ -57,7 +57,7 @@ export async function checkImagePath(input: string, options: ReaderOptions): Pro
 
   let home: string | null = null;
   try {
-    home = await fs.realpath(options.atelierHome);
+    home = await fs.realpath(options.aframeHome);
   } catch {
     /* no home yet */
   }

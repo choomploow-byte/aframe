@@ -13,7 +13,7 @@ A clean repo with tooling, conventions and CI so every later phase has rails.
 5. Vitest configured; one trivial passing test.
 6. Copy `CLAUDE.md`, `AGENTS.md`, `LICENSE`, `CONTRIBUTING.md` to the root; create `README.md` stub (pitch + dev instructions), `CHANGELOG.md`, `docs/` (copy from kit).
 7. GitHub: `.github/workflows/ci.yml` from `templates/github/ci.yml`, issue and PR templates.
-8. Initialise git, `.gitignore` (node_modules, dist, target, .atelier-dev), first commit.
+8. Initialise git, `.gitignore` (node_modules, dist, target, .aframe-dev), first commit.
 9. `scripts/` folder with placeholders: `build-mcp.mjs`, `test-mcp.mjs`.
 
 ## Acceptance

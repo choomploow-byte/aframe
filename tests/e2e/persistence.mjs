@@ -3,7 +3,7 @@
 //   npm run test:e2e:persist
 //
 // Starts the dev server (or attaches to a running desktop window with CDP_URL, which must have been
-// started with ATELIER_HOME pointing at a throwaway folder) and drives it with real mouse and
+// started with AFRAME_HOME pointing at a throwaway folder) and drives it with real mouse and
 // keyboard input. Files are inspected and changed directly on disk, the way an agent or a script
 // would, using the same Node file module the MCP server will use.
 import { mkdirSync } from 'node:fs';
@@ -15,7 +15,7 @@ import { idByName, press, reporter, settle, start } from './harness.mjs';
 const t = await start({ width: 1360, height: 900, persist: true });
 const { page } = t;
 const HOME = t.home;
-if (!HOME) throw new Error('No home directory: set ATELIER_HOME for the desktop window.');
+if (!HOME) throw new Error('No home directory: set AFRAME_HOME for the desktop window.');
 const disk = new HomeFs(HOME);
 // A failing file call is a bug worth seeing in full, not just as "Bad Request".
 page.on('response', (res) => {
@@ -43,7 +43,7 @@ async function until(fn, { timeout = 3000, every = 10 } = {}) {
 }
 const docState = () =>
   page.evaluate(() => {
-    const s = window.__atelier.store.getState();
+    const s = window.__aframe.store.getState();
     return {
       id: s.doc.id,
       name: s.doc.name,
@@ -56,7 +56,7 @@ const docState = () =>
   });
 const projectIds = async () =>
   (await disk.list('projects')).filter((e) => e.isDir).map((e) => e.name);
-const projectPath = (id) => `projects/${id}/project.atelier.json`;
+const projectPath = (id) => `projects/${id}/project.aframe.json`;
 const readProject = async (id) => {
   const text = await disk.read(projectPath(id));
   try {
@@ -134,11 +134,11 @@ await group('first run', async () => {
     'logs',
     'agents',
   ]) {
-    check(`~/.atelier/${f} exists`, folders.includes(f));
+    check(`~/.aframe/${f} exists`, folders.includes(f));
   }
   check(
     'the MCP placeholder is in place for Phase 5',
-    (await disk.read('mcp/atelier-mcp.mjs'))?.includes('atelier-generated') === true,
+    (await disk.read('mcp/aframe-mcp.mjs'))?.includes('aframe-generated') === true,
   );
 
   const st = await until(
@@ -169,7 +169,7 @@ await group('first run', async () => {
 await group('the sample becomes a real project', async () => {
   await page.click('[data-action="welcome-sample"]');
   await page.waitForFunction(
-    (old) => window.__atelier.store.getState().doc.id !== old,
+    (old) => window.__aframe.store.getState().doc.id !== old,
     {},
     projectA,
   );
@@ -192,7 +192,7 @@ await group('the sample becomes a real project', async () => {
     s.name.startsWith('Northwind') &&
       (await until(async () => (await saveState()) === 'saved')) !== null,
   );
-  await page.evaluate(() => window.__atelier.canvas().fitAll());
+  await page.evaluate(() => window.__aframe.canvas().fitAll());
   await shot('sample-saved');
 });
 
@@ -202,11 +202,11 @@ await group('editing in the app updates the file', async () => {
   // Five renames, measured one by one: one slow disk moment must not decide the result.
   const times = [];
   const names = [
-    'Atelier test project',
+    'AFrame test project',
     'Second name',
     'Third name',
     'Fourth name',
-    'Atelier test project',
+    'AFrame test project',
   ];
   for (const name of names) {
     await selectField('[data-field="project-name"]');
@@ -242,7 +242,7 @@ await group('editing in the app updates the file', async () => {
 
   // A canvas edit through real input: nudge the selected node with the arrow keys.
   const board = await idByName(page, 'Pricing - Needs Work'); // an artboard: free-positioned
-  await page.evaluate((id) => window.__atelier.store.getState().setSelection([id]), board);
+  await page.evaluate((id) => window.__aframe.store.getState().setSelection([id]), board);
   await page.focus('[data-testid="canvas"]');
   const x0 = (await readProject(projectA)).nodes[board].x;
   check('(the artboard has a position to change)', typeof x0 === 'number', String(x0));
@@ -289,7 +289,7 @@ await group('a script changes the JSON: the screen follows', async () => {
   check('as one undo step', s.past.at(-1) === 'External change', s.past.join('|'));
   check(
     'and a toast says what happened',
-    (await toasts()).some((x) => /changed outside Atelier/.test(x)),
+    (await toasts()).some((x) => /changed outside AFrame/.test(x)),
     (await toasts()).join('|'),
   );
   check('it was not written back (nothing to save)', (await saveState()) === 'saved');
@@ -307,15 +307,15 @@ await group('a script changes the JSON: the screen follows', async () => {
 await group('an agent edits while the user edits something else', async () => {
   const mine = await idByName(page, 'Pricing - Needs Work'); // free-positioned, so it can be nudged
   const theirs = await idByName(page, 'Headline');
-  await page.evaluate((id) => window.__atelier.store.getState().setSelection([id]), mine);
+  await page.evaluate((id) => window.__aframe.store.getState().setSelection([id]), mine);
   await page.focus('[data-testid="canvas"]');
-  const y0 = await page.evaluate((id) => window.__atelier.store.getState().doc.nodes[id].y, mine);
+  const y0 = await page.evaluate((id) => window.__aframe.store.getState().doc.nodes[id].y, mine);
   await press(page, 'Shift+ArrowDown'); // unsaved local edit on one node
   await agentSetProps(projectA, theirs, { text: 'Rewritten by the AI' }); // an agent edits another
   const ms = await until(
     () =>
       page.evaluate(
-        (id) => window.__atelier.store.getState().doc.nodes[id].text === 'Rewritten by the AI',
+        (id) => window.__aframe.store.getState().doc.nodes[id].text === 'Rewritten by the AI',
         theirs,
       ),
     { timeout: 3000 },
@@ -323,7 +323,7 @@ await group('an agent edits while the user edits something else', async () => {
   check('the agent’s change appears on screen', ms !== null);
   await sleep(500);
   const saved = await readProject(projectA);
-  const yPos = await page.evaluate((id) => window.__atelier.store.getState().doc.nodes[id].y, mine);
+  const yPos = await page.evaluate((id) => window.__aframe.store.getState().doc.nodes[id].y, mine);
   check(
     'and both edits are in the file',
     saved.nodes[theirs].text === 'Rewritten by the AI' &&
@@ -345,7 +345,7 @@ await group('an agent edits while the user edits something else', async () => {
 await group('what is open is published for agents', async () => {
   const id = await idByName(page, 'Hero');
   await page.click(`[data-layer-id="${id}"]`).catch(async () => {
-    await page.evaluate((n) => window.__atelier.store.getState().setSelection([n]), id);
+    await page.evaluate((n) => window.__aframe.store.getState().setSelection([n]), id);
   });
   const ms = await until(
     async () => {
@@ -426,15 +426,15 @@ await group('reload: everything comes back', async () => {
   await until(async () => (await saveState()) === 'saved');
   const before = await docState();
   await page.reload({ waitUntil: 'load' });
-  await page.waitForFunction(() => window.__atelier?.sync?.()?.attached === true, {
+  await page.waitForFunction(() => window.__aframe?.sync?.()?.attached === true, {
     timeout: 30000,
   });
   const after = await docState();
   check('the same project opens again', after.id === before.id, `${after.id} vs ${before.id}`);
-  check('with the name and the agent’s edit', after.name === 'Atelier test project');
+  check('with the name and the agent’s edit', after.name === 'AFrame test project');
   check(
     'and the project name is in the top bar',
-    (await page.$eval('[data-field="project-name"]', (e) => e.value)) === 'Atelier test project',
+    (await page.$eval('[data-field="project-name"]', (e) => e.value)) === 'AFrame test project',
   );
   check('nothing is saved just from opening it', (await readProject(projectA)).rev === after.rev);
 });
@@ -447,13 +447,13 @@ await group('the Projects dialog', async () => {
   check(
     'the open project is listed with its name',
     (await page.$$eval('.project__name', (e) => e.map((x) => x.textContent))).includes(
-      'Atelier test project',
+      'AFrame test project',
     ),
   );
   await shot('projects-dialog');
   await page.click('[data-action="new-project"]');
   await page.waitForFunction(
-    (old) => window.__atelier.store.getState().doc.id !== old,
+    (old) => window.__aframe.store.getState().doc.id !== old,
     {},
     projectA,
   );
@@ -465,7 +465,7 @@ await group('the Projects dialog', async () => {
   );
   check(
     'the first project was saved before leaving it',
-    (await readProject(projectA)).name === 'Atelier test project',
+    (await readProject(projectA)).name === 'AFrame test project',
   );
   check('the dialog closed', !(await page.$('.dialog')));
   check(
@@ -479,7 +479,7 @@ await group('the Projects dialog', async () => {
   await page.click('[data-testid="open-projects"]');
   await page.waitForSelector('[data-testid="project-list"]');
   await page.click(`[data-project-id="${projectA}"] .project__open`);
-  await page.waitForFunction((id) => window.__atelier.store.getState().doc.id === id, {}, projectA);
+  await page.waitForFunction((id) => window.__aframe.store.getState().doc.id === id, {}, projectA);
   check('choosing a project opens it', (await docState()).id === projectA);
 
   await page.click('[data-testid="open-projects"]');
@@ -537,12 +537,12 @@ await group('a new project from a template, and the toolkit survives save and re
     /slot grid/.test(await page.$eval('[data-testid="template-picker"]', (e) => e.textContent)),
   );
   await page.click('[data-action="new-project"]');
-  await page.waitForFunction((old) => window.__atelier.store.getState().doc.id !== old, {}, before);
+  await page.waitForFunction((old) => window.__aframe.store.getState().doc.id !== old, {}, before);
   await settle(page);
   const made = await docState();
   check('the new project is the template', made.name === 'Game inventory', made.name);
   const live = await page.evaluate(() => {
-    const d = window.__atelier.store.getState().doc;
+    const d = window.__aframe.store.getState().doc;
     const nodes = Object.values(d.nodes);
     return {
       masters: nodes.filter((n) => n.component).length,
@@ -575,12 +575,12 @@ await group('a new project from a template, and the toolkit survives save and re
     `${saved.length} nodes`,
   );
   await page.reload({ waitUntil: 'load' });
-  await page.waitForFunction(() => window.__atelier?.sync?.()?.attached === true, {
+  await page.waitForFunction(() => window.__aframe?.sync?.()?.attached === true, {
     timeout: 30000,
   });
   await settle(page);
   const again = await page.evaluate(() => {
-    const d = window.__atelier.store.getState().doc;
+    const d = window.__aframe.store.getState().doc;
     return { id: d.id, masters: Object.values(d.nodes).filter((n) => n.component).length };
   });
   check(
@@ -591,9 +591,9 @@ await group('a new project from a template, and the toolkit survives save and re
   // one undo step for an icon insert, and it persists too
   await shot('template-project');
   // leave things as the next group expects: the previous project open, the template one gone
-  await page.evaluate((id) => window.__atelier.projects.openById(id), before);
-  await page.waitForFunction((id) => window.__atelier.store.getState().doc.id === id, {}, before);
-  await page.evaluate((id) => window.__atelier.projects.removeProject(id), made.id);
+  await page.evaluate((id) => window.__aframe.projects.openById(id), before);
+  await page.waitForFunction((id) => window.__aframe.store.getState().doc.id === id, {}, before);
+  await page.evaluate((id) => window.__aframe.projects.removeProject(id), made.id);
   await until(async () => !(await projectIds()).includes(made.id));
   await settle(page);
 });
@@ -629,9 +629,9 @@ await group('damaged files', async () => {
 
   // Damaged between runs: the dialog offers the previous version.
   await page.evaluate(() =>
-    window.__atelier.store
+    window.__aframe.store
       .getState()
-      .dispatch([{ op: 'update', id: window.__atelier.store.getState().doc.rootId, set: {} }], {
+      .dispatch([{ op: 'update', id: window.__aframe.store.getState().doc.rootId, set: {} }], {
         label: 'noop',
       }),
   );
@@ -643,7 +643,7 @@ await group('damaged files', async () => {
   await page.keyboard.type('Last save');
   await page.keyboard.press('Enter');
   await until(async () => (await readProject(projectA))?.name === 'Last save');
-  await page.evaluate(() => window.__atelier.sync().detach());
+  await page.evaluate(() => window.__aframe.sync().detach());
   await fs.writeFile(file, '{"schema":1,"re');
   await page.reload({ waitUntil: 'load' });
   await page.waitForSelector('.dialog');
@@ -661,7 +661,7 @@ await group('damaged files', async () => {
   await shot('recover-dialog');
   await page.click('[data-action="restore-backup"]');
   await page.waitForFunction(
-    (id) => window.__atelier.store.getState().doc.id === id,
+    (id) => window.__aframe.store.getState().doc.id === id,
     { timeout: 5000 },
     projectA,
   );

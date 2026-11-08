@@ -20,7 +20,7 @@ import { createStore, type StoreApi } from 'zustand/vanilla';
 import type { HomeApi } from '../platform/fs';
 import { FsError, type FileStat } from '../platform/fs-types';
 import { parseProjectText, projectFile, revOf, type Opened } from '../projects/projects';
-import type { AtelierState } from '../store/store';
+import type { AFrameState } from '../store/store';
 
 export type SaveState = 'detached' | 'saved' | 'dirty' | 'saving' | 'error';
 
@@ -66,7 +66,7 @@ export interface SyncOptions {
 
 export interface SyncDeps {
   fs: HomeApi;
-  store: StoreApi<AtelierState>;
+  store: StoreApi<AFrameState>;
   notify?: (notice: SyncNotice) => void;
   options?: SyncOptions;
 }
@@ -82,7 +82,7 @@ export class SyncService {
   }));
 
   private readonly fs: HomeApi;
-  private readonly store: StoreApi<AtelierState>;
+  private readonly store: StoreApi<AFrameState>;
   private readonly notify: (n: SyncNotice) => void;
   private readonly opts: Required<SyncOptions>;
 

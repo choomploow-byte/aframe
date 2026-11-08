@@ -74,12 +74,12 @@ describe('screenshot', () => {
     const { ctx } = memory({
       screenshot: () =>
         Promise.reject(
-          new CoreError('APP_NOT_RUNNING', 'Atelier is not running.', 'Open Atelier and retry.'),
+          new CoreError('APP_NOT_RUNNING', 'AFrame is not running.', 'Open AFrame and retry.'),
         ),
     });
     expect(await fail(ctx, 'screenshot', {})).toMatchObject({
       code: 'APP_NOT_RUNNING',
-      hint: 'Open Atelier and retry.',
+      hint: 'Open AFrame and retry.',
     });
   });
 

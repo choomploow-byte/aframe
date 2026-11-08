@@ -36,7 +36,7 @@ const send = async (file: { name: string; content: string }): Promise<void> => {
 };
 
 beforeEach(async () => {
-  dir = await fs.mkdtemp(path.join(os.tmpdir(), 'atelier-bridge-'));
+  dir = await fs.mkdtemp(path.join(os.tmpdir(), 'aframe-bridge-'));
   fsx = createTestAdapter(path.join(dir, 'home'));
   await fsx.home_.ensure();
   order = [];

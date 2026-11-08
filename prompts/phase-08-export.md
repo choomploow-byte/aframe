@@ -11,7 +11,7 @@ Designs land in the user's repo as clean, accessible, believable code.
 3. **Names & classes**: kebab-case from node names, de-duplicated, stable across re-exports (deterministic ordering, minimal diffs).
 4. **Tokens**: emit CSS variables (`:root{--color-primary:...}`) and reference them; Tailwind exporter emits a `tailwind.config` snippet and utilities with arbitrary-value fallbacks; never guess a mapping you can't prove.
 5. **Assets**: write images to `assets/` with sensible filenames; no giant data URLs in code.
-6. **`export_code` tool**: confined writes (docs/18), conflict reporting, `overwrite` flag, returns file list + preview; generates `README-atelier.md` in the output.
+6. **`export_code` tool**: confined writes (docs/18), conflict reporting, `overwrite` flag, returns file list + preview; generates `README-aframe.md` in the output.
 7. **UI**: Export dialog (format picker, target folder picker, preview of main file with copy), "Copy as code" and "Copy as image" in the context menu, PNG/SVG export at 1x/2x/3x, transparent bg option.
 8. **Round-trip test**: for each fixture frame: export HTML -> render in headless Chrome at the frame's size -> screenshot -> pixel diff vs canvas screenshot (pixelmatch); fail > 2%. Also compile-check React output inside a minimal Vite template in CI.
 9. Docs: `docs/export-guide.md` explaining output structure and how to hand-edit.

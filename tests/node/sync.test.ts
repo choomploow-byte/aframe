@@ -8,7 +8,7 @@ import { FsError } from '../../src/platform/fs-types';
 import type { Doc, Op } from '../../src/core/types';
 import { sampleDoc } from '../../src/core/testing';
 import { newProjectFrom, openProject, projectFile, revOf } from '../../src/projects/projects';
-import { createAtelierStore } from '../../src/store/store';
+import { createAFrameStore } from '../../src/store/store';
 import { SyncService, type SyncNotice } from '../../src/sync/sync';
 import { createTestAdapter, type TestAdapter } from './helpers/node-adapter';
 
@@ -18,7 +18,7 @@ const set = (id: string, props: Record<string, unknown>): Op => ({ op: 'update',
 let dir: string;
 let fsx: TestAdapter;
 let id: string;
-let store: ReturnType<typeof createAtelierStore>;
+let store: ReturnType<typeof createAFrameStore>;
 let sync: SyncService;
 let notices: SyncNotice[];
 
@@ -51,7 +51,7 @@ async function agentEdit(ops: Op[]): Promise<void> {
 }
 
 beforeEach(async () => {
-  dir = await fs.mkdtemp(path.join(os.tmpdir(), 'atelier-sync-'));
+  dir = await fs.mkdtemp(path.join(os.tmpdir(), 'aframe-sync-'));
   fsx = createTestAdapter(path.join(dir, 'home'));
   await fsx.home_.ensure();
   const created = await newProjectFrom(fsx, sampleDoc(), 'Synced');
@@ -59,7 +59,7 @@ beforeEach(async () => {
   const opened = await openProject(fsx, id);
   if (!opened.ok) throw new Error('should open');
   let t = 0;
-  store = createAtelierStore({ now: () => (t += 1000) });
+  store = createAFrameStore({ now: () => (t += 1000) });
   notices = [];
   sync = new SyncService({
     fs: fsx,
@@ -174,7 +174,7 @@ describe('saving', () => {
   });
 
   it('a lock held by another program is reported kindly and retried', async () => {
-    fsx.failNextWrites(1, new FsError('LOCKED', 'another Atelier process is writing this project'));
+    fsx.failNextWrites(1, new FsError('LOCKED', 'another AFrame process is writing this project'));
     edit([set('n_other', { x: 651 })]);
     await sync.flush();
     expect(sync.status.getState().message).toContain('Another program');

@@ -56,13 +56,13 @@ const tab = (label) =>
 for (const scheme of ['light', 'dark']) {
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: scheme }]);
   await page.evaluate((s) => {
-    localStorage.setItem('atelier.theme', s);
+    localStorage.setItem('aframe.theme', s);
   }, scheme);
-  await page.evaluate(() => window.__atelier.loadBlank());
+  await page.evaluate(() => window.__aframe.loadBlank());
   await settle(page);
   await audit(`${scheme}: welcome screen`);
 
-  await page.evaluate(() => window.__atelier.loadSample());
+  await page.evaluate(() => window.__aframe.loadSample());
   await page.evaluate(() => document.fonts.ready);
   await settle(page);
   await audit(`${scheme}: design tab`);
@@ -112,9 +112,9 @@ for (const scheme of ['light', 'dark']) {
   }
   // Export and settings, through their own entry points.
   await page.evaluate(
-    (id) => window.__atelier.store.getState().setSelection([id]),
+    (id) => window.__aframe.store.getState().setSelection([id]),
     await page.evaluate(() => {
-      const s = window.__atelier.store.getState();
+      const s = window.__aframe.store.getState();
       return s.doc.nodes[s.doc.rootId].children[0];
     }),
   );
@@ -148,7 +148,7 @@ await page.emulateMediaFeatures([
   { name: 'prefers-color-scheme', value: 'light' },
   { name: 'prefers-reduced-motion', value: 'reduce' },
 ]);
-await page.evaluate(() => window.__atelier.loadSample());
+await page.evaluate(() => window.__aframe.loadSample());
 await settle(page);
 await page.keyboard.press('Tab');
 const first = await page.evaluate(() => document.activeElement?.tagName);

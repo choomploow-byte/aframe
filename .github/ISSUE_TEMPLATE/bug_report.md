@@ -12,9 +12,9 @@ labels: bug
 1.
 2.
 
-**How were you using Atelier?** (app only / Claude Code / Codex / Cursor / in-app chat)
+**How were you using AFrame?** (app only / Claude Code / Codex / Cursor / in-app chat)
 
-**Diagnostics** (Help → Copy diagnostics, or run `node ~/.atelier/mcp/atelier-mcp.mjs doctor`)
+**Diagnostics** (Help → Copy diagnostics, or run `node ~/.aframe/mcp/aframe-mcp.mjs doctor`)
 ```
 paste here
 ```

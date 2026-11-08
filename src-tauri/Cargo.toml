@@ -1,12 +1,12 @@
 [package]
-name = "atelier"
+name = "aframe"
 version = "0.2.0"
 description = "Open-source AI design studio"
 edition = "2021"
 license = "MIT"
 
 [lib]
-name = "atelier_lib"
+name = "aframe_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

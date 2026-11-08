@@ -8,7 +8,7 @@
 | 4 | **Webview inconsistencies** (WebKit vs WebView2) break screenshots/export | Medium | Medium | Cross-OS CI fixtures; fallback Chromium sidecar for screenshots |
 | 5 | **Code signing/notarisation friction** blocks non-technical installs | High | Medium | Budget time/money early (Apple dev account, Windows cert or Azure Artifact Signing, formerly Trusted Signing; EV certs no longer give instant SmartScreen reputation); document workarounds for alpha |
 | 6 | **MCP host differences** (config paths, flags, tool-name display, image support in tool results) | Medium | Medium | `doctor`, tested on Claude Code + Codex + Cursor, fallbacks that print manual steps; re-verify with each host release |
-| 7 | **Image results in MCP not rendered by some hosts** | Medium | High | Fallback: save PNG to `~/.atelier/exports/` and return the path + textual description; `screenshot` supports `mode: 'inline'|'file'` |
+| 7 | **Image results in MCP not rendered by some hosts** | Medium | High | Fallback: save PNG to `~/.aframe/exports/` and return the path + textual description; `screenshot` supports `mode: 'inline'|'file'` |
 | 8 | **Concurrent edits** (user + agent) cause lost updates | Medium | Medium | Dirty-node merge, atomic batches, undo-per-AI-turn, optional lock later |
 | 9 | **Prompt injection** via annotations/imported text/screenshots | Medium | Medium | Treat as data, no shell/network tools, confined file writes, user-confirmed outDir |
 | 10 | **Exporter fidelity/ugly code** disappoints devs | Medium | High | Semantic tags, tokens -> CSS vars, round-trip pixel tests, README in output, iterate with real repos |

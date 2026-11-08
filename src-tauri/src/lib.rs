@@ -1,6 +1,6 @@
-//! Atelier desktop shell.
+//! AFrame desktop shell.
 //!
-//! The webview gets a tiny, confined file API (every path is relative to `~/.atelier`, see
+//! The webview gets a tiny, confined file API (every path is relative to `~/.aframe`, see
 //! `home.rs`), a way to tell the native side what is open, and events for agent requests. There is
 //! no general file-system plugin and no shell: a compromised page can reach exactly these commands.
 
@@ -12,6 +12,7 @@ mod figma;
 mod fsops;
 mod home;
 mod layout;
+mod legacy;
 mod lock;
 
 use appstate::SharedState;
@@ -26,10 +27,10 @@ use std::time::Duration;
 use tauri::{Emitter, Manager, State, WindowEvent};
 
 /// The MCP server this app carries (see build.rs); installed into the home on launch when newer.
-const BUNDLED_MCP: &str = include_str!(concat!(env!("OUT_DIR"), "/atelier-mcp.mjs"));
+const BUNDLED_MCP: &str = include_str!(concat!(env!("OUT_DIR"), "/aframe-mcp.mjs"));
 
-const REQUEST_EVENT: &str = "atelier://request";
-const CLOSE_EVENT: &str = "atelier://close-requested";
+const REQUEST_EVENT: &str = "aframe://request";
+const CLOSE_EVENT: &str = "aframe://close-requested";
 /// If the page does not confirm it has saved within this time, quit anyway.
 const CLOSE_GRACE: Duration = Duration::from_secs(4);
 
@@ -43,7 +44,7 @@ struct RequestEvent {
 }
 
 #[tauri::command]
-async fn atelier_home(home: State<'_, Home>) -> Result<String, String> {
+async fn aframe_home(home: State<'_, Home>) -> Result<String, String> {
     home.ensure()?;
     Ok(home.root().to_string_lossy().into_owned())
 }
@@ -217,7 +218,7 @@ async fn app_quit(app: tauri::AppHandle) -> Result<(), String> {
 
 fn spawn_request_watcher(app: tauri::AppHandle, home: Home) {
     std::thread::Builder::new()
-        .name("atelier-requests".into())
+        .name("aframe-requests".into())
         .spawn(move || {
             let mut sweeps = 0u32;
             loop {
@@ -287,7 +288,7 @@ pub fn run() {
             }
         })
         .invoke_handler(tauri::generate_handler![
-            atelier_home,
+            aframe_home,
             fs_read,
             fs_read_head,
             fs_write,
@@ -309,5 +310,5 @@ pub fn run() {
             figma_download
         ])
         .run(tauri::generate_context!())
-        .expect("error while running Atelier");
+        .expect("error while running AFrame");
 }

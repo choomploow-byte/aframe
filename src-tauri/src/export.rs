@@ -323,7 +323,7 @@ mod tests {
     impl Dir {
         fn new() -> Dir {
             let p = std::env::temp_dir().join(format!(
-                "atelier-export-{}-{}",
+                "aframe-export-{}-{}",
                 std::process::id(),
                 N.fetch_add(1, Ordering::SeqCst)
             ));

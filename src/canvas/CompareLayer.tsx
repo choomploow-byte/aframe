@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import { useLayoutEffect, useState } from 'react';
 import { annotationUi, useAnnotationUi } from '../annotations/ui-state';
-import { useAtelier } from '../store/store';
+import { useAFrame } from '../store/store';
 import { Segmented } from '../ui/fields';
 import type { Rect } from './geometry';
 import type { Measurer } from './measure';
@@ -15,9 +15,9 @@ const DATA_IMAGE = /^data:image\/(png|jpeg|gif|webp|svg\+xml);/;
  */
 export function CompareLayer({ measurer }: { measurer: Measurer }) {
   const compare = useAnnotationUi((s) => s.compare);
-  const doc = useAtelier((s) => s.doc);
-  const selection = useAtelier((s) => s.selection);
-  const viewport = useAtelier((s) => s.viewport);
+  const doc = useAFrame((s) => s.doc);
+  const selection = useAFrame((s) => s.selection);
+  const viewport = useAFrame((s) => s.viewport);
   const [target, setTarget] = useState<Rect | null>(null);
 
   const reference = compare ? doc.references.find((r) => r.id === compare.referenceId) : undefined;

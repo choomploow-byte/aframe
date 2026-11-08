@@ -5,7 +5,7 @@ description: Load for game interfaces and any chunky, glossy, illustrated UI: HU
 
 # Game UI
 
-Game UI is read at a glance, under motion, on top of busy art. It wants **big shapes, thick outlines, bold colour, one clear focal point per screen, and every control showing it can be pressed.** Atelier has native tools for each of these; use them instead of faking them with stacks of rectangles.
+Game UI is read at a glance, under motion, on top of busy art. It wants **big shapes, thick outlines, bold colour, one clear focal point per screen, and every control showing it can be pressed.** AFrame has native tools for each of these; use them instead of faking them with stacks of rectangles.
 
 ## 1. Set the system first
 Tokens before nodes. A game palette is a dark ground, a lighter panel, one hot accent for actions, and a few semantic colours.

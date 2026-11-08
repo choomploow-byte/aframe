@@ -13,7 +13,14 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 
 // History and the tool's own test keep the old name on purpose.
-const SKIP_FILES = new Set(['CHANGELOG.md', 'scripts/rename.mjs', 'tests/node/rename.test.ts']);
+const SKIP_FILES = new Set([
+  'CHANGELOG.md',
+  'scripts/rename.mjs',
+  'tests/node/rename.test.ts',
+  'mcp/legacy.ts',
+  'src-tauri/src/legacy.rs',
+  'tests/mcp/legacy.test.ts',
+]);
 const BINARY = /\.(png|jpe?g|gif|webp|ico|icns|woff2?|ttf|otf|pdf|zip|gz|mp4|webm)$/i;
 const REPO_URLS = [
   /github\.com\/choomploow-byte\/atelier/g,

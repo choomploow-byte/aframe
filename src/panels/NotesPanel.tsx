@@ -3,7 +3,7 @@ import type { Annotation } from '@core/types';
 import { Check, MessageSquare, RotateCcw, Sparkles, Trash2 } from 'lucide-react';
 import { askAiToAddressNotes, focusAnnotation } from '../annotations/actions';
 import { useAnnotationUi, annotationUi, type NotesFilter } from '../annotations/ui-state';
-import { store, useAtelier } from '../store/store';
+import { store, useAFrame } from '../store/store';
 import { Segmented } from '../ui/fields';
 import { showToast } from '../ui/toast';
 
@@ -23,7 +23,7 @@ function change(
 
 /** The Notes tab: every pin in the project, with its status, who wrote it and the AI's reply. */
 export function NotesPanel() {
-  const doc = useAtelier((s) => s.doc);
+  const doc = useAFrame((s) => s.doc);
   const filter = useAnnotationUi((s) => s.filter);
   const focusId = useAnnotationUi((s) => s.focusId);
   const numbered = placeAnnotations(doc.annotations, () => null);

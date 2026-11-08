@@ -1,5 +1,5 @@
 /**
- * The person's own skills: `*.md` files in `~/.atelier/skills/` (docs/08). Read fresh on every call, so
+ * The person's own skills: `*.md` files in `~/.aframe/skills/` (docs/08). Read fresh on every call, so
  * adding a file needs no restart. Only ordinary markdown files of a sensible size are read; links,
  * directories and anything that is not a valid skill are ignored, never an error.
  */
@@ -14,8 +14,8 @@ import {
   type Skill,
 } from '../src/core/skills';
 
-export function readUserSkills(atelierHome: string): Skill[] {
-  const dir = path.join(atelierHome, 'skills');
+export function readUserSkills(aframeHome: string): Skill[] {
+  const dir = path.join(aframeHome, 'skills');
   let names: string[];
   try {
     names = fs.readdirSync(dir);
@@ -40,6 +40,6 @@ export function readUserSkills(atelierHome: string): Skill[] {
 }
 
 /** Shipped skills plus the person's own (theirs win on a name clash). */
-export function allSkills(atelierHome: string, shipped: readonly Skill[]): Skill[] {
-  return mergeSkills(shipped, readUserSkills(atelierHome));
+export function allSkills(aframeHome: string, shipped: readonly Skill[]): Skill[] {
+  return mergeSkills(shipped, readUserSkills(aframeHome));
 }

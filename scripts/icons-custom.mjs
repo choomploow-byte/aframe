@@ -1,4 +1,4 @@
-// Icons Atelier draws itself, for things Font Awesome Free does not have (a sword, a potion, a chest).
+// Icons AFrame draws itself, for things Font Awesome Free does not have (a sword, a potion, a chest).
 // Original artwork, released under the project's MIT licence. Same 512 x 512 grid and solid style as
 // the Font Awesome set so the two read as one family. Shapes are built from simple geometry; see EVENODD
 // below for which ones are drawn with holes.

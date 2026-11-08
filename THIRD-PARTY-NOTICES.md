@@ -1,6 +1,6 @@
 # Third-party notices
 
-Atelier is MIT licensed (see `LICENSE`). It bundles the following third-party material.
+AFrame is MIT licensed (see `LICENSE`). It bundles the following third-party material.
 
 ## Icons: Font Awesome Free (solid)
 
@@ -15,15 +15,15 @@ style.
   @fontawesome - https://fontawesome.com. License - https://fontawesome.com/license/free (Icons: CC BY 4.0,
   Fonts: SIL OFL 1.1, Code: MIT License). Copyright 2026 Fonticons, Inc."
 - The same notice is kept in the header of `src/core/icon-data.ts` and added to the end of every shipped
-  JavaScript file by the build (`scripts/attribution.mjs`: the app's bundle and `atelier-mcp.mjs`). A test checks
+  JavaScript file by the build (`scripts/attribution.mjs`: the app's bundle and `aframe-mcp.mjs`). A test checks
   that it is there.
 
 The package `@fortawesome/free-solid-svg-icons` is a development dependency only: it is read when the
 icon data is generated and is not shipped.
 
-## Icons drawn for Atelier
+## Icons drawn for AFrame
 
-The icons marked `source: "atelier"` (sword, swords, potion, chest, sparkles; `scripts/icons-custom.mjs`)
+The icons marked `source: "aframe"` (sword, swords, potion, chest, sparkles; `scripts/icons-custom.mjs`)
 were drawn for this project and are released under the MIT licence.
 
 ## Fonts: SIL Open Font License 1.1

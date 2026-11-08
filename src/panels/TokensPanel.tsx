@@ -10,7 +10,7 @@ import {
   setTokenValue,
   tokenFromSelection,
 } from '../store/token-commands';
-import { store, useAtelier } from '../store/store';
+import { store, useAFrame } from '../store/store';
 import { ColorField } from '../ui/ColorField';
 import { NumberField, Section, Select, TextField } from '../ui/fields';
 import { showToast } from '../ui/toast';
@@ -94,8 +94,8 @@ function AddButton({ group, label }: { group: TokenGroup; label: string }) {
 }
 
 export function TokensPanel() {
-  const doc = useAtelier((s) => s.doc);
-  const selection = useAtelier((s) => s.selection);
+  const doc = useAFrame((s) => s.doc);
+  const selection = useAFrame((s) => s.selection);
   const usage = useMemo(() => tokenUsage(doc), [doc]);
   const { colors, fonts, radii, spacing } = doc.tokens;
 

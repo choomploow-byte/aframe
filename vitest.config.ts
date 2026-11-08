@@ -13,7 +13,7 @@ export default defineConfig({
       'tests/node/**/*.test.ts',
       'tests/mcp/**/*.test.ts',
     ],
-    // Builds mcp/dist/atelier-mcp.mjs once: the integration tests run the file that ships.
+    // Builds mcp/dist/aframe-mcp.mjs once: the integration tests run the file that ships.
     globalSetup: ['tests/mcp/global-setup.ts'],
     coverage: {
       provider: 'v8',

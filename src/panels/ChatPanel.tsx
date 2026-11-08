@@ -16,7 +16,7 @@ import {
 import { activeModel, settingsStore, useChatSettings } from '../chat/settings';
 import { SUGGESTED_PROMPTS } from '../chat/system-prompt';
 import type { ImageData } from '../chat/types';
-import { useAtelier } from '../store/store';
+import { useAFrame } from '../store/store';
 import { showToast } from '../ui/toast';
 import { openDialog } from '../ui/ui-state';
 
@@ -122,7 +122,7 @@ export function ChatPanel() {
   const running = useChat((s) => s.running);
   const turnUsage = useChat((s) => s.turnUsage);
   const { settings, keys } = useChatSettings();
-  const canUndo = useAtelier(() => lastStepIsAi());
+  const canUndo = useAFrame(() => lastStepIsAi());
   const [text, setText] = useState('');
   const [images, setImages] = useState<ImageData[]>([]);
   const [ready, setReady] = useState<{ ok: true } | { ok: false; reason: string } | null>(null);
@@ -181,7 +181,7 @@ export function ChatPanel() {
           <p>
             The assistant sends your messages, an outline of your design and any screenshots it
             takes to {provider?.label ?? 'the provider you choose'}. Nothing goes anywhere else, and
-            Atelier has no servers of its own.
+            AFrame has no servers of its own.
           </p>
           <p>
             Your API key is kept in your computer&apos;s own keychain, never in a file or in the

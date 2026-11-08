@@ -51,7 +51,7 @@ Each finding: `{ rule, severity, nodeId, message, fix?: Op[] }` so the agent can
 
 ## CI (GitHub Actions)
 - `ci.yml`: Node matrix 22/24 on ubuntu (Vitest 5 needs >= 22.12), plus a Windows Tauri build smoke job from Phase 4: install, typecheck, lint, unit, MCP integration, e2e (xvfb + Chrome).
-- `release.yml`: on tag, `tauri-action` builds Windows/macOS/Linux, uploads to Release; signs when secrets exist; publishes `atelier-mcp` to npm.
+- `release.yml`: on tag, `tauri-action` builds Windows/macOS/Linux, uploads to Release; signs when secrets exist; publishes `aframe-mcp` to npm.
 - Dependabot weekly; `npm audit` + `cargo audit` in a nightly job.
 
 ## Bug-report quality

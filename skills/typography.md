@@ -1,6 +1,6 @@
 ---
 name: typography
-description: Type scales, font pairing from Atelier's bundled fonts, line height, weights, and text patterns for UI. Load when choosing or fixing fonts and text sizes.
+description: Type scales, font pairing from AFrame's bundled fonts, line height, weights, and text patterns for UI. Load when choosing or fixing fonts and text sizes.
 ---
 
 # Typography

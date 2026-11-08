@@ -101,7 +101,7 @@ await page.exposeFunction('__evalSend', async (providerId, body) => {
 });
 await page.evaluate(
   async (cfg) => {
-    const chat = await window.__atelier.chat();
+    const chat = await window.__aframe.chat();
     window.__chat = chat;
     chat.transport.setTransportForTests((p, body) => window.__evalSend(p, body));
     chat.keys.setKeyStoreForTests({
@@ -142,9 +142,9 @@ for (const task of tasks) {
     key: '',
   };
   await page.evaluate((d) => {
-    window.__atelier.projects.detachForTests();
-    window.__atelier.store.getState().loadDoc(d);
-    window.__atelier.canvas()?.fitAll();
+    window.__aframe.projects.detachForTests();
+    window.__aframe.store.getState().loadDoc(d);
+    window.__aframe.canvas()?.fitAll();
   }, before);
   await page.evaluate(() => document.fonts.ready);
   await settle(page);
@@ -152,7 +152,7 @@ for (const task of tasks) {
     ? Object.values(before.nodes).find((n) => n.name === task.select)?.id
     : undefined;
   if (selected) {
-    await page.evaluate((id) => window.__atelier.store.getState().setSelection([id]), selected);
+    await page.evaluate((id) => window.__aframe.store.getState().setSelection([id]), selected);
   }
   await page.evaluate(() => window.__chat.session.resetChat());
   const startedAt = Date.now();
@@ -169,7 +169,7 @@ for (const task of tasks) {
   const result = await page.evaluate(() => {
     const s = window.__chat.session.chatStore.getState();
     return {
-      doc: JSON.parse(JSON.stringify(window.__atelier.store.getState().doc)),
+      doc: JSON.parse(JSON.stringify(window.__aframe.store.getState().doc)),
       items: s.items.map((i) => ({
         kind: i.kind,
         text: i.text ?? '',
@@ -196,7 +196,7 @@ for (const task of tasks) {
   // A picture of the result for the human rating.
   const png = await page.evaluate(async () => {
     const { captureScreenshot } = await import('/src/canvas/screenshot.ts');
-    const s = window.__atelier.store.getState();
+    const s = window.__aframe.store.getState();
     try {
       return (await captureScreenshot(s.doc, s.viewport.zoom, { maxWidth: 1400 })).pngBase64;
     } catch {

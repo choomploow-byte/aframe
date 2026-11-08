@@ -1,5 +1,5 @@
 /**
- * Atelier core types. Authoritative spec: docs/04-data-model.md (incl. "Phase 1 decisions").
+ * AFrame core types. Authoritative spec: docs/04-data-model.md (incl. "Phase 1 decisions").
  * No DOM / Node imports allowed in src/core/.
  */
 
@@ -336,7 +336,7 @@ export interface ToolProjects {
   open(project: string): Promise<ProjectSummary>;
 }
 
-/** The user's asset library (their own images, kept in the Atelier home; MCP server only). */
+/** The user's asset library (their own images, kept in the AFrame home; MCP server only). */
 export interface ToolLibrary {
   list(): LibraryEntry[] | Promise<LibraryEntry[]>;
   /** The bytes of one asset by id, or null if there is no such id. */
@@ -366,7 +366,7 @@ export interface ToolContext {
   commit(next: Doc, meta?: CommitMeta): void | Promise<void>;
   screenshot?: (opts: ScreenshotOptions) => Promise<ScreenshotResult>;
   getSelection?: () => string[] | Promise<string[]>;
-  /** Whether the Atelier app is running (heartbeat is fresh). Absent = unknown/not applicable. */
+  /** Whether the AFrame app is running (heartbeat is fresh). Absent = unknown/not applicable. */
   appOnline?: () => boolean | Promise<boolean>;
   projects?: ToolProjects;
   skills?: ToolSkills;

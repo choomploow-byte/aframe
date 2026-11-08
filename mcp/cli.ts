@@ -1,5 +1,5 @@
 /**
- * The command line of `atelier-mcp.mjs`:
+ * The command line of `aframe-mcp.mjs`:
  *   (no arguments)                          run the MCP server over stdio (what hosts do)
  *   install [--claude|--codex|--cursor|--all] [--force]
  *   uninstall [same host flags]
@@ -9,7 +9,7 @@
  */
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { McpEnv } from './env';
-import { createAtelierServer } from './server';
+import { createAFrameServer } from './server';
 import { MCP_VERSION } from './generated';
 import { HomeFs, resolveHomeDir, sweepTempFiles } from './home-fs';
 import {
@@ -29,21 +29,21 @@ import {
 import { Library } from './library';
 import { Presence } from './presence';
 
-const HELP = `Atelier MCP server v${MCP_VERSION}
+const HELP = `AFrame MCP server v${MCP_VERSION}
 
-Usage: node atelier-mcp.mjs [command]
+Usage: node aframe-mcp.mjs [command]
 
   (no command)            run the server over stdio (hosts start it this way)
   install [hosts]         register with Claude Code, Codex and/or Cursor
   uninstall [hosts]       remove exactly what install added
   doctor                  check Node, the app, and each host's registration
   print-config            JSON for any other MCP host
-  library add <folder>    copy a folder of images into your asset library (~/.atelier/library)
+  library add <folder>    copy a folder of images into your asset library (~/.aframe/library)
   library list            what is in it
   --version
 
 hosts: --claude --codex --cursor --all   (default: every host found on this machine)
-       --force replaces an existing "atelier" entry that is not ours
+       --force replaces an existing "aframe" entry that is not ours
 `;
 
 const MARK: Record<Step['level'], string> = {
@@ -116,7 +116,7 @@ export function runCommand(args: string[], env: InstallEnv, io: CliIo): number {
     }
     case 'library': {
       const [sub, folder] = rest;
-      const library = new Library(env.atelierHome);
+      const library = new Library(env.aframeHome);
       if (sub === 'list') {
         const all = library.list();
         const counts = new Map<string, number>();
@@ -183,9 +183,9 @@ export async function serve(selfPath: string): Promise<void> {
   const env = new McpEnv(home, { onProjectChange: (id) => presence.touch(id) });
   await presence.start();
 
-  const handle = serveStdio(() => createAtelierServer(env, presence));
+  const handle = serveStdio(() => createAFrameServer(env, presence));
   console.error(
-    `atelier-mcp v${MCP_VERSION} serving (home: ${home.root}; started from ${selfPath})`,
+    `aframe-mcp v${MCP_VERSION} serving (home: ${home.root}; started from ${selfPath})`,
   );
 
   let stopping = false;

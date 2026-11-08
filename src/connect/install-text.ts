@@ -4,10 +4,10 @@
  */
 import { BRAND } from '../brand';
 
-/** The stable server path inside the Atelier home, written the way that machine writes paths. */
+/** The stable server path inside the AFrame home, written the way that machine writes paths. */
 export function serverPath(home: string): string {
   const sep = home.includes('\\') ? '\\' : '/';
-  return [home.replace(/[\\/]+$/, ''), 'mcp', 'atelier-mcp.mjs'].join(sep);
+  return [home.replace(/[\\/]+$/, ''), 'mcp', 'aframe-mcp.mjs'].join(sep);
 }
 
 export function claudePrompt(path: string): string {
@@ -43,9 +43,9 @@ export function genericJson(path: string): string {
 }
 
 export const EXAMPLE_PROMPTS = [
-  'in atelier, improve my design',
-  'in atelier, make the pricing page look more premium and follow my reference',
-  'in atelier, address my annotations',
-  'in atelier, rebuild this screenshot as an editable design (attach an image)',
-  'in atelier, make a mobile version of the selected frame',
+  'in aframe, improve my design',
+  'in aframe, make the pricing page look more premium and follow my reference',
+  'in aframe, address my annotations',
+  'in aframe, rebuild this screenshot as an editable design (attach an image)',
+  'in aframe, make a mobile version of the selected frame',
 ] as const;

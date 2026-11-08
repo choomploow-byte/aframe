@@ -1,11 +1,11 @@
 /**
  * The webview's whole view of the disk: one typed API, two adapters.
  *
- *  - Tauri: the confined commands in src-tauri (every path relative to `~/.atelier`).
+ *  - Tauri: the confined commands in src-tauri (every path relative to `~/.aframe`).
  *  - Dev HTTP: the same operations behind `/__fs/*` in `vite dev` (scripts/vite-dev-fs.ts), so the
  *    app runs in a normal browser for development and the browser tests.
  *
- * Nothing else in the app talks to the disk. Paths are always relative to the Atelier home.
+ * Nothing else in the app talks to the disk. Paths are always relative to the AFrame home.
  */
 import { FsError, type DirEntry, type DocWrite, type FileStat } from './fs-types';
 
@@ -79,7 +79,7 @@ async function createTauriFs(): Promise<HomeApi> {
   };
   return {
     kind: 'tauri',
-    home: () => call('atelier_home'),
+    home: () => call('aframe_home'),
     readText: (path) => call('fs_read', { path }),
     readHead: (path, max) => call('fs_read_head', { path, max }),
     writeText: (path, content) => call('fs_write', { path, content }),
@@ -90,8 +90,8 @@ async function createTauriFs(): Promise<HomeApi> {
     reportAppState: (s) =>
       call('app_state_set', { currentProject: s.currentProject, selection: [...s.selection] }),
     bridgeResync: () => call('bridge_resync'),
-    onRequest: (cb) => subscribe<BridgeRequestFile>('atelier://request', cb),
-    onCloseRequested: (cb) => subscribe<null>('atelier://close-requested', () => cb()),
+    onRequest: (cb) => subscribe<BridgeRequestFile>('aframe://request', cb),
+    onCloseRequested: (cb) => subscribe<null>('aframe://close-requested', () => cb()),
     quit: () => call('app_quit'),
   };
 }
@@ -108,7 +108,7 @@ function createDevFs(): HomeApi {
     try {
       res = await fetch(`/__fs/${op}`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-atelier-dev': '1' },
+        headers: { 'content-type': 'application/json', 'x-aframe-dev': '1' },
         body: JSON.stringify(body),
       });
     } catch (e) {

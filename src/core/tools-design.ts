@@ -115,7 +115,7 @@ const placeIcon = defineTool({
 const listFonts = defineTool({
   name: 'list_fonts',
   description:
-    "The fonts that ship with Atelier, with their real weights. fontFamily takes a name from this list or a $font token. Display families for game UI: Lilita One, Luckiest Guy, Bungee (one weight each) and Fredoka (300-700). A weight outside a family's range is not faked; apply_changes warns. fontWeight goes up to 900 for families that have it (Inter, Fraunces, DM Sans, Playfair Display).",
+    "The fonts that ship with AFrame, with their real weights. fontFamily takes a name from this list or a $font token. Display families for game UI: Lilita One, Luckiest Guy, Bungee (one weight each) and Fredoka (300-700). A weight outside a family's range is not faked; apply_changes warns. fontWeight goes up to 900 for families that have it (Inter, Fraunces, DM Sans, Playfair Display).",
   inputSchema: z.object({
     category: z.enum(['sans', 'serif', 'mono', 'display']).optional(),
   }),
@@ -235,7 +235,7 @@ const needLibrary = (ctx: ToolContext): NonNullable<ToolContext['library']> => {
     throw new CoreError(
       'NOT_IMPLEMENTED',
       'The asset library is not available in this environment.',
-      'It is part of the Atelier MCP server; add images with import_image instead.',
+      'It is part of the AFrame MCP server; add images with import_image instead.',
     );
   }
   return ctx.library;
@@ -244,7 +244,7 @@ const needLibrary = (ctx: ToolContext): NonNullable<ToolContext['library']> => {
 const searchLibraryTool = defineTool({
   name: 'search_library',
   description:
-    "Search the user's own asset library: textures and overlays such as halftones, sunbursts, stars, sparkles, particles, hexagons, studs and paper. Most are white or grey with transparency, made to lay over a coloured frame (set opacity, or tint the frame behind). Returns ids for use_library_asset. No query lists a category. The library is the user's, kept in their Atelier folder; add to it with `atelier-mcp library add <folder>`.",
+    "Search the user's own asset library: textures and overlays such as halftones, sunbursts, stars, sparkles, particles, hexagons, studs and paper. Most are white or grey with transparency, made to lay over a coloured frame (set opacity, or tint the frame behind). Returns ids for use_library_asset. No query lists a category. The library is the user's, kept in their AFrame folder; add to it with `aframe-mcp library add <folder>`.",
   inputSchema: z.object({
     query: z.string().max(80).optional().describe('Words, e.g. "halftone corner" or "sparkle"'),
     category: z.enum(LIBRARY_CATEGORIES as unknown as [string, ...string[]]).optional(),
@@ -264,7 +264,7 @@ const searchLibraryTool = defineTool({
       categories: counts,
       ...(entries.length === 0
         ? {
-            hint: 'The library is empty. Add a folder of images: atelier-mcp library add <folder>.',
+            hint: 'The library is empty. Add a folder of images: aframe-mcp library add <folder>.',
           }
         : found.total === 0
           ? {

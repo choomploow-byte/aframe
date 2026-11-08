@@ -1,7 +1,7 @@
 import { nodeToCss } from '@core/style';
 import { memo, useCallback, useMemo, type CSSProperties, type KeyboardEvent } from 'react';
 import { commitTextEdit } from '../store/text-edit';
-import { store, useAtelier } from '../store/store';
+import { store, useAFrame } from '../store/store';
 import { IconSvg } from './IconSvg';
 
 interface Props {
@@ -18,7 +18,7 @@ function editingStyle(css: Record<string, string>): CSSProperties {
 }
 
 function TextBody({ id, text, css }: { id: string; text: string; css: Record<string, string> }) {
-  const editing = useAtelier((s) => s.editingTextId === id);
+  const editing = useAFrame((s) => s.editingTextId === id);
 
   // Focus and select everything the moment the editable element mounts.
   const ref = useCallback((el: HTMLDivElement | null) => {
@@ -74,10 +74,10 @@ function TextBody({ id, text, css }: { id: string; text: string; css: Record<str
  * on (id, parentId) and subscribed to its own node, so an edit re-renders only what changed.
  */
 export const NodeView = memo(function NodeView({ id, parentId }: Props) {
-  const node = useAtelier((s) => s.doc.nodes[id]);
-  const parent = useAtelier((s) => (parentId === null ? undefined : s.doc.nodes[parentId]));
-  const tokens = useAtelier((s) => s.doc.tokens);
-  const assetUrl = useAtelier((s) =>
+  const node = useAFrame((s) => s.doc.nodes[id]);
+  const parent = useAFrame((s) => (parentId === null ? undefined : s.doc.nodes[parentId]));
+  const tokens = useAFrame((s) => s.doc.tokens);
+  const assetUrl = useAFrame((s) =>
     node?.type === 'image' && node.assetId !== undefined ? s.doc.assets[node.assetId] : undefined,
   );
   const css = useMemo(() => (node ? nodeToCss(node, parent, tokens) : {}), [node, parent, tokens]);

@@ -68,7 +68,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'Atelier ${{ github.ref_name }}'
+          releaseName: 'AFrame ${{ github.ref_name }}'
           releaseBody: 'See CHANGELOG.md for what changed. Installers are unsigned unless the release notes say otherwise.'
           releaseDraft: true
           prerelease: true
@@ -103,7 +103,7 @@ jobs:
       - run: npm ci
       - run: npm run build:mcp
       - run: npm run pack:mcp
-      - name: Publish atelier-mcp (needs the NPM_TOKEN secret; see docs/release.md)
+      - name: Publish aframe-mcp (needs the NPM_TOKEN secret; see docs/release.md)
         run: npm publish --provenance --access public
         working-directory: mcp-package
         env: { NODE_AUTH_TOKEN: '${{ secrets.NPM_TOKEN }}' }

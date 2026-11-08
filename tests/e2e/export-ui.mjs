@@ -74,20 +74,20 @@ const chooseSegment = async (field, value) => {
 };
 
 // ---- a design to export: the pricing template ---------------------------------------------------
-await page.evaluate(() => window.__atelier.loadTemplate('pricing'));
+await page.evaluate(() => window.__aframe.loadTemplate('pricing'));
 await page.evaluate(() => document.fonts.ready);
 await settle(page);
 const screenId = await page.evaluate(() => {
-  const s = window.__atelier.store.getState();
+  const s = window.__aframe.store.getState();
   return s.doc.nodes[s.doc.rootId].children.find((id) => s.doc.nodes[id].name !== 'Components');
 });
 const frameName = await page.evaluate(
-  (id) => window.__atelier.store.getState().doc.nodes[id].name,
+  (id) => window.__aframe.store.getState().doc.nodes[id].name,
   screenId,
 );
 
 // Select the frame with a real click on its layer, then Ctrl+Shift+E.
-await page.evaluate((id) => window.__atelier.store.getState().setSelection([id]), screenId);
+await page.evaluate((id) => window.__aframe.store.getState().setSelection([id]), screenId);
 await settle(page);
 await press(page, 'Control+Shift+E');
 check('Ctrl+Shift+E opens the export dialog', (await dialog()) !== null);
@@ -162,8 +162,8 @@ if (zip) {
   }
   check(
     'the zip holds the component, its CSS, tokens and README',
-    ['MyPricingPage.tsx', 'MyPricingPage.module.css', 'tokens.css', 'README-atelier.md'].every(
-      (n) => names.includes(n),
+    ['MyPricingPage.tsx', 'MyPricingPage.module.css', 'tokens.css', 'README-aframe.md'].every((n) =>
+      names.includes(n),
     ),
     names.join(', '),
   );
@@ -179,7 +179,7 @@ await page.evaluate(() => {
 });
 await settle(page);
 const frameW = await page.evaluate(
-  (id) => window.__atelier.store.getState().doc.nodes[id].w,
+  (id) => window.__aframe.store.getState().doc.nodes[id].w,
   screenId,
 );
 const size = await page.$eval('[data-testid="export-size"]', (el) => el.textContent ?? '');
@@ -278,7 +278,7 @@ await settle(page);
 // Context menu on a layer.
 const layer = await idByName(page, 'Pricing - Needs Work').catch(() => null);
 void layer;
-await page.evaluate((id) => window.__atelier.store.getState().setSelection([id]), screenId);
+await page.evaluate((id) => window.__aframe.store.getState().setSelection([id]), screenId);
 await settle(page);
 const box = await page.evaluate((id) => {
   const el = document.querySelector(`[data-node-id="${id}"]`);
@@ -302,7 +302,7 @@ if (box) {
 }
 
 // ---- nothing to export -----------------------------------------------------------------------------
-await page.evaluate(() => window.__atelier.loadBlank());
+await page.evaluate(() => window.__aframe.loadBlank());
 await settle(page);
 await press(page, 'Control+Shift+E');
 check('with no frame, no dialog opens', (await dialog()) === null);

@@ -28,8 +28,8 @@ const EXPECTED = {
 };
 
 // A throwaway projects folder: this test must never touch a real one.
-const home = mkdtempSync(join(tmpdir(), 'atelier-smoke-home-'));
-process.env.ATELIER_HOME = home;
+const home = mkdtempSync(join(tmpdir(), 'aframe-smoke-home-'));
+process.env.AFRAME_HOME = home;
 const server = await createServer({
   server: { port: 1431, strictPort: false, host: '127.0.0.1' },
   logLevel: 'error',
