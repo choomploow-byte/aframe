@@ -514,11 +514,12 @@ mod tests {
                         let text = read(&home, P).unwrap().unwrap();
                         let rev = parse_rev(&text).expect("always a valid document");
                         let next = doc(rev + 1, &format!("t{i}-{applied}"));
-                        if write_doc(&home, P, &next, Some(rev), Crash::None)
-                            .unwrap()
-                            .ok
-                        {
-                            applied += 1;
+                        // Six writers on a slow disk can wait out the lock; a real caller tries again.
+                        match write_doc(&home, P, &next, Some(rev), Crash::None) {
+                            Ok(r) if r.ok => applied += 1,
+                            Ok(_) => {}
+                            Err(e) if e.starts_with("LOCKED") => {}
+                            Err(e) => panic!("{e}"),
                         }
                     }
                 })

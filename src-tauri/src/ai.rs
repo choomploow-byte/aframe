@@ -159,12 +159,17 @@ pub fn send(
 ) -> Result<AiReply, String> {
     let url = endpoint(provider, base_url)?;
     adopt_legacy(provider);
-    let key = match entry(provider)?.get_password() {
-        Ok(k) if !k.is_empty() => Some(k),
-        Ok(_) | Err(keyring::Error::NoEntry) => None,
-        // A local server may need no key, so a missing credential store must not stop it.
+    // A local server may need no key, so a missing credential store (a Linux box with no secret
+    // service, say) must not stop the custom provider.
+    let key = match entry(provider) {
+        Ok(e) => match e.get_password() {
+            Ok(k) if !k.is_empty() => Some(k),
+            Ok(_) | Err(keyring::Error::NoEntry) => None,
+            Err(_) if provider == Provider::Custom => None,
+            Err(_) => return Err("The system credential store could not be read.".into()),
+        },
         Err(_) if provider == Provider::Custom => None,
-        Err(_) => return Err("The system credential store could not be read.".into()),
+        Err(e) => return Err(e),
     };
     if key.is_none() && provider != Provider::Custom {
         return Err("NO_KEY".into());

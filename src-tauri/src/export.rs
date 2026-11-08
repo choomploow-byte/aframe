@@ -131,6 +131,15 @@ pub fn root_problem(segments: &[String]) -> Option<String> {
     if BLOCKED_TOP.contains(&top.as_str()) {
         return Some(format!("\"{}\" is a system folder", segments[0]));
     }
+    // macOS keeps /etc as a link to /private/etc, so the real path of /etc/x starts with "private".
+    // (Temporary folders live under /private/var/folders, which stays allowed.)
+    if top == "private"
+        && segments
+            .get(1)
+            .is_some_and(|s| s.eq_ignore_ascii_case("etc"))
+    {
+        return Some("\"/private/etc\" is a system folder".into());
+    }
     for s in segments {
         if BLOCKED_ANYWHERE.contains(&s.to_lowercase().as_str()) {
             return Some(format!("\"{s}\" is a system or credentials folder"));

@@ -250,7 +250,11 @@ mod tests {
         let err = get("file", KEY, None, None);
         // On a machine that has a Figma token stored this goes to the network instead; accept both.
         if let Err(e) = err {
-            assert!(e == "NO_TOKEN" || e.starts_with("NETWORK"), "{e}");
+            // A machine with no credential store (CI on Linux) reports that instead.
+            assert!(
+                e == "NO_TOKEN" || e.starts_with("NETWORK") || e.contains("credential store"),
+                "{e}"
+            );
         }
     }
 }
