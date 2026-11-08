@@ -1,3 +1,5 @@
+import { utf8 } from '../utf8';
+
 /**
  * A minimal ZIP writer ("store" method, no compression) so a browser build can hand over an export
  * as one download without a dependency. Source code and images are small and PNG/JPEG are already
@@ -24,20 +26,6 @@ export function crc32(bytes: Uint8Array): number {
 /** 2026-01-01 00:00 in DOS date/time. */
 const DOS_TIME = 0;
 const DOS_DATE = ((2026 - 1980) << 9) | (1 << 5) | 1;
-
-/** UTF-8 bytes of a string (core has no TextEncoder: it must also compile without the DOM). */
-function utf8(text: string): Uint8Array {
-  const out: number[] = [];
-  for (const ch of text) {
-    const c = ch.codePointAt(0) as number;
-    if (c < 0x80) out.push(c);
-    else if (c < 0x800) out.push(0xc0 | (c >> 6), 0x80 | (c & 63));
-    else if (c < 0x10000) out.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
-    else
-      out.push(0xf0 | (c >> 18), 0x80 | ((c >> 12) & 63), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
-  }
-  return Uint8Array.from(out);
-}
 
 export interface ZipEntry {
   path: string;
