@@ -21,11 +21,16 @@ const REPO_URLS = [
 
 export function validateNames({ name, slug, bundleId }) {
   const problems = [];
-  if (!name || name.length > 40 || /[
-<>&"\]/.test(name)) problems.push('--name must be 1-40 characters without quotes, angle brackets or backslashes');
+  if (!name || name.length > 40 || /[\r\n<>&"\\]/.test(name)) {
+    problems.push('--name must be 1-40 characters without quotes, angle brackets or backslashes');
+  }
   // No dashes: the slug also goes into identifiers (useFoo, __foo) and crate names.
-  if (!/^[a-z][a-z0-9]{1,30}$/.test(slug ?? '')) problems.push('--slug must be lowercase letters and digits only, starting with a letter (2-31 characters)');
-  if (bundleId !== undefined && !/^[a-z][a-z0-9]*(\.[a-z][a-z0-9-]*){1,4}$/.test(bundleId)) problems.push('--bundle-id must look like com.example.app');
+  if (!/^[a-z][a-z0-9]{1,30}$/.test(slug ?? ''))
+    problems.push(
+      '--slug must be lowercase letters and digits only, starting with a letter (2-31 characters)',
+    );
+  if (bundleId !== undefined && !/^[a-z][a-z0-9]*(\.[a-z][a-z0-9-]*){1,4}$/.test(bundleId))
+    problems.push('--bundle-id must look like com.example.app');
   return problems;
 }
 
@@ -35,7 +40,9 @@ const IDENT = '[A-Za-z0-9_$]';
 export function renameText(text, { name, slug, bundleId }, options = {}) {
   const upper = slug.toUpperCase();
   // A name with spaces cannot sit inside an identifier (useAtelier, AtelierState): there it is joined up.
-  const pascal = name.replace(/[^A-Za-z0-9]+(.)?/g, (_m, c) => (c ? c.toUpperCase() : '')).replace(/^./, (c) => c.toUpperCase());
+  const pascal = name
+    .replace(/[^A-Za-z0-9]+(.)?/g, (_m, c) => (c ? c.toUpperCase() : ''))
+    .replace(/^./, (c) => c.toUpperCase());
   let out = text;
   const protectedUrls = [];
   if (!options.renameRepoUrls) {
