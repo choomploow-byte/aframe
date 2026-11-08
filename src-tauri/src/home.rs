@@ -1,6 +1,6 @@
-//! The Atelier home directory and the one function every file command goes through to stay inside it.
+//! The AFrame home directory and the one function every file command goes through to stay inside it.
 //!
-//! Everything the webview can touch is RELATIVE to the home (`~/.atelier`, or `$ATELIER_HOME`).
+//! Everything the webview can touch is RELATIVE to the home (`~/.aframe`, or `$AFRAME_HOME`).
 //! Absolute paths, `..`, drive prefixes, `:` (Windows alternate streams) and symlinks that lead
 //! outside are rejected here, once, so no command can forget to check (docs/06, docs/18).
 
@@ -8,8 +8,8 @@ use std::fs;
 use std::path::{Component, Path, PathBuf};
 
 // Mirrors src/brand.ts (the one place the product name lives on the TypeScript side).
-pub const HOME_DIR_NAME: &str = ".atelier";
-pub const HOME_ENV_VAR: &str = "ATELIER_HOME";
+pub const HOME_DIR_NAME: &str = ".aframe";
+pub const HOME_ENV_VAR: &str = "AFRAME_HOME";
 
 #[derive(Clone, Debug)]
 pub struct Home {
@@ -28,7 +28,7 @@ impl Home {
             }
         }
         dirs::home_dir()
-            .map(|h| Home::new(h.join(HOME_DIR_NAME)))
+            .map(|h| Home::new(crate::legacy::choose_home(&h, HOME_DIR_NAME)))
             .ok_or_else(|| "could not determine the home directory".to_string())
     }
 
@@ -85,7 +85,7 @@ impl Home {
         let canon_probe = probe.canonicalize().map_err(|e| e.to_string())?;
         let canon_home = self.root.canonicalize().map_err(|e| e.to_string())?;
         if !canon_probe.starts_with(&canon_home) {
-            return Err("path escapes the Atelier home directory".into());
+            return Err("path escapes the AFrame home directory".into());
         }
         Ok(full)
     }
@@ -154,7 +154,7 @@ pub(crate) mod testutil {
     impl TempHome {
         pub fn new() -> Self {
             let dir = std::env::temp_dir().join(format!(
-                "atelier-rs-{}-{}",
+                "aframe-rs-{}-{}",
                 std::process::id(),
                 N.fetch_add(1, Ordering::SeqCst)
             ));
@@ -189,7 +189,7 @@ mod tests {
         let t = TempHome::new();
         assert!(t
             .home
-            .confine("projects/p_abc12/project.atelier.json")
+            .confine("projects/p_abc12/project.aframe.json")
             .is_ok());
         assert!(t.home.confine("./a/./b.txt").is_ok());
         assert!(t.home.confine("").is_ok());

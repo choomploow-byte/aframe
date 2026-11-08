@@ -1,5 +1,5 @@
 /**
- * The Atelier home directory from Node: the same operations, confinement and write protocol as the
+ * The AFrame home directory from Node: the same operations, confinement and write protocol as the
  * Rust commands in src-tauri/src (home.rs, fsops.rs, lock.rs), so a browser dev session and the MCP
  * server (Phase 5) behave exactly like the desktop app. Docs/06 is the protocol; keep these in step.
  *
@@ -8,6 +8,7 @@
 import fs from 'node:fs/promises';
 import { closeSync, existsSync, fsyncSync, openSync, realpathSync } from 'node:fs';
 import path from 'node:path';
+import { chooseHome } from './legacy';
 import os from 'node:os';
 import { BRAND } from '../src/brand';
 import { FsError, type DirEntry, type DocWrite, type FileStat } from '../src/platform/fs-types';
@@ -23,7 +24,7 @@ let tmpCounter = 0;
 export function resolveHomeDir(env: NodeJS.ProcessEnv = process.env, fallback?: string): string {
   const fromEnv = env[BRAND.homeEnvVar];
   if (fromEnv) return fromEnv;
-  return fallback ?? path.join(os.homedir(), BRAND.homeDirName);
+  return fallback ?? chooseHome(os.homedir(), BRAND.homeDirName);
 }
 
 const code = (e: unknown): string | undefined => (e as NodeJS.ErrnoException | undefined)?.code;
@@ -77,7 +78,7 @@ export class HomeFs {
     }
     const realProbe = realpathSync(probe);
     const inside = realProbe === realHome || realProbe.startsWith(realHome + path.sep);
-    if (!inside) throw new FsError('ESCAPE', 'path escapes the Atelier home directory');
+    if (!inside) throw new FsError('ESCAPE', 'path escapes the AFrame home directory');
     return full;
   }
 
@@ -301,7 +302,7 @@ export async function acquireLock(
         /* gone already: try again */
       }
       if (Date.now() - started >= waitMs) {
-        throw new FsError('LOCKED', 'another Atelier process is writing this project');
+        throw new FsError('LOCKED', 'another AFrame process is writing this project');
       }
       await sleep(15);
     }
@@ -348,16 +349,16 @@ export const HOME_DIRS = [
 ] as const;
 
 /** Marker on the first line of generated files, so a later phase may replace them. */
-export const GENERATED_MARKER = 'atelier-generated';
+export const GENERATED_MARKER = 'aframe-generated';
 
 const MCP_PLACEHOLDER = `// ${GENERATED_MARKER} placeholder. The real MCP server is bundled here in Phase 5.
-console.error('Atelier MCP server: not installed yet (this build has no MCP bundle).');
+console.error('AFrame MCP server: not installed yet (this build has no MCP bundle).');
 process.exit(1);
 `;
 const SKILLS_README = `<!-- ${GENERATED_MARKER} -->
 Skills are markdown files the AI agent loads on demand. Put your own \`*.md\` files here: each
 needs a frontmatter block with \`name\` (lowercase letters, digits and dashes) and \`description\`.
-A skill of yours with the same name as one of Atelier's replaces it. See skills/README.md in the
+A skill of yours with the same name as one of AFrame's replaces it. See skills/README.md in the
 repository for the format.
 `;
 
@@ -366,7 +367,7 @@ export async function ensureLayout(home: HomeFs): Promise<void> {
   await home.ensure();
   for (const d of HOME_DIRS) await fs.mkdir(home.confine(d), { recursive: true });
   for (const [rel, text] of [
-    ['mcp/atelier-mcp.mjs', MCP_PLACEHOLDER],
+    ['mcp/aframe-mcp.mjs', MCP_PLACEHOLDER],
     ['skills/README.md', SKILLS_README],
   ] as const) {
     if ((await home.stat(rel)) === null) await home.write(rel, text);

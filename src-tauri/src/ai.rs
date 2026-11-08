@@ -9,7 +9,7 @@
 use serde::Serialize;
 use std::time::Duration;
 
-const SERVICE: &str = "atelier-ai";
+const SERVICE: &str = "aframe-ai";
 const MAX_KEY_LEN: usize = 512;
 const MAX_BODY_BYTES: usize = 40 * 1024 * 1024;
 const TIMEOUT: Duration = Duration::from_secs(240);
@@ -49,7 +49,37 @@ fn entry(provider: Provider) -> Result<keyring::Entry, String> {
         .map_err(|_| "The system credential store is not available.".to_string())
 }
 
+/// Moves a key saved under another credential-store service name to this one (the old version used a
+/// different name). Does nothing if this one already has a key. Returns whether it moved one.
+pub fn adopt_key(old_service: &str, new_service: &str, account: &str) -> bool {
+    let (Ok(new), Ok(old)) = (
+        keyring::Entry::new(new_service, account),
+        keyring::Entry::new(old_service, account),
+    ) else {
+        return false;
+    };
+    if !matches!(new.get_password(), Err(keyring::Error::NoEntry)) {
+        return false;
+    }
+    match old.get_password() {
+        Ok(k) if !k.is_empty() && new.set_password(&k).is_ok() => {
+            let _ = old.delete_credential();
+            true
+        }
+        _ => false,
+    }
+}
+
+fn adopt_legacy(provider: Provider) {
+    adopt_key(
+        crate::legacy::LEGACY_KEY_SERVICE,
+        SERVICE,
+        provider.account(),
+    );
+}
+
 pub fn key_present(provider: Provider) -> Result<bool, String> {
+    adopt_legacy(provider);
     match entry(provider)?.get_password() {
         Ok(k) => Ok(!k.is_empty()),
         Err(keyring::Error::NoEntry) => Ok(false),
@@ -69,6 +99,7 @@ pub fn key_set(provider: Provider, key: &str) -> Result<(), String> {
 
 /// The stored key, for the module that makes the request. Never sent to the page.
 pub fn key_get(provider: Provider) -> Result<Option<String>, String> {
+    adopt_legacy(provider);
     match entry(provider)?.get_password() {
         Ok(k) if !k.is_empty() => Ok(Some(k)),
         Ok(_) | Err(keyring::Error::NoEntry) => Ok(None),
@@ -127,6 +158,7 @@ pub fn send(
     body: &serde_json::Value,
 ) -> Result<AiReply, String> {
     let url = endpoint(provider, base_url)?;
+    adopt_legacy(provider);
     let key = match entry(provider)?.get_password() {
         Ok(k) if !k.is_empty() => Some(k),
         Ok(_) | Err(keyring::Error::NoEntry) => None,
@@ -223,6 +255,32 @@ mod tests {
             endpoint(Provider::Custom, Some("https://openrouter.ai/api/v1/")).unwrap(),
             "https://openrouter.ai/api/v1/chat/completions"
         );
+    }
+
+    #[test]
+    fn a_key_saved_under_the_old_service_name_is_moved() {
+        let tag = std::process::id();
+        let (old, new) = (
+            format!("aframe-test-old-{tag}"),
+            format!("aframe-test-new-{tag}"),
+        );
+        let Ok(e) = keyring::Entry::new(&old, "anthropic") else {
+            return;
+        };
+        if e.set_password("legacy-secret").is_err() {
+            eprintln!("SKIPPED: no credential store here");
+            return;
+        }
+        assert!(adopt_key(&old, &new, "anthropic"));
+        let moved = keyring::Entry::new(&new, "anthropic").unwrap();
+        assert_eq!(moved.get_password().unwrap(), "legacy-secret");
+        assert!(matches!(e.get_password(), Err(keyring::Error::NoEntry)));
+        // A key that is already there is never overwritten by an old one.
+        e.set_password("older").unwrap();
+        assert!(!adopt_key(&old, &new, "anthropic"));
+        assert_eq!(moved.get_password().unwrap(), "legacy-secret");
+        let _ = e.delete_credential();
+        let _ = moved.delete_credential();
     }
 
     #[test]
