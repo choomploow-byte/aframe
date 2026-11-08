@@ -4,6 +4,8 @@ All notable changes are recorded here. Format: [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-08 (pre-release)
+
 ### Added
 
 - Game-UI tools for the AI: `create_widget` (16 finished, token-styled controls such as chunky buttons, currency pills, progress bars, item slots, shop cards, panels, modals, tabs), `list_themes` / `apply_theme` (7 game palettes), `arrange_nodes` (align, distribute, grid, match size), `group_nodes`, `ungroup_node`, `repeat_node` (copies with per-copy text and icons) and `find_nodes`.
@@ -16,7 +18,7 @@ All notable changes are recorded here. Format: [Keep a Changelog](https://keepac
 ### Changed
 
 - The repository is now `aframe` (was `atelier`); the websites moved to `/aframe/` and `/aframe/pro/`.
-- The release workflow skips the npm publish, with a notice, when no `NPM_TOKEN` secret is set.
+- The release workflow no longer fails the macOS job when there is no Apple certificate (the app is built unsigned), and skips the npm publish, with a notice, when no `NPM_TOKEN` secret is set.
 
 ## [0.3.0] - 2026-11-08 (pre-release)
 

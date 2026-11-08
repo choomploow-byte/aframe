@@ -2,7 +2,7 @@
 
 Open-source, local-first AI design studio. Let Claude Code, Codex or a chat with your own API key design real UI on a canvas you can see, annotate and approve, then export it as code into your repo.
 
-> **Status: early pre-release (v0.3.x).** A Windows installer is on the [releases page](https://github.com/choomploow-byte/aframe/releases) (unsigned: Windows will warn). macOS and Linux build from source but have not been run by the author. Everything below is tested on Windows and in Chrome; what has not been tried is listed in [`docs/14-open-source-and-release.md`](docs/14-open-source-and-release.md).
+> **Status: early pre-release (v0.4.x).** A Windows installer is on the [releases page](https://github.com/choomploow-byte/aframe/releases) (unsigned: Windows will warn). macOS and Linux build from source but have not been run by the author. Everything below is tested on Windows and in Chrome; what has not been tried is listed in [`docs/14-open-source-and-release.md`](docs/14-open-source-and-release.md).
 
 ## What it does
 
