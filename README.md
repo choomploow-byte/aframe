@@ -2,7 +2,7 @@
 
 Open-source, local-first AI design studio. Let Claude Code, Codex or a chat with your own API key design real UI on a canvas you can see, annotate and approve, then export it as code into your repo.
 
-> **Status: early pre-release (v0.3.x).** A Windows installer is on the [releases page](https://github.com/choomploow-byte/atelier/releases) (unsigned: Windows will warn). macOS and Linux build from source but have not been run by the author. Everything below is tested on Windows and in Chrome; what has not been tried is listed in [`docs/14-open-source-and-release.md`](docs/14-open-source-and-release.md).
+> **Status: early pre-release (v0.3.x).** A Windows installer is on the [releases page](https://github.com/choomploow-byte/aframe/releases) (unsigned: Windows will warn). macOS and Linux build from source but have not been run by the author. Everything below is tested on Windows and in Chrome; what has not been tried is listed in [`docs/14-open-source-and-release.md`](docs/14-open-source-and-release.md).
 
 ## What it does
 
@@ -17,7 +17,7 @@ Start with [`docs/user-guide.md`](docs/user-guide.md); there is a two-minute wal
 
 ## Install
 
-1. Download the installer from the [releases page](https://github.com/choomploow-byte/atelier/releases) and run it. It is not code-signed yet, so Windows SmartScreen will say "unknown publisher": choose *More info*, then *Run anyway*. Checksums are next to the installer.
+1. Download the installer from the [releases page](https://github.com/choomploow-byte/aframe/releases) and run it. It is not code-signed yet, so Windows SmartScreen will say "unknown publisher": choose *More info*, then *Run anyway*. Checksums are next to the installer.
 2. Open AFrame and press **Explore the sample project**.
 3. Connect an AI: press **Connect AI** and paste the text it shows into Claude Code or Codex, or press the **Chat** tab and add an API key. Then ask: *"in aframe, improve my design"*.
 

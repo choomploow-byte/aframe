@@ -14,12 +14,13 @@ Push a tag `vX.Y.Z`:
    trying an installer.
 3. **npm-mcp**: `npm run pack:mcp` then `npm publish --provenance` of `aframe-mcp`.
 
-**Not yet proved.** The workflow has never run. The Windows installer has been built and smoke-tested by
-hand on a Windows machine (silent install, launch, check, uninstall: `tests/e2e/installer-smoke.mjs`).
-macOS and Linux have never been built by the author; the Rust tests and the app are written to be portable
-(Linux needs `libdbus-1-dev` for the keychain crate, which the workflow installs), but the first run is the
-test. Expect to fix something. The `aframe-mcp` package has been packed and installed from a clean folder
-in a test (`tests/node/npm-package.test.ts`) and has not been published.
+**What has run.** The v0.3.0 run built the Windows installer and the Linux `.AppImage` and `.deb` on
+GitHub's runners. The Windows installer has also been smoke-tested by hand (silent install, launch, check,
+uninstall: `tests/e2e/installer-smoke.mjs`). The Linux files have not been opened by the author. The macOS job
+failed in that run: with the `APPLE_*` secrets empty, `tauri-action` still tries to import a signing
+certificate, so the job needs the secrets or a change that skips signing. The npm job skips itself, with a
+notice, when `NPM_TOKEN` is not set. The `aframe-mcp` package has been packed and installed from a clean
+folder in a test (`tests/node/npm-package.test.ts`) and has not been published.
 
 ## What you must supply
 

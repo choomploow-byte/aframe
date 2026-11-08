@@ -100,10 +100,24 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22, registry-url: 'https://registry.npmjs.org', cache: npm }
-      - run: npm ci
-      - run: npm run build:mcp
-      - run: npm run pack:mcp
+      - name: Check for the NPM_TOKEN secret
+        id: token
+        env: { NPM_TOKEN: '${{ secrets.NPM_TOKEN }}' }
+        run: |
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::NPM_TOKEN is not set, so aframe-mcp was not published to npm. See docs/release.md."
+          fi
+      - if: steps.token.outputs.present == 'true'
+        run: npm ci
+      - if: steps.token.outputs.present == 'true'
+        run: npm run build:mcp
+      - if: steps.token.outputs.present == 'true'
+        run: npm run pack:mcp
       - name: Publish aframe-mcp (needs the NPM_TOKEN secret; see docs/release.md)
+        if: steps.token.outputs.present == 'true'
         run: npm publish --provenance --access public
         working-directory: mcp-package
         env: { NODE_AUTH_TOKEN: '${{ secrets.NPM_TOKEN }}' }

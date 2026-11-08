@@ -47,9 +47,9 @@ writeFileSync(
       files: ['aframe-mcp.mjs', 'README.md', 'LICENSE', 'THIRD-PARTY-NOTICES.md'],
       engines: { node: '>=20' },
       keywords: ['mcp', 'model-context-protocol', 'design', 'claude-code', 'codex', 'ui'],
-      repository: { type: 'git', url: 'git+https://github.com/choomploow-byte/atelier.git' },
-      homepage: 'https://choomploow-byte.github.io/atelier/',
-      bugs: { url: 'https://github.com/choomploow-byte/atelier/issues' },
+      repository: { type: 'git', url: 'git+https://github.com/choomploow-byte/aframe.git' },
+      homepage: 'https://choomploow-byte.github.io/aframe/',
+      bugs: { url: 'https://github.com/choomploow-byte/aframe/issues' },
     },
     null,
     2,
@@ -60,7 +60,7 @@ writeFileSync(
   join(out, 'README.md'),
   `# aframe-mcp
 
-The MCP server for [AFrame](https://choomploow-byte.github.io/atelier/), an open-source design canvas that an AI
+The MCP server for [AFrame](https://choomploow-byte.github.io/aframe/), an open-source design canvas that an AI
 agent can drive. This package is the same single file the AFrame desktop app carries.
 
 \`\`\`bash
@@ -75,7 +75,7 @@ only the folders you tell an agent to export into.
 
 Then ask your agent: *"in aframe, improve my design"*.
 
-MIT licensed. Source and the desktop app: https://github.com/choomploow-byte/atelier
+MIT licensed. Source and the desktop app: https://github.com/choomploow-byte/aframe
 `,
 );
 console.log(`Wrote ${out} (aframe-mcp ${pkg.version})`);

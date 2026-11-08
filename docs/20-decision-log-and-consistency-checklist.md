@@ -156,3 +156,4 @@ These items repeat across files and drift easily. Verify they still agree:
 | Change sync file format | `docs/06`, Rust commands, dev adapter, migration, test matrix |
 | Add an importer | `core/import/<kind>.ts` returning an `ImportResult` with a report, a tab in `ImportDialog.tsx`, fixtures and unit tests, a row in the docs/10 table (what is and is not carried) |
 | Add exporter | `export.ts` registry, UI menu, `export_code` enum, round-trip fixture, docs |
+| 127 | 2026-11-08 | The GitHub repository is renamed `atelier` to `aframe`, so the Pages sites are at `choomploow-byte.github.io/aframe/` (game UI) and `/aframe/pro/`. GitHub redirects the old repository and release links; the old Pages address does not redirect. The npm job in the release workflow now skips itself with a notice when `NPM_TOKEN` is not set, instead of failing. |

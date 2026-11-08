@@ -4,6 +4,11 @@ All notable changes are recorded here. Format: [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+### Changed
+
+- The repository is now `aframe` (was `atelier`); the websites moved to `/aframe/` and `/aframe/pro/`.
+- The release workflow skips the npm publish, with a notice, when no `NPM_TOKEN` secret is set.
+
 ## [0.3.0] - 2026-11-08 (pre-release)
 
 Renamed to AFrame, one top bar in the desktop window, and two websites.
