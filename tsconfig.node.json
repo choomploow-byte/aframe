@@ -13,6 +13,7 @@
     "mcp",
     "tests/e2e",
     "tests/node",
-    "tests/mcp"
+    "tests/mcp",
+    "evals"
   ]
 }
