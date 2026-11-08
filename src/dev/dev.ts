@@ -1,5 +1,6 @@
 import { createEmptyDoc, loadDoc } from '@core/doc';
 import { getCanvasApi } from '../canvas/canvas-api';
+import { setWindowControls } from '../platform/window-controls';
 import * as projects from '../projects/session';
 import * as commands from '../store/commands';
 import { store } from '../store/store';
@@ -20,6 +21,8 @@ export async function installDevTools(): Promise<void> {
   (window as unknown as { __aframe: unknown }).__aframe = {
     store,
     commands,
+    /** Pretends the page is in the desktop window (own title bar), for the top-bar test. */
+    setWindowControls,
     canvas: getCanvasApi,
     /** Project operations and the live sync service, for the persistence tests. */
     projects,

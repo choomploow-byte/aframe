@@ -8,6 +8,7 @@
  * Nothing else in the app talks to the disk. Paths are always relative to the AFrame home.
  */
 import { FsError, type DirEntry, type DocWrite, type FileStat } from './fs-types';
+import { setWindowControls } from './window-controls';
 
 export interface AppStateReport {
   currentProject: string | null;
@@ -77,6 +78,13 @@ async function createTauriFs(): Promise<HomeApi> {
       off?.();
     };
   };
+  setWindowControls({
+    minimize: () => call('window_minimize'),
+    toggleMaximize: () => call('window_toggle_maximize'),
+    isMaximized: () => call('window_is_maximized'),
+    close: () => call('window_close'),
+    startDrag: () => call('window_start_drag'),
+  });
   return {
     kind: 'tauri',
     home: () => call('aframe_home'),

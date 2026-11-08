@@ -1,8 +1,22 @@
-import { Check, ChevronDown, FolderOpen, Monitor, Moon, Redo2, Sun, Undo2 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import {
+  Check,
+  ChevronDown,
+  Copy,
+  FolderOpen,
+  Minus,
+  Monitor,
+  Moon,
+  Redo2,
+  Square,
+  Sun,
+  Undo2,
+  X,
+} from 'lucide-react';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { BRAND } from '../brand';
 import { useConnect } from '../connect/agents';
 import { openExportDialog } from '../export/dialog-state';
+import { useWindowControls } from '../platform/window-controls';
 import { exportProjectFile, useProjects } from '../projects/session';
 import { renameProject } from '../store/panel-commands';
 import { store, useAFrame } from '../store/store';
@@ -53,6 +67,68 @@ function SaveStatus() {
   );
 }
 
+/** Minimise, maximise/restore and close, drawn by the page because the window has no native title bar. */
+function WindowButtons() {
+  const controls = useWindowControls((s) => s.controls);
+  const [maximized, setMaximized] = useState(false);
+  useEffect(() => {
+    if (!controls) return;
+    let alive = true;
+    const sync = (): void => {
+      void controls.isMaximized().then(
+        (m) => alive && setMaximized(m),
+        () => undefined,
+      );
+    };
+    sync();
+    window.addEventListener('resize', sync);
+    return () => {
+      alive = false;
+      window.removeEventListener('resize', sync);
+    };
+  }, [controls]);
+  if (!controls) return null;
+  const run = (p: Promise<void>): void => void p.catch(() => undefined);
+  return (
+    <span className="winbtns" data-testid="window-buttons">
+      <button
+        type="button"
+        className="winbtn"
+        aria-label="Minimise"
+        title="Minimise"
+        data-testid="win-minimize"
+        onClick={() => run(controls.minimize())}
+      >
+        <Minus size={14} strokeWidth={1.5} aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        className="winbtn"
+        aria-label={maximized ? 'Restore' : 'Maximise'}
+        title={maximized ? 'Restore' : 'Maximise'}
+        data-testid="win-maximize"
+        onClick={() => run(controls.toggleMaximize())}
+      >
+        {maximized ? (
+          <Copy size={12} strokeWidth={1.5} aria-hidden="true" />
+        ) : (
+          <Square size={12} strokeWidth={1.5} aria-hidden="true" />
+        )}
+      </button>
+      <button
+        type="button"
+        className="winbtn winbtn--close"
+        aria-label="Close"
+        title="Close"
+        data-testid="win-close"
+        onClick={() => run(controls.close())}
+      >
+        <X size={15} strokeWidth={1.5} aria-hidden="true" />
+      </button>
+    </span>
+  );
+}
+
 /** Projects, project name and save status, undo/redo, export menu (a stub until Phase 8), theme and Connect AI. */
 export function TopBar() {
   const lint = useLintCounts();
@@ -64,9 +140,24 @@ export function TopBar() {
   const ThemeIcon = THEME_ICON[theme];
   const exportButton = useRef<HTMLButtonElement>(null);
   const [exportAt, setExportAt] = useState<{ x: number; y: number } | null>(null);
+  const controls = useWindowControls((s) => s.controls);
+
+  // With no native title bar, an empty stretch of the top bar moves the window (a double press
+  // maximises or restores it), like a title bar does. Buttons and fields are left alone.
+  const dragWindow = (e: MouseEvent<HTMLElement>): void => {
+    if (!controls || e.button !== 0) return;
+    const el = e.target as HTMLElement;
+    if (el.closest('button, input, textarea, select, a, [role="menu"]')) return;
+    e.preventDefault();
+    void (e.detail === 2 ? controls.toggleMaximize() : controls.startDrag()).catch(() => undefined);
+  };
 
   return (
-    <header className="topbar">
+    <header
+      className="topbar"
+      onMouseDown={dragWindow}
+      data-window-frame={controls ? 'own' : undefined}
+    >
       <LogoMark size={22} />
       <Wordmark height={18} label={BRAND.name} />
       <button
@@ -207,6 +298,7 @@ export function TopBar() {
         <span className={`pill__dot${connected ? ' pill__dot--on' : ''}`} aria-hidden="true" />
         {STRINGS.topbar.connect}
       </button>
+      <WindowButtons />
     </header>
   );
 }

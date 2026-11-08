@@ -216,6 +216,45 @@ async fn app_quit(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+// The window has no native title bar (see tauri.conf.json), so the page draws its own and drives the
+// window through these. They are async on purpose: window calls made from a synchronous command
+// can deadlock on Windows.
+
+/// Minimises the window.
+#[tauri::command]
+async fn window_minimize(window: tauri::WebviewWindow) -> Result<(), String> {
+    window.minimize().map_err(|e| e.to_string())
+}
+
+/// Maximises the window, or puts it back to its normal size if it already is.
+#[tauri::command]
+async fn window_toggle_maximize(window: tauri::WebviewWindow) -> Result<(), String> {
+    let maximized = window.is_maximized().map_err(|e| e.to_string())?;
+    if maximized {
+        window.unmaximize().map_err(|e| e.to_string())
+    } else {
+        window.maximize().map_err(|e| e.to_string())
+    }
+}
+
+/// Whether the window is maximised (the page shows "restore" instead of "maximise").
+#[tauri::command]
+async fn window_is_maximized(window: tauri::WebviewWindow) -> Result<bool, String> {
+    window.is_maximized().map_err(|e| e.to_string())
+}
+
+/// Asks the window to close: the same path as the native close button, so unsaved work is flushed first.
+#[tauri::command]
+async fn window_close(window: tauri::WebviewWindow) -> Result<(), String> {
+    window.close().map_err(|e| e.to_string())
+}
+
+/// Starts moving the window with the mouse (the page calls this on a press on the empty top bar).
+#[tauri::command]
+async fn window_start_drag(window: tauri::WebviewWindow) -> Result<(), String> {
+    window.start_dragging().map_err(|e| e.to_string())
+}
+
 fn spawn_request_watcher(app: tauri::AppHandle, home: Home) {
     std::thread::Builder::new()
         .name("aframe-requests".into())
@@ -299,6 +338,11 @@ pub fn run() {
             app_state_set,
             bridge_resync,
             app_quit,
+            window_minimize,
+            window_toggle_maximize,
+            window_is_maximized,
+            window_close,
+            window_start_drag,
             export_folder,
             export_pick_folder,
             export_files,

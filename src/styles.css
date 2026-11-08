@@ -111,6 +111,56 @@ body {
   background: var(--bg);
 }
 
+/* The desktop window has no native title bar: the top bar is the title bar. The buttons run to the
+   window's top-right corner, full height, like the system's own. */
+.topbar[data-window-frame='own'] {
+  padding-right: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.topbar[data-window-frame='own'] .topbar__project input {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.winbtns {
+  display: flex;
+  align-self: stretch;
+  margin-left: 4px;
+}
+
+.winbtn {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: default;
+}
+
+.winbtn:hover {
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+  color: var(--text);
+}
+
+.winbtn:active {
+  background: color-mix(in srgb, var(--text) 16%, transparent);
+}
+
+.winbtn--close:hover,
+.winbtn--close:active {
+  background: #c42b1c;
+  color: #fff;
+}
+
+.winbtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
 .topbar__project {
   width: 200px;
 }
