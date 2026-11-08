@@ -4,9 +4,10 @@ import { Tabs, type TabDef } from '../ui/Tabs';
 import { AssetsPanel } from './AssetsPanel';
 import { ComponentsPanel, IconsPanel } from './KitPanels';
 import { LayersPanel } from './LayersPanel';
+import { WidgetsPanel } from './WidgetsPanel';
 import { TokensPanel } from './TokensPanel';
 
-type LeftTab = 'layers' | 'assets' | 'tokens' | 'icons' | 'components';
+type LeftTab = 'layers' | 'assets' | 'tokens' | 'icons' | 'components' | 'widgets';
 
 const TABS: readonly TabDef<LeftTab>[] = [
   { id: 'layers', label: STRINGS.panels.layers },
@@ -14,6 +15,7 @@ const TABS: readonly TabDef<LeftTab>[] = [
   { id: 'tokens', label: STRINGS.panels.tokens },
   { id: 'icons', label: STRINGS.panels.icons },
   { id: 'components', label: STRINGS.panels.components },
+  { id: 'widgets', label: STRINGS.panels.widgets },
 ];
 
 /** Left panel: Layers, Assets, Tokens, Icons and Components tabs (docs/07). */
@@ -26,6 +28,7 @@ export function LeftPanel() {
       {tab === 'tokens' && <TokensPanel />}
       {tab === 'icons' && <IconsPanel />}
       {tab === 'components' && <ComponentsPanel />}
+      {tab === 'widgets' && <WidgetsPanel />}
     </Tabs>
   );
 }

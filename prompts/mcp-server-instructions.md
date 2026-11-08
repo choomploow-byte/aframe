@@ -14,7 +14,7 @@ WORKFLOW for any design request ("design", "improve my UI", "make it look better
 6. After addressing annotations, resolve_annotation with a one-line reply.
 7. Summarise in plain language what you changed and why.
 
-GAME OR CHUNKY UI: load_skill "game-ui". Icons: search_icons, then an icon node. Fonts: list_fonts. Repeated controls: define_component (with hover/pressed states) and create_instance; check them with screenshot state "all". Textures and overlays from the user's own library: search_library, use_library_asset.
+GAME OR CHUNKY UI: load_skill "game-ui". Start with list_themes + apply_theme (palette, fonts, radii), then build controls with create_widget (buttons, currency pills, progress bars, item slots, shop cards, panels, modals, tabs...) instead of hand-building them, and lay them out with repeat_node, arrange_nodes and group_nodes. Text can have an outline (textStroke) and gradient colour; hue/saturation/brightness recolour images. Icons: search_icons, then an icon node. Fonts: list_fonts. Repeated controls: define_component (with hover/pressed states) and create_instance; check them with screenshot state "all". Textures and overlays from the user's own library: search_library, use_library_asset.
 
 RULES
 - Keep the user's copy and structure unless asked; improve presentation first.

@@ -4,6 +4,7 @@ import {
   Frame,
   Hand,
   Image as ImageIcon,
+  Magnet,
   MessageSquare,
   MousePointer2,
   Square,
@@ -16,6 +17,7 @@ import { addArtboard } from '../store/commands';
 import { store, useAFrame, type ToolId } from '../store/store';
 import { getCanvasApi } from './canvas-api';
 import { DEVICE_PRESETS } from './presets';
+import { setSnapSettings, useSnapSettings } from './snap-settings';
 
 interface ToolDef {
   id: ToolId;
@@ -46,6 +48,8 @@ const TOOLS: readonly ToolDef[] = [
 export function Toolbar() {
   const tool = useAFrame((s) => s.tool);
   const [presetsOpen, setPresetsOpen] = useState(false);
+  const [snapOpen, setSnapOpen] = useState(false);
+  const snap = useSnapSettings();
 
   const addPreset = (preset: (typeof DEVICE_PRESETS)[number]): void => {
     setPresetsOpen(false);
@@ -104,6 +108,72 @@ export function Toolbar() {
           )}
         </span>
       ))}
+      <span className="toolbar__group toolbar__snap">
+        <button
+          type="button"
+          className="toolbar__btn"
+          aria-pressed={snap.enabled}
+          aria-label="Snapping"
+          title="Snapping on/off (Shift+S). Hold Ctrl while dragging to skip it once."
+          data-testid="snap-toggle"
+          onClick={() => setSnapSettings({ enabled: !snap.enabled })}
+        >
+          <Magnet size={16} strokeWidth={1.75} aria-hidden="true" />
+        </button>
+        <span className="toolbar__presets">
+          <button
+            type="button"
+            className="toolbar__btn toolbar__btn--small"
+            aria-label="Snapping options"
+            aria-expanded={snapOpen}
+            title="Snapping options"
+            data-testid="snap-options"
+            onClick={() => setSnapOpen((o) => !o)}
+          >
+            <ChevronDown size={12} strokeWidth={2} aria-hidden="true" />
+          </button>
+          {snapOpen && (
+            <div className="menu menu--up snapmenu" role="group" aria-label="Snapping options">
+              <label className="snapmenu__row">
+                <span>Snap to layers</span>
+                <input
+                  type="checkbox"
+                  checked={snap.objects}
+                  data-testid="snap-objects"
+                  onChange={(e) => setSnapSettings({ objects: e.target.checked })}
+                />
+              </label>
+              <label className="snapmenu__row">
+                <span>Equal spacing</span>
+                <input
+                  type="checkbox"
+                  checked={snap.spacing}
+                  data-testid="snap-spacing"
+                  onChange={(e) => setSnapSettings({ spacing: e.target.checked })}
+                />
+              </label>
+              <label className="snapmenu__row">
+                <span>Grid</span>
+                <select
+                  value={snap.grid}
+                  aria-label="Snap grid"
+                  data-testid="snap-grid"
+                  onChange={(e) => setSnapSettings({ grid: Number(e.target.value) })}
+                >
+                  {[0, 2, 4, 8, 16, 32].map((n) => (
+                    <option key={n} value={n}>
+                      {n === 0 ? 'Off' : `${n} px`}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="row__note">
+                Snapping only helps you drag. Your AI places things exactly.
+              </p>
+            </div>
+          )}
+        </span>
+      </span>
     </div>
   );
 }

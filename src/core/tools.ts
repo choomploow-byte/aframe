@@ -6,8 +6,9 @@ import { CREATABLE_TYPES } from './props';
 import { defineTool, ToolFailure, type Tool, type ToolResult } from './tool-kit';
 import { mergeTokens } from './token-edit';
 import { DESIGN_TOOLS } from './tools-design';
+import { GAME_TOOLS } from './tools-game';
 import { EXTRA_TOOLS } from './tools-extra';
-import type { NodePropKey, Op, ToolContext, Warning } from './types';
+import { BLEND_MODES, type NodePropKey, type Op, type ToolContext, type Warning } from './types';
 import { lookupId } from './ops';
 import { deepEqual } from './util';
 
@@ -86,6 +87,8 @@ const nodeProps = {
   w: sizeSchema.describe("Width in px, 'hug' (fit content) or 'fill' (take the available space)"),
   h: sizeSchema.describe("Height in px, 'hug' or 'fill'"),
   rotation: z.number().describe('Degrees'),
+  flipX: z.boolean().describe('Mirror left-right'),
+  flipY: z.boolean().describe('Mirror top-bottom'),
   visible: z.boolean(),
   locked: z.boolean().describe('Editor-only lock; tools can still edit locked nodes'),
   opacity: z.number().describe('0 (transparent) to 1'),
@@ -104,6 +107,19 @@ const nodeProps = {
   shadow: z.array(shadowSchema),
   blur: z.number().describe('Layer blur in px'),
   backdropBlur: z.number().describe('Backdrop blur in px'),
+  hue: z
+    .number()
+    .describe(
+      'Hue shift in degrees (-360 to 360). Recolours an image: a blue button with hue 120 turns green',
+    ),
+  saturation: z.number().describe('Colour strength multiplier, 1 = unchanged, 0 = grey'),
+  brightness: z.number().describe('Brightness multiplier, 1 = unchanged'),
+  contrast: z.number().describe('Contrast multiplier, 1 = unchanged'),
+  blendMode: z
+    .enum(BLEND_MODES)
+    .describe(
+      'How the layer mixes with what is under it: overlay or soft-light for textures that take the colour below, screen or plus-lighter for glows, multiply for shadows',
+    ),
   effects: z
     .array(effectRefSchema)
     .describe(
@@ -127,8 +143,19 @@ const nodeProps = {
   textAlign: z.enum(['left', 'center', 'right', 'justify']),
   color: z.string().describe('Text colour. ' + COLOR_HELP),
   textTransform: z.enum(['none', 'uppercase', 'capitalize']),
+  textStroke: z
+    .string()
+    .describe(
+      'Text outline colour: the game-title look. Pair with textStrokeWidth (3-6 for big titles)',
+    ),
+  textStrokeWidth: z.number().describe('How far the outline reaches outside the letters, px'),
   assetId: z.string().describe('Image nodes only'),
-  fit: z.enum(['cover', 'contain', 'fill']),
+  fit: z
+    .enum(['cover', 'contain', 'fill', 'tile'])
+    .describe(
+      "Image fit. 'tile' repeats the picture across the layer (textures and patterns); set tileSize to scale one tile",
+    ),
+  tileSize: z.number().describe('Tile fit only: width of one tile in px'),
   icon: z.string().describe("Icon nodes only: a name from search_icons, e.g. 'coins'"),
   component: z
     .object({
@@ -354,6 +381,7 @@ export const TOOLS: readonly Tool[] = [
   setTokens,
   applyChangesTool,
   ...DESIGN_TOOLS,
+  ...GAME_TOOLS,
   ...EXTRA_TOOLS,
 ];
 

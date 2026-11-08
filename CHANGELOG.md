@@ -4,6 +4,15 @@ All notable changes are recorded here. Format: [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+### Added
+
+- Game-UI tools for the AI: `create_widget` (16 finished, token-styled controls such as chunky buttons, currency pills, progress bars, item slots, shop cards, panels, modals, tabs), `list_themes` / `apply_theme` (7 game palettes), `arrange_nodes` (align, distribute, grid, match size), `group_nodes`, `ungroup_node`, `repeat_node` (copies with per-copy text and icons) and `find_nodes`.
+- `update_where` (one edit for every layer that matches a name, type or text), blend modes (`blendMode`: overlay, screen, multiply...), and three skills: `shop-patterns`, `game-motion` and `roblox-ui`.
+- New layer properties: flip (`flipX`, `flipY`), colour adjust (`hue`, `saturation`, `brightness`, `contrast`), text outline (`textStroke`, `textStrokeWidth`), gradient lettering, and tiled images (`fit: "tile"`, `tileSize`).
+- Editor: an Arrange section (align, distribute, grid, same size, flip, ungroup, repeat), a Widgets tab (themes and one-click widgets), outline and gradient controls for text, colour adjust and tiling controls for images, and shortcuts (Alt+A/D/W/S/H/V align, Shift+H/V flip, Ctrl+Shift+G ungroup).
+- Snapping for people: snap to other layers' edges and centres anywhere in the same frame, equal-gap guides with the gap shown, an optional grid, and snapping while resizing. A magnet button in the tool bar (and Shift+S) turns it off; Ctrl while dragging skips it once. It never touches the design or the AI.
+- The asset library takes the new game UI packs (buttons, panels, banners, sliders, icons, currency, items, eggs, event icons) with folder-aware categories and search filters. The packs stay in your own `~/.aframe/library`; they are not part of the app.
+
 ### Changed
 
 - The repository is now `aframe` (was `atelier`); the websites moved to `/aframe/` and `/aframe/pro/`.

@@ -191,7 +191,7 @@ describe('propIssues', () => {
         .map((i) => i.path)
         .sort(),
     ).toEqual(Object.keys(badText).sort());
-    expect(propIssues({ assetId: 'n_abcde', fit: 'tile' }, 'image')).toHaveLength(2);
+    expect(propIssues({ assetId: 'n_abcde', fit: 'zoom' }, 'image')).toHaveLength(2);
     expect(propIssues({ fontFamily: '$primary' }, 'text')).toHaveLength(1);
     expect(propIssues({ radius: '$primary' }, 'rect')).toHaveLength(1);
     expect(propIssues({ shadow: 'x' }, 'rect')).toHaveLength(1);

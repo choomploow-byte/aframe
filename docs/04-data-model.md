@@ -34,6 +34,8 @@ interface Node {
   // geometry. x,y only apply when the parent has layout 'none' (or is the page)
   x: number; y: number;
   w: Size; h: Size;
+  flipX?: boolean;           // mirror left-right (applied after rotation)
+  flipY?: boolean;           // mirror top-bottom
   rotation?: number;         // v0.2
   visible: boolean;
   locked: boolean;
@@ -48,6 +50,11 @@ interface Node {
   shadow?: Shadow[];
   blur?: number;             // layer blur px
   backdropBlur?: number;
+  hue?: number;              // degrees, -360..360: recolours a layer (images above all)
+  saturation?: number;       // multiplier, 1 = unchanged
+  brightness?: number;       // multiplier, 1 = unchanged
+  contrast?: number;         // multiplier, 1 = unchanged
+  blendMode?: BlendMode;     // normal | multiply | screen | overlay | soft-light | hard-light | color-dodge | plus-lighter | darken | lighten | difference
 
   // frame only
   layout?: 'none' | 'row' | 'column';
@@ -68,6 +75,8 @@ interface Node {
   textAlign?: 'left' | 'center' | 'right' | 'justify';
   color?: string;            // text colour (colour or $token)
   textTransform?: 'none' | 'uppercase' | 'capitalize';
+  textStroke?: string;       // outline colour round the glyphs (game titles)
+  textStrokeWidth?: number;  // px the outline reaches outside the letters
 
   // image only
   assetId?: string;
@@ -168,7 +177,7 @@ interface Reference {
 6. **Strokes** are drawn with `outline` + `outline-offset` (inside: `-w`, center: `-w/2`, outside: `0`): no layout impact, painted above children, follows `border-radius`. `strokeWidth` defaults to 1 when `stroke` is set; `strokeWidth: 0` or no `stroke` means no stroke.
 7. **`locked` is UI-only.** Tools may edit locked nodes; the result carries a `LOCKED_NODE` warning.
 8. **`line`** is a horizontal bar: `w` is its length, `h` its thickness (default 1) and `stroke` (fallback `fill`) its colour. `strokeWidth` is ignored for lines.
-9. **Property applicability:** frame-only (`layout, gap, padding, align, justify, wrap, clip`), text-only (`text, fontFamily, fontSize, fontWeight, lineHeight, letterSpacing, textAlign, color, textTransform`), image-only (`assetId, fit`). Setting one on the wrong node type is an `INVALID_VALUE` error with a hint, not a silent no-op.
+9. **Property applicability:** frame-only (`layout, gap, padding, align, justify, wrap, clip`), text-only (`text, fontFamily, fontSize, fontWeight, lineHeight, letterSpacing, textAlign, color, textTransform, textStroke, textStrokeWidth`), image-only (`assetId, fit`). Setting one on the wrong node type is an `INVALID_VALUE` error with a hint, not a silent no-op.
 10. **Defaults (`normalizeNode`)** add only these keys: every node `name, x, y, visible, locked, opacity, children, w, h`; frames also `layout:'none', gap:0, padding:[0,0,0,0], align:'start', justify:'start', clip:false`; text also `text:'', fontSize:16, fontWeight:400, lineHeight:1.4`; images `fit:'cover'`. `w/h` default to `'hug'` for text and for frames with a row/column layout, else 100 (line: 100 x 1). Normalising the sample fixture is a no-op.
 11. **`apply_changes` semantics:** stops at the first failing op and applies nothing; `update.set` accepts `null` to remove an optional property; unknown or inapplicable properties are rejected; no-op updates are not reported as changed; the result adds `deleted: string[]` and `warnings` (`LOCKED_NODE`, `UNKNOWN_TOKEN`). Unknown tokens are warnings, not errors. Deleting a node clears `nodeId` on annotations that pinned it (the pin keeps its x/y). `rev`/`meta` are bumped by the commit layer (`bumpRev`), not by ops.
 

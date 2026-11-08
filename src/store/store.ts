@@ -30,6 +30,9 @@ export interface Guide {
   at: number;
   from: number;
   to: number;
+  /** 'gap' draws an equal-spacing marker with its size in `label` (default: an alignment line). */
+  kind?: 'align' | 'gap';
+  label?: string;
 }
 
 /** Short-lived gesture feedback drawn by the overlay; never part of the document or history. */

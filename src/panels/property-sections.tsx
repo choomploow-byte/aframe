@@ -1122,11 +1122,31 @@ export function ImageSection({ ctx }: { ctx: PropCtx }) {
             { value: 'cover', label: 'Cover' },
             { value: 'contain', label: 'Contain' },
             { value: 'fill', label: 'Stretch' },
+            { value: 'tile', label: 'Tile' },
           ]}
           disabled={ctx.locked}
           onChange={(v) => ctx.set({ fit: v }, 'Change image fit')}
         />
       </Row>
+      {fit.value === 'tile' && (
+        <Row label="Tile size">
+          <NumberField
+            label="W"
+            ariaLabel="Tile width"
+            field="tileSize"
+            value={ctx.get('tileSize').value ?? 0}
+            mixed={ctx.get('tileSize').mixed}
+            min={0}
+            precision={0}
+            unit="px"
+            title="Width of one tile; 0 uses the picture's own size"
+            disabled={ctx.locked}
+            onChange={(v) =>
+              ctx.set({ tileSize: v <= 0 ? null : v }, 'Change tile size', 'prop:tileSize')
+            }
+          />
+        </Row>
+      )}
     </Section>
   );
 }

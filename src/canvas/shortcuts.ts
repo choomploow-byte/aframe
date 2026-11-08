@@ -16,6 +16,15 @@ import {
   type Store,
 } from '../store/commands';
 import type { ToolId } from '../store/store';
+import {
+  alignSelection,
+  flipSelection,
+  ungroupSelection,
+  type CommandResult,
+} from '../store/game-commands';
+import { showToast } from '../ui/toast';
+import { setSnapSettings, useSnapSettings } from './snap-settings';
+import type { AlignEdge } from '@core/arrange';
 import { openExportDialog } from '../export/dialog-state';
 import { openChat } from '../chat/focus';
 import { openDialog } from '../ui/ui-state';
@@ -53,6 +62,20 @@ const tool = (id: string, label: string, key: string, tool: ToolId): Shortcut =>
   keys: key.toUpperCase(),
   match: (e) => plain(e) && e.key.toLowerCase() === key,
   run: ({ store }) => store.getState().setTool(tool),
+});
+
+/** Tells the user why a command could not run (a keyboard shortcut has no button to show it). */
+const said = (result: CommandResult): void => {
+  if (!result.ok) showToast(result.reason, { kind: 'error' });
+};
+
+const align = (edge: AlignEdge, label: string, code: string): Shortcut => ({
+  id: `structure.align.${edge}`,
+  label,
+  keys: `Alt+${code.slice(3)}`,
+  // `code`, not `key`: with Alt held, macOS reports a different character.
+  match: (e) => e.altKey && !mod(e) && !e.shiftKey && e.code === code,
+  run: ({ env }) => said(alignSelection(env, edge)),
 });
 
 const arrow = (name: string, dx: number, dy: number): Shortcut => ({
@@ -155,6 +178,44 @@ export const SHORTCUTS: readonly Shortcut[] = [
     match: (e) => mod(e) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'g',
     run: ({ env }) => void wrapSelectionInFrame(env),
   },
+  {
+    id: 'view.snapping',
+    label: 'Toggle snapping',
+    keys: 'Shift+S',
+    match: (e) => !mod(e) && !e.altKey && e.shiftKey && e.key.toLowerCase() === 's',
+    run: () => {
+      const enabled = !useSnapSettings.getState().enabled;
+      setSnapSettings({ enabled });
+      showToast(enabled ? 'Snapping on' : 'Snapping off');
+    },
+  },
+  {
+    id: 'structure.ungroup',
+    label: 'Ungroup',
+    keys: 'Ctrl+Shift+G',
+    match: (e) => mod(e) && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'g',
+    run: ({ env }) => said(ungroupSelection(env)),
+  },
+  {
+    id: 'structure.flipX',
+    label: 'Flip horizontally',
+    keys: 'Shift+H',
+    match: (e) => !mod(e) && !e.altKey && e.shiftKey && e.key.toLowerCase() === 'h',
+    run: ({ store }) => said(flipSelection(store, 'x')),
+  },
+  {
+    id: 'structure.flipY',
+    label: 'Flip vertically',
+    keys: 'Shift+V',
+    match: (e) => !mod(e) && !e.altKey && e.shiftKey && e.key.toLowerCase() === 'v',
+    run: ({ store }) => said(flipSelection(store, 'y')),
+  },
+  align('left', 'Align left', 'KeyA'),
+  align('right', 'Align right', 'KeyD'),
+  align('top', 'Align top', 'KeyW'),
+  align('bottom', 'Align bottom', 'KeyS'),
+  align('center', 'Align horizontal centres', 'KeyH'),
+  align('middle', 'Align vertical centres', 'KeyV'),
   {
     id: 'structure.autoLayout',
     label: 'Add auto layout',

@@ -36,6 +36,8 @@ const READ_ONLY = new Set([
   'list_fonts',
   'component_list',
   'search_library',
+  'list_themes',
+  'find_nodes',
 ]);
 
 type Block = { type: 'text'; text: string } | { type: 'image'; data: string; mimeType: string };

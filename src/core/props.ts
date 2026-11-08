@@ -12,6 +12,8 @@ export const COMMON_PROPS = [
   'w',
   'h',
   'rotation',
+  'flipX',
+  'flipY',
   'visible',
   'locked',
   'opacity',
@@ -23,6 +25,11 @@ export const COMMON_PROPS = [
   'shadow',
   'blur',
   'backdropBlur',
+  'hue',
+  'saturation',
+  'brightness',
+  'contrast',
+  'blendMode',
   'effects',
   'role',
   'href',
@@ -49,9 +56,11 @@ export const TEXT_PROPS = [
   'textAlign',
   'color',
   'textTransform',
+  'textStroke',
+  'textStrokeWidth',
 ] as const satisfies readonly NodePropKey[];
 
-export const IMAGE_PROPS = ['assetId', 'fit'] as const satisfies readonly NodePropKey[];
+export const IMAGE_PROPS = ['assetId', 'fit', 'tileSize'] as const satisfies readonly NodePropKey[];
 
 /** `color` is the icon's ink, like text colour. */
 export const ICON_PROPS = ['icon', 'color'] as const satisfies readonly NodePropKey[];

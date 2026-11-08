@@ -15,7 +15,10 @@ Skills are markdown documents of design knowledge that agents load on demand via
 | `reference-matching.md` | reference-matching | Style briefs and comparison loop |
 | `critique.md` | critique | Review checklist and report format |
 | `tokens.md` | tokens | Design systems and export mapping |
-| `game-ui.md` | game-ui | Game HUDs, shops, inventories, chunky buttons, icons, patterns, bevels, component states |
+| `game-ui.md` | game-ui | Game HUDs, shops, inventories, chunky buttons, icons, patterns, bevels, component states, widgets, themes |
+| `roblox-ui.md` | roblox-ui | UI that gets rebuilt in Roblox Studio: design resolution, safe areas, scaling, layer to Studio object mapping |
+| `shop-patterns.md` | shop-patterns | Shops, offers and price hierarchy: hero offer, deals, rarity, tabs, currencies |
+| `game-motion.md` | game-motion | Button press, pop-in, shine sweeps, durations and easing, written as a spec |
 
 ## File format
 ```

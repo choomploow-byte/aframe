@@ -201,7 +201,16 @@ await group('theme: toggle, persistence, no flash', async () => {
 await group('every doc-04 property is reachable from the panels', async () => {
   await resetSample();
   const seen = new Set();
-  const collect = async () => (await fieldsOnScreen()).forEach((f) => seen.add(f));
+  const collect = async () => {
+    // Rarely used sections start closed; open them so their fields are on screen.
+    await page.evaluate(() =>
+      document
+        .querySelectorAll('.section__toggle[aria-expanded="false"]')
+        .forEach((b) => b.click()),
+    );
+    await settle(page);
+    (await fieldsOnScreen()).forEach((f) => seen.add(f));
+  };
   // A frame with auto layout, a text node, a plain frame with no layout, and (below) an image.
   for (const name of ['Hero', 'Headline', 'Landing - Desktop', 'Logo']) {
     await selectByName(name);
@@ -310,6 +319,15 @@ await group('every doc-04 property is reachable from the panels', async () => {
     'shadow-0-inset',
     'blur',
     'backdropBlur',
+    'hue',
+    'saturation',
+    'brightness',
+    'contrast',
+    'align-left',
+    'flipX',
+    'flipY',
+    'textStroke',
+    'textStrokeWidth',
     'text',
     'fontFamily',
     'fontSize',

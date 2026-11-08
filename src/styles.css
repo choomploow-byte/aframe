@@ -857,3 +857,80 @@ body {
   gap: 8px;
   color: var(--muted);
 }
+
+/* Equal-spacing markers while dragging: a bar with end ticks and the gap in px. */
+.ov-gap {
+  position: absolute;
+  background: var(--accent);
+  pointer-events: none;
+}
+.ov-gap--h {
+  height: 1px;
+}
+.ov-gap--v {
+  width: 1px;
+}
+.ov-gap::before,
+.ov-gap::after {
+  content: '';
+  position: absolute;
+  background: var(--accent);
+}
+.ov-gap--h::before,
+.ov-gap--h::after {
+  top: -3px;
+  width: 1px;
+  height: 7px;
+}
+.ov-gap--h::before {
+  left: 0;
+}
+.ov-gap--h::after {
+  right: 0;
+}
+.ov-gap--v::before,
+.ov-gap--v::after {
+  left: -3px;
+  width: 7px;
+  height: 1px;
+}
+.ov-gap--v::before {
+  top: 0;
+}
+.ov-gap--v::after {
+  bottom: 0;
+}
+.ov-gap__label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -140%);
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: var(--accent-ink, #fff);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 14px;
+  white-space: nowrap;
+}
+.ov-gap--v .ov-gap__label {
+  transform: translate(8px, -50%);
+}
+.snapmenu {
+  min-width: 190px;
+  padding: 6px;
+}
+.snapmenu__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 6px;
+  font-size: 12px;
+  color: var(--ink);
+}
+.snapmenu__row select {
+  font: inherit;
+  font-size: 12px;
+}

@@ -147,7 +147,28 @@ export function Overlay({ measurer }: { measurer: Measurer }) {
       )}
 
       {transient.guides.map((g, i) =>
-        g.axis === 'x' ? (
+        g.kind === 'gap' ? (
+          <div
+            key={i}
+            className={`ov-gap ov-gap--${g.axis === 'y' ? 'h' : 'v'}`}
+            data-gap={g.label}
+            style={
+              g.axis === 'y'
+                ? {
+                    left: toScreen('x', g.from),
+                    top: toScreen('y', g.at),
+                    width: (g.to - g.from) * zoom,
+                  }
+                : {
+                    left: toScreen('x', g.at),
+                    top: toScreen('y', g.from),
+                    height: (g.to - g.from) * zoom,
+                  }
+            }
+          >
+            <span className="ov-gap__label">{g.label}</span>
+          </div>
+        ) : g.axis === 'x' ? (
           <div
             key={i}
             className="ov-guide"

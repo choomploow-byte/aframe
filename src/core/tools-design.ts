@@ -15,7 +15,15 @@ import {
 import { CoreError } from './errors';
 import { FONT_CATALOG } from './fonts';
 import { getIcon, ICON_CATEGORIES, searchIcons, suggestIcons } from './icons';
-import { describeEntry, LIBRARY_CATEGORIES, searchLibrary, type LibraryCategory } from './library';
+import {
+  describeEntry,
+  LIBRARY_CATEGORIES,
+  libraryFacets,
+  PICTURE_CATEGORIES,
+  searchLibrary,
+  STRETCHY_CATEGORIES,
+  type LibraryCategory,
+} from './library';
 import { lookupId } from './ops';
 import { defineTool, ToolFailure, type Tool } from './tool-kit';
 import type { Doc, ToolContext } from './types';
@@ -244,24 +252,40 @@ const needLibrary = (ctx: ToolContext): NonNullable<ToolContext['library']> => {
 const searchLibraryTool = defineTool({
   name: 'search_library',
   description:
-    "Search the user's own asset library: textures and overlays such as halftones, sunbursts, stars, sparkles, particles, hexagons, studs and paper. Most are white or grey with transparency, made to lay over a coloured frame (set opacity, or tint the frame behind). Returns ids for use_library_asset. No query lists a category. The library is the user's, kept in their AFrame folder; add to it with `aframe-mcp library add <folder>`.",
+    'Search the user\'s own asset library. It holds game UI parts (buttons, panels, banners, sliders, icons, currency, items, food, animals, nature, characters, eggs, event icons for Christmas, Halloween and Valentine\'s, social logos) as well as textures and overlays (halftones, sunbursts, stars, sparkles, particles, hexagons, studs, paper; mostly white or grey with transparency, made to lay over a coloured frame). Words match names, colours ("blue", "gold"), sizes ("small", "large") and folder names. Returns ids for use_library_asset. With no query it lists a category or pack, and the result always includes `categories` and `packs` (with their groups) so you can browse. The library is the user\'s, kept in their AFrame folder; add to it with `aframe-mcp library add <folder>`.',
   inputSchema: z.object({
-    query: z.string().max(80).optional().describe('Words, e.g. "halftone corner" or "sparkle"'),
+    query: z
+      .string()
+      .max(80)
+      .optional()
+      .describe('Words, e.g. "blue button", "gold coin", "dragon egg", "halftone corner"'),
     category: z.enum(LIBRARY_CATEGORIES as unknown as [string, ...string[]]).optional(),
+    pack: z
+      .string()
+      .max(60)
+      .optional()
+      .describe('Only this pack, e.g. "Basic GUI", "Eggs", "Events" (part of the name is enough)'),
+    group: z
+      .string()
+      .max(60)
+      .optional()
+      .describe('Only this folder in a pack, e.g. "Sliders", "Halloween" (see `packs`)'),
     limit: z.number().int().min(1).max(60).optional().describe('Default 24'),
   }),
-  handler: async (ctx, { query, category, limit }) => {
+  handler: async (ctx, { query, category, pack, group, limit }) => {
     const entries = await needLibrary(ctx).list();
     const found = searchLibrary(entries, query, {
       ...(category === undefined ? {} : { category: category as LibraryCategory }),
+      ...(pack === undefined ? {} : { pack }),
+      ...(group === undefined ? {} : { group }),
       ...(limit === undefined ? {} : { limit }),
     });
-    const counts: Record<string, number> = {};
-    for (const e of entries) counts[e.category] = (counts[e.category] ?? 0) + 1;
+    const { categories: counts, packs } = libraryFacets(entries);
     return {
       total: found.total,
       assets: found.hits.map(describeEntry),
       categories: counts,
+      ...(packs.length > 0 ? { packs } : {}),
       ...(entries.length === 0
         ? {
             hint: 'The library is empty. Add a folder of images: aframe-mcp library add <folder>.',
@@ -278,7 +302,7 @@ const searchLibraryTool = defineTool({
 const useLibraryAsset = defineTool({
   name: 'use_library_asset',
   description:
-    'Place an image from the asset library as an image node. The picture is stored in the project (once, however many times you place it). Give w and h to stretch it over something (fit "fill" is the default for overlays); opacity 0.1-0.4 lays a white texture softly over a colour. Returns the node id.',
+    'Place an image from the asset library as an image node (PNG or SVG; SVG stays sharp at any size). The picture is stored in the project (once, however many times you place it). Without w and h it keeps its own proportions (icons at most 96px, other parts at most 480px). Panels, buttons, banners and sliders default to fit "fill", so they follow the node when it is resized; icons, currency, items and the like default to "contain" so they are never squashed. Give w and h to stretch an overlay over something; opacity 0.1-0.4 lays a white texture softly over a colour. Returns the node id.',
   inputSchema: z.object({
     id: z.string().describe('An id from search_library'),
     parentId: z.string().optional().describe('Frame to put it in (default: the first frame)'),
@@ -287,7 +311,13 @@ const useLibraryAsset = defineTool({
     w: z.number().min(1).max(10000).optional(),
     h: z.number().min(1).max(10000).optional(),
     opacity: z.number().min(0).max(1).optional(),
-    fit: z.enum(['cover', 'contain', 'fill']).optional(),
+    fit: z.enum(['cover', 'contain', 'fill', 'tile']).optional(),
+    tileSize: z
+      .number()
+      .min(1)
+      .max(4000)
+      .optional()
+      .describe('fit "tile": width of one tile in px'),
     name: z.string().max(120).optional().describe('Layer name (default: the asset name)'),
   }),
   handler: async (ctx, input) => {
@@ -318,14 +348,24 @@ const useLibraryAsset = defineTool({
       input.parentId === undefined
         ? (root?.children[0] ?? base.rootId)
         : lookupId(base.nodes, input.parentId);
-    const spec = imageNodeSpec(assetId, info);
+    const category = found.entry.category;
+    const spec = imageNodeSpec(assetId, info, PICTURE_CATEGORIES.includes(category) ? 96 : 480);
     spec.name = input.name ?? found.entry.name;
     if (input.w !== undefined || input.h !== undefined) {
       const ratio = (info.width ?? 1) / Math.max(1, info.height ?? 1);
       spec.w = input.w ?? Math.max(1, Math.round((input.h as number) * ratio));
       spec.h = input.h ?? Math.max(1, Math.round((input.w as number) / ratio));
     }
-    spec.fit = input.fit ?? (input.w !== undefined && input.h !== undefined ? 'fill' : 'cover');
+    spec.fit =
+      input.fit ??
+      (STRETCHY_CATEGORIES.includes(category)
+        ? 'fill'
+        : PICTURE_CATEGORIES.includes(category)
+          ? 'contain'
+          : input.w !== undefined && input.h !== undefined
+            ? 'fill'
+            : 'cover');
+    if (input.tileSize !== undefined) spec.tileSize = input.tileSize;
     if (input.x !== undefined) spec.x = input.x;
     if (input.y !== undefined) spec.y = input.y;
     if (input.opacity !== undefined) spec.opacity = input.opacity;

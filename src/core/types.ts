@@ -7,6 +7,21 @@ import type { LibraryEntry } from './library';
 
 export const SCHEMA_VERSION = 1 as const;
 
+export const BLEND_MODES = [
+  'normal',
+  'multiply',
+  'screen',
+  'overlay',
+  'soft-light',
+  'hard-light',
+  'color-dodge',
+  'plus-lighter',
+  'darken',
+  'lighten',
+  'difference',
+] as const;
+export type BlendMode = (typeof BLEND_MODES)[number];
+
 export type NodeType = 'page' | 'frame' | 'rect' | 'ellipse' | 'line' | 'text' | 'image' | 'icon';
 /** Node types a tool may create (the page node is created with the document). */
 export type CreatableNodeType = Exclude<NodeType, 'page'>;
@@ -82,6 +97,9 @@ export interface Node {
   w: Size;
   h: Size;
   rotation?: number; // v0.2
+  /** Mirror the layer left-right / top-bottom (after rotation is applied to the mirrored layer). */
+  flipX?: boolean;
+  flipY?: boolean;
   visible: boolean;
   locked: boolean;
   opacity: number; // 0..1
@@ -96,6 +114,13 @@ export interface Node {
   shadow?: Shadow[];
   blur?: number;
   backdropBlur?: number;
+  /** Colour adjustments for any layer (images above all): recolour a blue button green with `hue: 120`. */
+  hue?: number; // degrees, -360..360
+  saturation?: number; // multiplier, 1 = unchanged
+  brightness?: number; // multiplier, 1 = unchanged
+  contrast?: number; // multiplier, 1 = unchanged
+  /** How the layer mixes with what is under it (glows, textures that react to the colour below). */
+  blendMode?: BlendMode;
   /** Named shadow recipes drawn after `shadow`; box-based, so ignored on text. */
   effects?: EffectRef[];
 
@@ -121,10 +146,16 @@ export interface Node {
   textAlign?: 'left' | 'center' | 'right' | 'justify';
   color?: string;
   textTransform?: 'none' | 'uppercase' | 'capitalize';
+  /** Outline round the glyphs (the classic game title look); `textStrokeWidth` is how far it reaches outside. */
+  textStroke?: string;
+  textStrokeWidth?: number;
 
   // Image
   assetId?: string;
-  fit?: 'cover' | 'contain' | 'fill';
+  /** 'tile' repeats the picture across the layer (textures, patterns); `tileSize` is one tile's width. */
+  fit?: 'cover' | 'contain' | 'fill' | 'tile';
+  /** Tile fit only: width of one tile in px (height follows the picture). Default: the picture's own size. */
+  tileSize?: number;
 
   // Icon
   /** Name from the icon set (search_icons). Unknown names draw a labelled placeholder. */

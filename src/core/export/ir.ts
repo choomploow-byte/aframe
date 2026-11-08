@@ -220,9 +220,19 @@ export function buildIr(doc: Doc, nodeId: string, options: IrOptions = {}): IrRe
         break;
       }
       case 'image': {
+        const file = assetFile(node);
+        if (node.fit === 'tile' && file) {
+          // A tiled picture is a box with the picture as its repeating background.
+          tag = 'div';
+          css.backgroundImage = `url(${file})`;
+          if (node.props?.['aria-label']) {
+            attrs.role = 'img';
+            attrs['aria-label'] = node.props['aria-label'];
+          } else attrs['aria-hidden'] = 'true';
+          break;
+        }
         tag = 'img';
         isVoid = true;
-        const file = assetFile(node);
         if (file) asset = { file };
         const alt = node.props?.alt ?? node.props?.['aria-label'];
         if (alt === undefined)

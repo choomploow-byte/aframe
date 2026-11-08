@@ -9,7 +9,7 @@ AFrame is a desktop design app. You drive it through the `aframe` MCP tools (sho
 
 ## The loop (never skip the last step)
 1. **Look**: `get_design`; `get_selection` if the user says "this/selected"; `get_annotations` if they mention notes/comments/pins; `list_references` if they mention a reference or example.
-2. **Learn**: `load_skill design-fundamentals` once, then others as needed (`typography`, `color`, `layout-and-spacing`, `patterns`, `accessibility`, `reference-matching`, `critique`, `tokens`, and `game-ui` for games and chunky, glossy UI).
+2. **Learn**: `load_skill design-fundamentals` once, then others as needed (`typography`, `color`, `layout-and-spacing`, `patterns`, `accessibility`, `reference-matching`, `critique`, `tokens`, and `game-ui` for games and chunky, glossy UI, plus `shop-patterns`, `game-motion` and `roblox-ui` for shops, motion specs and UI that is rebuilt in Roblox Studio).
 3. **Plan**: decide structure → type → colour → detail. For references, write a short style brief first.
 4. **Edit**: `apply_changes` in a few logical, atomic batches. Use nested `create` to build whole sections.
 5. **Verify**: `screenshot` the changed frame. Critique what you see. `lint_design`. Fix. Repeat up to ~3 times.

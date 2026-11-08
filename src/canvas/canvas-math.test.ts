@@ -14,7 +14,7 @@ import {
   unionRects,
 } from './geometry';
 import { chainTo, depthOf, enterTarget, pickTarget } from './pick';
-import { snapMove } from './snapping';
+import { snapEdges, snapMove } from './snapping';
 import {
   clampZoom,
   fitRect,
@@ -220,5 +220,129 @@ describe('picking', () => {
     expect(enterTarget({ chain, selected: [] })).toBe('n_row1');
     expect(enterTarget({ chain, selected: ['n_other'] })).toBe('n_row1');
     expect(enterTarget({ chain: [], selected: [] })).toBeNull();
+  });
+});
+
+describe('snapMove: equal spacing and grid', () => {
+  const on = { objects: true, spacing: true, grid: 0 };
+
+  it('centres a layer between two neighbours and marks both gaps', () => {
+    const targets = [
+      { x: 0, y: 0, w: 100, h: 50 },
+      { x: 300, y: 0, w: 100, h: 50 },
+    ];
+    // free space 100..300 = 200, moving is 60 wide: centred x = 170.
+    const res = snapMove({ x: 167, y: 0, w: 60, h: 50 }, targets, 6, on);
+    expect(res.dx).toBe(3);
+    const gaps = res.guides.filter((g) => g.kind === 'gap');
+    expect(gaps.map((g) => g.label)).toEqual(['70', '70']);
+  });
+
+  it('repeats a gap that already exists between two other layers', () => {
+    const targets = [
+      { x: 0, y: 0, w: 50, h: 50 },
+      { x: 80, y: 0, w: 50, h: 50 }, // gap of 30
+    ];
+    // Next to the second one, 30 away: x = 160.
+    const res = snapMove({ x: 163, y: 0, w: 50, h: 50 }, targets, 6, on);
+    expect(res.dx).toBe(-3);
+    expect(res.guides.filter((g) => g.kind === 'gap').every((g) => g.label === '30')).toBe(true);
+  });
+
+  it('works vertically too', () => {
+    const targets = [
+      { x: 0, y: 0, w: 50, h: 100 },
+      { x: 0, y: 300, w: 50, h: 100 },
+    ];
+    const res = snapMove({ x: 0, y: 168, w: 50, h: 60 }, targets, 6, on);
+    expect(res.dy).toBe(2);
+    expect(res.guides.some((g) => g.kind === 'gap' && g.axis === 'x')).toBe(true);
+  });
+
+  it('spacing is off unless asked for, and layers on other rows are ignored', () => {
+    const targets = [
+      { x: 0, y: 0, w: 100, h: 50 },
+      { x: 300, y: 0, w: 100, h: 50 },
+    ];
+    expect(snapMove({ x: 167, y: 0, w: 60, h: 50 }, targets, 6).dx).toBe(0);
+    expect(snapMove({ x: 167, y: 200, w: 60, h: 50 }, targets, 6, on).dx).toBe(0);
+  });
+
+  it('snaps to a grid on axes nothing else snapped', () => {
+    const res = snapMove({ x: 37, y: 61, w: 10, h: 10 }, [], 6, {
+      objects: true,
+      spacing: false,
+      grid: 8,
+    });
+    expect([res.dx, res.dy]).toEqual([3, 3]);
+    expect(
+      snapMove({ x: 20, y: 20, w: 10, h: 10 }, [], 5, { objects: true, spacing: false, grid: 8 })
+        .dx,
+    ).toBe(4);
+  });
+
+  it('turns everything off with objects, spacing and grid all false', () => {
+    const targets = [{ x: 100, y: 100, w: 50, h: 50 }];
+    expect(
+      snapMove({ x: 98, y: 98, w: 10, h: 10 }, targets, 6, {
+        objects: false,
+        spacing: false,
+        grid: 0,
+      }),
+    ).toEqual({
+      dx: 0,
+      dy: 0,
+      guides: [],
+    });
+  });
+});
+
+describe('snapEdges (resizing)', () => {
+  const targets = [{ x: 200, y: 0, w: 100, h: 100 }];
+  const all = { objects: true, spacing: false, grid: 0 };
+
+  it('pulls the dragged right edge onto a nearby edge and keeps the left edge', () => {
+    const res = snapEdges(
+      { x: 0, y: 0, w: 197, h: 50 },
+      { left: false, right: true, top: false, bottom: false },
+      targets,
+      6,
+      all,
+    );
+    expect(res.rect).toEqual({ x: 0, y: 0, w: 200, h: 50 });
+    expect(res.guides[0]).toMatchObject({ axis: 'x', at: 200 });
+  });
+
+  it('moves the left edge and shrinks the width to match', () => {
+    const res = snapEdges(
+      { x: 203, y: 0, w: 97, h: 50 },
+      { left: true, right: false, top: false, bottom: false },
+      targets,
+      6,
+      all,
+    );
+    expect(res.rect).toMatchObject({ x: 200, w: 100 });
+  });
+
+  it('ignores edges that are not being dragged and does nothing out of range', () => {
+    const res = snapEdges(
+      { x: 0, y: 0, w: 150, h: 50 },
+      { left: false, right: false, top: false, bottom: true },
+      targets,
+      6,
+      all,
+    );
+    expect(res.rect).toEqual({ x: 0, y: 0, w: 150, h: 50 });
+  });
+
+  it('can snap the dragged edge to the grid', () => {
+    const res = snapEdges(
+      { x: 0, y: 0, w: 61, h: 50 },
+      { left: false, right: true, top: false, bottom: false },
+      [],
+      6,
+      { objects: false, spacing: false, grid: 8 },
+    );
+    expect(res.rect.w).toBe(64);
   });
 });

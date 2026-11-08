@@ -424,7 +424,8 @@
 }
 .tabs__list {
   display: flex;
-  gap: 2px;
+  flex-wrap: wrap; /* the left panel has six tabs: wrap rather than hide some */
+  gap: 0 2px;
   padding: 8px 10px 0;
   border-bottom: 1px solid var(--border);
 }

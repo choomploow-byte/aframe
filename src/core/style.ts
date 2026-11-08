@@ -170,17 +170,40 @@ function appearance(node: Node, tokens: Tokens, issues: TokenIssue[], out: CssRe
     parts.push(...effectShadows(node.effects, fill, tokens, issues));
     if (parts.length > 0) out.boxShadow = parts.join(', ');
   }
-  if (node.blur) out.filter = `blur(${px(node.blur)})`;
+  const filters: string[] = [];
+  if (node.blur) filters.push(`blur(${px(node.blur)})`);
+  if (node.hue) filters.push(`hue-rotate(${n(node.hue)}deg)`);
+  if (node.saturation !== undefined && node.saturation !== 1) {
+    filters.push(`saturate(${n(node.saturation)})`);
+  }
+  if (node.brightness !== undefined && node.brightness !== 1) {
+    filters.push(`brightness(${n(node.brightness)})`);
+  }
+  if (node.contrast !== undefined && node.contrast !== 1) {
+    filters.push(`contrast(${n(node.contrast)})`);
+  }
+  if (filters.length > 0) out.filter = filters.join(' ');
   if (node.backdropBlur) {
     out.backdropFilter = `blur(${px(node.backdropBlur)})`;
     out.WebkitBackdropFilter = out.backdropFilter; // WebKit (macOS/Linux webviews) still needs the prefix
   }
   if (node.opacity !== 1) out.opacity = n(node.opacity);
-  if (node.rotation) out.transform = `rotate(${n(node.rotation)}deg)`;
+  if (node.blendMode && node.blendMode !== 'normal') out.mixBlendMode = node.blendMode;
+  const transforms: string[] = [];
+  if (node.rotation) transforms.push(`rotate(${n(node.rotation)}deg)`);
+  if (node.flipX || node.flipY)
+    transforms.push(`scale(${node.flipX ? -1 : 1}, ${node.flipY ? -1 : 1})`);
+  if (transforms.length > 0) out.transform = transforms.join(' ');
 
   if (node.type === 'image') {
     out.display = 'block';
-    out.objectFit = node.fit ?? 'cover';
+    if (node.fit === 'tile') {
+      // The renderers draw a tiled image as a plain box with the picture as its background (they
+      // add `background-image`; a data URL does not belong in this record).
+      out.backgroundRepeat = 'repeat';
+      out.backgroundPosition = '0 0';
+      out.backgroundSize = node.tileSize ? `${px(node.tileSize)} auto` : 'auto';
+    } else out.objectFit = node.fit ?? 'cover';
   }
 }
 
@@ -205,7 +228,38 @@ function typography(node: Node, tokens: Tokens, issues: TokenIssue[], out: CssRe
   if (node.textAlign) out.textAlign = node.textAlign;
   if (node.textTransform && node.textTransform !== 'none') out.textTransform = node.textTransform;
   const colour = resolveColor(node.color, tokens, issues);
-  if (colour) out.color = colour;
+  const strokeColour = resolveColor(node.textStroke, tokens, issues);
+  const strokeWidth = node.textStrokeWidth ?? (strokeColour ? 2 : 0);
+  if (colour && /^(?:linear|radial)-gradient\(/.test(colour)) {
+    // Gradient lettering: the gradient is the element's background, clipped to the glyphs. A
+    // text-shadow would be painted over that background, so shadows become a drop-shadow filter.
+    out.backgroundImage = colour;
+    out.backgroundClip = 'text';
+    out.WebkitBackgroundClip = 'text';
+    out.color = 'transparent';
+    out.WebkitTextFillColor = 'transparent';
+    if (out.textShadow) {
+      const drops = (node.shadow ?? []).flatMap((s) => {
+        const c = s.inset ? undefined : resolveColor(s.color, tokens, issues);
+        return c ? [`drop-shadow(${px(s.x)} ${px(s.y)} ${px(s.blur)} ${c})`] : [];
+      });
+      delete out.textShadow;
+      out.filter = [out.filter, ...drops].filter(Boolean).join(' ');
+    }
+    // The outline is centred on the glyph edge here (painted over the gradient), so it is
+    // `textStrokeWidth` thick overall rather than that far outside.
+    if (strokeColour && strokeWidth > 0)
+      out.WebkitTextStroke = `${px(strokeWidth)} ${strokeColour}`;
+  } else {
+    if (colour) out.color = colour;
+    if (strokeColour && strokeWidth > 0) {
+      // Painted behind the fill, so half of the stroke is hidden under the letters: doubling the
+      // width makes `textStrokeWidth` the visible outline thickness.
+      out.WebkitTextStroke = `${px(strokeWidth * 2)} ${strokeColour}`;
+      out.paintOrder = 'stroke fill';
+      out.strokeLinejoin = 'round';
+    }
+  }
   // hug width = a single line; any other width wraps (docs/04 layout semantics).
   if (node.w === 'hug') {
     out.whiteSpace = 'pre';
@@ -236,6 +290,9 @@ export function nodeToCss(
 
 const UNSAFE_VALUE_RE = /[;{}<>\\]|url\s*\(|expression\s*\(|@import/i;
 
+/** `url(assets/name.png)`: a relative link to an exported picture, the one other `url()` an export may carry. */
+export const ASSET_URL_RE = /url\((["']?)assets\/[A-Za-z0-9._-]+\1\)/g;
+
 export function cssPropertyName(key: string): string {
   return key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
 }
@@ -249,7 +306,10 @@ export function cssToString(css: CssRecord, options: { separator?: string } = {}
   return (
     Object.entries(css)
       // The one `url()` allowed is the data-URL image a noise pattern is made of (see NOISE_URL_RE).
-      .filter(([, value]) => !UNSAFE_VALUE_RE.test(value.replace(NOISE_URL_RE, 'none')))
+      .filter(
+        ([, value]) =>
+          !UNSAFE_VALUE_RE.test(value.replace(NOISE_URL_RE, 'none').replace(ASSET_URL_RE, 'none')),
+      )
       .map(([key, value]) => `${cssPropertyName(key)}: ${value};`)
       .join(separator)
   );

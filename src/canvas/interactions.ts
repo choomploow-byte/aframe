@@ -17,7 +17,8 @@ import {
 } from './geometry';
 import type { Measurer } from './measure';
 import { chainTo, enterTarget, pickTarget } from './pick';
-import { snapMove } from './snapping';
+import { activeSnap } from './snap-settings';
+import { snapEdges, snapMove } from './snapping';
 import { panBy, screenToWorld, wheelZoomFactor, zoomAt } from './viewport';
 
 /**
@@ -86,6 +87,7 @@ type Gesture =
       flex: boolean;
       startWorld: Rect;
       startModel: Point;
+      targets: Rect[];
       started: boolean;
     };
 
@@ -197,18 +199,7 @@ export function attachInteractions(deps: Deps): {
     );
     const first = s.doc.nodes[ids[0] as string] as Node;
     const parent = s.doc.nodes[first.parentId ?? ''];
-    const targets: Rect[] = [];
-    if (parent) {
-      for (const sib of parent.children) {
-        if (ids.includes(sib) || s.doc.nodes[sib]?.visible === false) continue;
-        const r = measurer.worldRect(sib);
-        if (r) targets.push(r);
-      }
-      if (parent.type !== 'page') {
-        const pr = measurer.worldRect(parent.id);
-        if (pr) targets.push(pr);
-      }
-    }
+    const targets = snapTargets(ids, parent);
     gesture = {
       kind: 'move',
       origin,
@@ -220,6 +211,45 @@ export function attachInteractions(deps: Deps): {
       alt,
       narrowTo,
     };
+  };
+
+  /**
+   * What a dragged layer can line up with: its siblings and parent first, then every other visible
+   * layer in the same top-level frame (so a button can align with something in another group).
+   */
+  const snapTargets = (moving: readonly string[], parent: Node | undefined): Rect[] => {
+    const s = state();
+    const out: Rect[] = [];
+    const seen = new Set<string>(moving);
+    const add = (id: string): void => {
+      if (seen.has(id)) return;
+      seen.add(id);
+      const n = s.doc.nodes[id];
+      if (!n || n.visible === false || id === s.doc.rootId) return;
+      const r = measurer.worldRect(id);
+      if (r && r.w > 0 && r.h > 0) out.push(r);
+    };
+    if (parent) {
+      for (const sib of parent.children) add(sib);
+      if (parent.type !== 'page') add(parent.id);
+    }
+    // The rest of the same artboard, breadth first, capped so a huge design stays responsive.
+    let artboard: Node | undefined = parent;
+    while (artboard && artboard.parentId !== null && artboard.parentId !== s.doc.rootId) {
+      artboard = s.doc.nodes[artboard.parentId];
+    }
+    if (artboard && artboard.type !== 'page') {
+      const queue = [artboard.id];
+      const skip = new Set(moving);
+      while (queue.length > 0 && out.length < 300) {
+        const id = queue.shift() as string;
+        const n = s.doc.nodes[id];
+        if (!n || skip.has(id)) continue;
+        add(id);
+        queue.push(...n.children);
+      }
+    }
+    return out;
   };
 
   const startResize = (handle: Handle, origin: Point): void => {
@@ -239,6 +269,7 @@ export function attachInteractions(deps: Deps): {
       flex,
       startWorld,
       startModel: { x: node.x, y: node.y },
+      targets: snapTargets([id], s.doc.nodes[node.parentId ?? '']),
       started: false,
     };
   };
@@ -389,8 +420,14 @@ export function attachInteractions(deps: Deps): {
     let sx = 0;
     let sy = 0;
     let guides: ReturnType<typeof snapMove>['guides'] = [];
-    if (!mods.ctrl && g.groupWorld) {
-      const snap = snapMove(translate(g.groupWorld, dx, dy), g.targets, SNAP_PX / zoom);
+    const snapOptions = activeSnap();
+    if (!mods.ctrl && snapOptions && g.groupWorld) {
+      const snap = snapMove(
+        translate(g.groupWorld, dx, dy),
+        g.targets,
+        SNAP_PX / zoom,
+        snapOptions,
+      );
       sx = snap.dx;
       sy = snap.dy;
       guides = snap.guides;
@@ -476,6 +513,23 @@ export function attachInteractions(deps: Deps): {
       if (north) top = bottomEdge - h;
       else bottomEdge = top + h;
     }
+    // Snap the edges being dragged onto other layers (not while resizing from the centre or keeping proportions).
+    let guides: ReturnType<typeof snapEdges>['guides'] = [];
+    const snapOptions = activeSnap();
+    if (snapOptions && !mods.alt && !(mods.shift && corner)) {
+      const snapped = snapEdges(
+        { x: left, y: top, w: rightEdge - left, h: bottomEdge - top },
+        { left: west, right: east, top: north, bottom: south },
+        g.targets,
+        SNAP_PX / zoom,
+        snapOptions,
+      );
+      left = snapped.rect.x;
+      top = snapped.rect.y;
+      rightEdge = snapped.rect.x + snapped.rect.w;
+      bottomEdge = snapped.rect.y + snapped.rect.h;
+      guides = snapped.guides;
+    }
     // Never collapse: keep the edge opposite the handle fixed and stop at 1 world px.
     if (rightEdge - left < 1) {
       if (west) left = rightEdge - 1;
@@ -495,6 +549,7 @@ export function attachInteractions(deps: Deps): {
       set.y = round2(g.startModel.y + (top - r0.y));
     }
     s.dispatch([{ op: 'update', id: g.id, set }], { label: 'Resize' });
+    s.setTransient({ guides });
   };
 
   const updateDraw = (g: Extract<Gesture, { kind: 'draw' }>, p: Point): void => {

@@ -16,7 +16,7 @@ const insideComponent = (doc: Doc, n: Node): boolean =>
   instanceRootOf(doc.nodes, n) !== null || masterRootOf(doc.nodes, n) !== null;
 
 /** A selected frame, else the parent of what is selected, else the page; never inside a component. */
-function insertionParent(doc: Doc, selection: readonly string[]): Node {
+export function insertionParent(doc: Doc, selection: readonly string[]): Node {
   const page = doc.nodes[doc.rootId] as Node;
   const first = selection[0] ? doc.nodes[selection[0]] : undefined;
   const candidates: (Node | undefined)[] = [

@@ -385,3 +385,92 @@ describe('cssToString', () => {
     expect(GLOBAL_RESET_CSS).toContain('box-sizing:border-box');
   });
 });
+
+describe('game-UI looks: flip, colour adjustments, outlined and gradient lettering', () => {
+  it('flips combine with rotation', () => {
+    expect(css(node({ type: 'rect', w: 10, h: 10, flipX: true }), page).transform).toBe(
+      'scale(-1, 1)',
+    );
+    expect(
+      css(node({ type: 'rect', w: 10, h: 10, rotation: 30, flipX: true, flipY: true }), page)
+        .transform,
+    ).toBe('rotate(30deg) scale(-1, -1)');
+  });
+
+  it('colour adjustments become one filter, next to blur, and unchanged values add nothing', () => {
+    const adjusted = css(
+      node({ type: 'image', w: 10, h: 10, blur: 2, hue: 120, saturation: 1.4, brightness: 1 }),
+      page,
+    );
+    expect(adjusted.filter).toBe('blur(2px) hue-rotate(120deg) saturate(1.4)');
+    expect(css(node({ type: 'image', w: 10, h: 10, contrast: 1 }), page).filter).toBeUndefined();
+  });
+
+  it('a text outline is drawn behind the fill and is the visible thickness', () => {
+    const t = css(
+      node({
+        type: 'text',
+        text: 'PLAY',
+        color: '#fff',
+        textStroke: '#120B24',
+        textStrokeWidth: 4,
+      }),
+      column,
+    );
+    expect(t.WebkitTextStroke).toBe('8px #120B24');
+    expect(t.paintOrder).toBe('stroke fill');
+    expect(t.color).toBe('#fff');
+  });
+
+  it('gradient lettering clips the gradient to the glyphs and moves shadows to a drop-shadow', () => {
+    const t = css(
+      node({
+        type: 'text',
+        text: 'GOLD',
+        color: 'linear-gradient(180deg, #FFE27A, #FFB020)',
+        shadow: [{ x: 0, y: 3, blur: 0, spread: 0, color: '#120B24' }],
+      }),
+      column,
+    );
+    expect(t.backgroundImage).toContain('linear-gradient');
+    expect(t.backgroundClip).toBe('text');
+    expect(t.color).toBe('transparent');
+    expect(t.textShadow).toBeUndefined();
+    expect(t.filter).toBe('drop-shadow(0px 3px 0px #120B24)');
+  });
+});
+
+describe('tiled images', () => {
+  it('a tiled image repeats from the corner at the tile size, with no object-fit', () => {
+    const css1 = css(
+      node({ type: 'image', w: 200, h: 100, fit: 'tile', tileSize: 32, assetId: 'img_ab12c' }),
+      page,
+    );
+    expect(css1).toMatchObject({
+      backgroundRepeat: 'repeat',
+      backgroundSize: '32px auto',
+      backgroundPosition: '0 0',
+    });
+    expect(css1.objectFit).toBeUndefined();
+    expect(css(node({ type: 'image', w: 8, h: 8, fit: 'tile' }), page).backgroundSize).toBe('auto');
+  });
+
+  it('cssToString lets an exported asset url through and still refuses other urls', () => {
+    expect(cssToString({ backgroundImage: 'url(assets/stone-tile.png)' })).toContain(
+      'assets/stone-tile.png',
+    );
+    expect(cssToString({ backgroundImage: 'url(https://evil.test/x.png)' })).toBe('');
+    expect(cssToString({ backgroundImage: 'url(assets/../x.png)' })).toBe('');
+  });
+});
+
+describe('blend modes', () => {
+  it('writes mix-blend-mode, and nothing for normal', () => {
+    expect(css(node({ type: 'rect', w: 10, h: 10, blendMode: 'overlay' }), page).mixBlendMode).toBe(
+      'overlay',
+    );
+    expect(
+      css(node({ type: 'rect', w: 10, h: 10, blendMode: 'normal' }), page).mixBlendMode,
+    ).toBeUndefined();
+  });
+});

@@ -15,6 +15,19 @@ import { setThemePreference, type ThemePreference } from './theme';
 import { openExportDialog } from '../export/dialog-state';
 import { openChat } from '../chat/focus';
 import { openDialog } from './ui-state';
+import { GAME_THEMES } from '@core/themes';
+import { WIDGET_INFO, WIDGET_KINDS } from '@core/widgets';
+import {
+  applyGameTheme,
+  distributeSelection,
+  gridSelection,
+  insertWidget,
+  matchSizeSelection,
+  repeatSelection,
+  type CommandResult,
+} from '../store/game-commands';
+import { showToast } from './toast';
+import { setSnapSettings, useSnapSettings } from '../canvas/snap-settings';
 
 /**
  * Everything the command palette (Ctrl+K) can run: every keyboard shortcut from the one registry,
@@ -139,5 +152,97 @@ export function buildPaletteCommands(): PaletteCommand[] {
     { id: 'ai.chat', label: 'Open the AI chat', group: 'Help', run: openChat },
     { id: 'ai.settings', label: 'AI settings…', group: 'Help', run: () => openDialog('settings') },
   ];
-  return [...fromShortcuts, ...frames, ...themes, ...other];
+  const said = (result: CommandResult, done?: string): void => {
+    if (!result.ok) showToast(result.reason, { kind: 'error' });
+    else if (done) showToast(done);
+  };
+  const ctx = (): ReturnType<typeof currentShortcutContext> => currentShortcutContext();
+
+  const gameWidgets: PaletteCommand[] = WIDGET_KINDS.map((kind) => ({
+    id: `widget.${kind}`,
+    label: `Insert widget: ${WIDGET_INFO[kind].label}`,
+    group: 'Game UI',
+    run: () => said(insertWidget(store, kind, ctx().api?.viewCenter() ?? null)),
+  }));
+  const gameThemes: PaletteCommand[] = GAME_THEMES.map((t) => ({
+    id: `gametheme.${t.id}`,
+    label: `Game theme: ${t.label}`,
+    group: 'Game UI',
+    run: () => said(applyGameTheme(store, t.id), `Theme: ${t.label}`),
+  }));
+  const arrange: PaletteCommand[] = [
+    {
+      id: 'arrange.distributeH',
+      label: 'Distribute horizontally',
+      group: 'Arrange',
+      run: () => said(distributeSelection(ctx().env, 'horizontal')),
+    },
+    {
+      id: 'arrange.distributeV',
+      label: 'Distribute vertically',
+      group: 'Arrange',
+      run: () => said(distributeSelection(ctx().env, 'vertical')),
+    },
+    {
+      id: 'arrange.grid',
+      label: 'Arrange selection in a grid',
+      group: 'Arrange',
+      run: () =>
+        said(
+          gridSelection(
+            ctx().env,
+            Math.max(1, Math.ceil(Math.sqrt(store.getState().selection.length))),
+          ),
+        ),
+    },
+    {
+      id: 'arrange.sameWidth',
+      label: 'Match width of selection',
+      group: 'Arrange',
+      run: () => said(matchSizeSelection(ctx().env, 'w')),
+    },
+    {
+      id: 'arrange.sameHeight',
+      label: 'Match height of selection',
+      group: 'Arrange',
+      run: () => said(matchSizeSelection(ctx().env, 'h')),
+    },
+    ...[3, 5, 9].map((n) => ({
+      id: `arrange.repeat${n}`,
+      label: `Repeat selected layer ×${n} in a ${n === 9 ? 'grid' : 'row'}`,
+      group: 'Arrange',
+      run: () =>
+        said(repeatSelection(ctx().env, n, n === 9 ? 'grid' : 'row', n === 9 ? 3 : undefined)),
+    })),
+  ];
+  const snapping: PaletteCommand[] = [
+    {
+      id: 'snap.objects',
+      label: 'Snapping: toggle snap to layers',
+      group: 'View',
+      run: () => setSnapSettings({ objects: !useSnapSettings.getState().objects }),
+    },
+    {
+      id: 'snap.spacing',
+      label: 'Snapping: toggle equal spacing guides',
+      group: 'View',
+      run: () => setSnapSettings({ spacing: !useSnapSettings.getState().spacing }),
+    },
+    ...[0, 4, 8, 16].map((n) => ({
+      id: `snap.grid.${n}`,
+      label: n === 0 ? 'Snapping: grid off' : `Snapping: grid ${n} px`,
+      group: 'View',
+      run: () => setSnapSettings({ grid: n, enabled: true }),
+    })),
+  ];
+  return [
+    ...fromShortcuts,
+    ...snapping,
+    ...frames,
+    ...themes,
+    ...other,
+    ...gameWidgets,
+    ...gameThemes,
+    ...arrange,
+  ];
 }

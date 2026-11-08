@@ -123,12 +123,23 @@ export function runCommand(args: string[], env: InstallEnv, io: CliIo): number {
         for (const e of all) counts.set(e.category, (counts.get(e.category) ?? 0) + 1);
         io.out(`${all.length} assets in ${library.dir}`);
         for (const [category, n] of [...counts].sort()) io.out(`  ${category}: ${n}`);
+        const packs = new Map<string, number>();
+        for (const e of all) if (e.pack) packs.set(e.pack, (packs.get(e.pack) ?? 0) + 1);
+        if (packs.size > 0) {
+          io.out('by pack:');
+          for (const [pack, n] of [...packs].sort()) io.out(`  ${pack}: ${n}`);
+        }
         return 0;
       }
       if (sub === 'add' && folder) {
         try {
           const report = library.add(folder);
           io.out(`[ok]  added ${report.added.length} to ${library.dir}`);
+          if (report.twins.length > 0) {
+            io.out(
+              `[i]   ${report.twins.length} left out because a better copy came with them (a PNG beside its SVG, or a smaller size)`,
+            );
+          }
           if (report.duplicates.length > 0) {
             io.out(
               `[i]   ${report.duplicates.length} already there (same picture): ${report.duplicates.slice(0, 5).join(', ')}${report.duplicates.length > 5 ? ', ...' : ''}`,

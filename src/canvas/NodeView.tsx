@@ -104,6 +104,15 @@ export const NodeView = memo(function NodeView({ id, parentId }: Props) {
   if (node.type === 'image') {
     // Only embedded raster/SVG data URLs are ever shown (docs/18); SVG is safe because <img> never runs scripts.
     const src = assetUrl !== undefined && IMAGE_SRC_RE.test(assetUrl) ? assetUrl : undefined;
+    if (src && node.fit === 'tile') {
+      return (
+        <div
+          data-node-id={id}
+          data-node-type="image"
+          style={{ ...css, backgroundImage: `url("${src}")` }}
+        />
+      );
+    }
     return src ? (
       <img
         data-node-id={id}

@@ -42,10 +42,15 @@ function build(doc: Doc, id: string, parent: Node | undefined): HTMLElement | nu
   if (node.type === 'image') {
     const url = node.assetId === undefined ? undefined : doc.assets[node.assetId];
     if (url !== undefined && IMAGE_SRC_RE.test(url)) {
-      const img = document.createElement('img');
-      img.src = url;
-      img.alt = '';
-      el = img;
+      if (node.fit === 'tile') {
+        el = document.createElement('div');
+        css.backgroundImage = `url("${url}")`;
+      } else {
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = '';
+        el = img;
+      }
     } else {
       el = document.createElement('div');
       css.background =

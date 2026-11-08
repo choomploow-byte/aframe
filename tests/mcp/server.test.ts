@@ -113,32 +113,41 @@ describe('the protocol surface', () => {
         'add_annotation',
         'add_reference',
         'apply_changes',
+        'apply_theme',
+        'arrange_nodes',
         'component_list',
         'create_instance',
         'create_project',
+        'create_widget',
         'define_component',
         'export_code',
         'export_image',
+        'find_nodes',
         'get_annotations',
         'get_design',
         'get_node',
         'get_reference',
         'get_selection',
         'get_tokens',
+        'group_nodes',
         'import_image',
         'lint_design',
         'list_fonts',
         'list_projects',
         'list_references',
         'list_skills',
+        'list_themes',
         'load_skill',
         'open_project',
         'place_icon',
+        'repeat_node',
         'resolve_annotation',
         'screenshot',
         'search_icons',
         'search_library',
         'set_tokens',
+        'ungroup_node',
+        'update_where',
         'use_library_asset',
       ].sort(),
     );
@@ -151,9 +160,25 @@ describe('the protocol surface', () => {
     const shot = tools.find((t) => t.name === 'screenshot');
     expect(shot?.annotations?.readOnlyHint).toBe(true);
     expect(tools.find((t) => t.name === 'apply_changes')?.annotations?.readOnlyHint).toBe(false);
-    for (const name of ['search_icons', 'list_fonts', 'component_list', 'search_library'])
+    for (const name of [
+      'search_icons',
+      'list_fonts',
+      'component_list',
+      'search_library',
+      'list_themes',
+      'find_nodes',
+    ])
       expect(tools.find((t) => t.name === name)?.annotations?.readOnlyHint, name).toBe(true);
-    for (const name of ['place_icon', 'create_instance', 'define_component', 'use_library_asset'])
+    for (const name of [
+      'place_icon',
+      'create_instance',
+      'define_component',
+      'use_library_asset',
+      'create_widget',
+      'update_where',
+      'arrange_nodes',
+      'apply_theme',
+    ])
       expect(tools.find((t) => t.name === name)?.annotations?.readOnlyHint, name).toBe(false);
   });
 

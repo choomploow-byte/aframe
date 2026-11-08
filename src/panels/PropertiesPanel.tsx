@@ -15,6 +15,7 @@ import {
   StrokeSection,
   TypographySection,
 } from './property-sections';
+import { AdjustSection, ArrangeSection, TextOutlineSection } from './game-sections';
 import { ComponentSection, EffectPresetsSection, IconSection } from './toolkit-sections';
 
 /** The Design tab: sections for whatever is selected, with "Mixed" where a multi-selection differs. */
@@ -45,15 +46,18 @@ export function PropertiesPanel() {
   return (
     <div className="props" data-testid="properties">
       <LayerSection ctx={ctx} />
+      <ArrangeSection ctx={ctx} />
       <LayoutSection ctx={ctx} />
       {hasFrame && <AutoLayoutSection ctx={ctx} />}
       {hasText && <TypographySection ctx={ctx} />}
+      {hasText && <TextOutlineSection ctx={ctx} />}
       {hasIcon && <IconSection ctx={ctx} />}
       {hasImage && <ImageSection ctx={ctx} />}
       <FillSection ctx={ctx} />
       <StrokeSection ctx={ctx} />
       {radiusApplies && <RadiusSection ctx={ctx} />}
       <EffectsSection ctx={ctx} />
+      <AdjustSection ctx={ctx} />
       {presetsApply && <EffectPresetsSection ctx={ctx} />}
       {hasFrame && <ComponentSection ctx={ctx} />}
       <NotesSection ctx={ctx} />

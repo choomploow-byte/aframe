@@ -35,7 +35,8 @@ The desktop window has no native title bar: the top bar is the title bar (minimi
 - Move: drag; arrows nudge 1px, shift+arrows 10px; alt-drag duplicates. Children of auto-layout frames are **not** free-dragged; dragging shows an insertion indicator to **reorder** within the frame (v0.2: reparent).
 - Resize: 8 handles on the DOM-measured box; shift keeps ratio; alt resizes from centre. In auto-layout frames, resizing a child switches its axis to fixed.
 - Create: drag with the tool to draw; click to create default size; text tool: click and type.
-- Snapping: edges/centres of siblings and parent, 6 px threshold, magenta-free guides in accent colour; distance labels on alt-hover.
+- Snapping (human view only, never saved in the design): edges/centres of siblings, the parent and everything else in the same top-level frame; equal-gap snaps with the gap size drawn; an optional grid (2-32 px); resizing snaps the dragged edges. 6 px threshold, guides in the accent colour. Magnet button (with options) in the tool pill, Shift+S toggles, Ctrl while dragging skips it once.
+- Arrange: the Design tab's Arrange section (align, distribute, grid, same width/height, flip, ungroup, repeat), Alt+A/D/W/S/H/V to align, Shift+H/V to flip, Ctrl+Shift+G to ungroup. The Widgets tab inserts ready-made game controls and applies themes.
 - Frame presets popover: Desktop 1440x900, Laptop 1280x800, Tablet 820x1180, Mobile 390x844.
 - Right-click context menu: duplicate, delete, group-in-frame, add auto-layout, bring forward/back, copy as code, copy as image, "Ask AI about this...".
 
@@ -45,7 +46,7 @@ The desktop window has no native title bar: the top bar is the title bar (minimi
 - **Marquee** from empty canvas selects the artboards it touches; shift adds. Locked nodes can be selected but not moved, resized, nudged or deleted from the UI.
 - **Creating:** `F`/`R`/`O` drag to draw (live `W × H` readout); a click makes a default size (frame 390x844, shapes 100x100); `T` click then type, `Esc`/`Ctrl+Enter`/click-away commits; leaving it empty creates nothing. The new node goes into the frame under the pointer (no position when that frame is auto-layout). Tool returns to Select afterwards.
 - **Shortcuts as built:** `V F R O T H` tools (`I` and `A` arrive with images and annotations), `Ctrl+Z`, `Ctrl+Shift+Z`/`Ctrl+Y`, `Ctrl+C/X/V/D`, `Del`, `Ctrl+A`, `Ctrl+G` wrap in frame, `Ctrl+Alt+A` add auto-layout (infers direction, order, gap, padding, alignment), `[` `]` and `Ctrl+[` `Ctrl+]` z-order, arrows nudge, `Shift+1/2`, `Ctrl+0`, `+`/`-`, `Ctrl+Alt+D` performance HUD. One registry (`src/canvas/shortcuts.ts`) feeds the key handler and, later, the command palette.
-- **Not built yet:** multi-selection resize, resize snapping, distance labels, parent highlight while dragging on the canvas, aligning/distributing, pasting from the system clipboard. (Reparenting by dragging in the Layers panel and the right-click menus arrived in Phase 3.)
+- **Not built yet:** multi-selection resize, hover distance labels, parent highlight while dragging on the canvas, pasting from the system clipboard. (Reparenting by dragging in the Layers panel and the right-click menus arrived in Phase 3.)
 
 ## Properties panel (context-aware sections)
 Layout (x/y/w/h with sizing mode dropdowns hug/fill/fixed, rotation later) · Auto-layout (direction, gap, padding, align, justify, wrap) · Fill · Stroke · Effects (shadow, blur) · Typography (text only) · Image (fit) · Export (PNG/SVG/code) · Role/name.

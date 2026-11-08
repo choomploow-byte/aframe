@@ -4,7 +4,7 @@ import { CONTAINER_TYPES, NODE_TYPES, ownersOf, propsFor, REQUIRED_PROPS } from 
 import { suggest } from './suggest';
 import { parseTokenRef } from './tokens';
 import type { Doc, NodeType, OpError, Tokens, Warning } from './types';
-import { SCHEMA_VERSION } from './types';
+import { BLEND_MODES, SCHEMA_VERSION } from './types';
 import { isFiniteNumber, isPlainObject } from './util';
 
 /** One problem found by a validator. Converted to `OpError` by callers that know the op index. */
@@ -276,6 +276,8 @@ const CHECKS: Record<string, Check> = {
   w: size,
   h: size,
   rotation: num(-360_000, 360_000, 'degrees'),
+  flipX: bool,
+  flipY: bool,
   visible: bool,
   locked: bool,
   opacity: num(0, 1, 'opacity'),
@@ -287,6 +289,11 @@ const CHECKS: Record<string, Check> = {
   shadow,
   blur: num(0, 1000, 'px'),
   backdropBlur: num(0, 1000, 'px'),
+  hue: num(-360, 360, 'degrees'),
+  saturation: num(0, 10, 'a multiplier (1 = unchanged)'),
+  brightness: num(0, 10, 'a multiplier (1 = unchanged)'),
+  contrast: num(0, 10, 'a multiplier (1 = unchanged)'),
+  blendMode: oneOf(...BLEND_MODES),
   effects,
   role: oneOf('button', 'input', 'link', 'nav', 'section', 'heading', 'card', 'list', 'icon'),
   href: (v) =>
@@ -311,6 +318,8 @@ const CHECKS: Record<string, Check> = {
   textAlign: oneOf('left', 'center', 'right', 'justify'),
   color,
   textTransform: oneOf('none', 'uppercase', 'capitalize'),
+  textStroke: color,
+  textStrokeWidth: num(0, 100, 'px'),
   assetId: (v) => (isValidId(v, 'img') ? null : "an asset id like 'img_ab12c'"),
   icon: (v) =>
     typeof v === 'string' && ICON_NAME_RE.test(v)
@@ -320,7 +329,8 @@ const CHECKS: Record<string, Check> = {
   instanceOf: (v) => (isValidId(v, 'n') ? null : "a master component's node id like 'n_abc12'"),
   state: oneOf(...COMPONENT_STATES),
   overrides: (v) => layerPatches(v, 'overrides'),
-  fit: oneOf('cover', 'contain', 'fill'),
+  fit: oneOf('cover', 'contain', 'fill', 'tile'),
+  tileSize: num(1, 10_000, 'px'),
 };
 
 const STRUCTURAL_KEYS = new Set(['id', 'type', 'parentId', 'children', 'tempId', 'from']);

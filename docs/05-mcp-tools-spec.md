@@ -77,6 +77,15 @@ Must include, concisely:
 | `list_fonts` | `{ category? }` | Bundled fonts with real weights, plus the document's font tokens |
 | `search_library` | `{ query?, category?, limit? }` | The user's asset library: ids, names, categories, sizes |
 | `use_library_asset` | `{ id, parentId?, x?, y?, w?, h?, opacity?, fit?, name? }` | An image node from the library (the picture is stored in the project once) |
+| `create_widget` | `{ kind, parentId?, x?, y?, name?, component?, label?, icon?, tone?, size?, value?, count?, rarity?, items?, ... }` | A finished game-UI control (button, icon_button, currency_pill, progress_bar, item_slot, item_card, panel, modal, title_banner, tab_bar, stat_row, rating_stars, toggle, slider, badge, toast), built from the project tokens (missing game tokens are added, existing ones kept). `component: true` also defines states |
+| `list_themes` | `{}` | The built-in game themes: palette, fonts, radii under the standard token names |
+| `apply_theme` | `{ theme }` | Sets those tokens; layers that use `$tokens` change look |
+| `arrange_nodes` | `{ action: 'align'\|'distribute'\|'grid'\|'match_size', ids, edge?, toParent?, axis?, gap?, columns?, dimension?, to? }` | The editor's align/distribute/grid/match-size tools. Layers must share a parent that is the page or a `layout: "none"` frame and have fixed sizes |
+| `group_nodes` | `{ ids, name?, layout?: 'none'\|'row'\|'column', gap? }` | Wrap layers in a frame at their combined bounds |
+| `ungroup_node` | `{ id }` | Release a frame's children into its parent and delete the frame |
+| `repeat_node` | `{ id, count, direction?, columns?, gap?, values? }` | Copies of a layer in a row, column or grid; `values` gives each copy its own text or icon by layer name |
+| `update_where` | `{ set, name?, query?, type?, role?, component?, inside?, dryRun?, label? }` | One atomic edit for every layer that matches ("every layer named Stud Texture to opacity 0.4"); properties that do not apply to a layer type are skipped, instance layers are skipped, `dryRun` lists what would change |
+| `find_nodes` | `{ query?, type?, role?, component?, inside?, limit? }` | Find layers by name or text; returns ids, size, parent |
 | `define_component` | `{ nodeId, kind?, name?, states? }` | Frame becomes a master; states by layer name |
 | `create_instance` | `{ component, parentId?, x?, y?, name?, state?, overrides? }` | An instance that follows its master |
 | `component_list` | `{ kind? }` | Masters with layers, states and instances |
