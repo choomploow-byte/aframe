@@ -111,7 +111,7 @@ export default tseslint.config(
   },
   {
     // page.evaluate() callbacks in e2e scripts execute inside the browser.
-    files: ['tests/e2e/**', 'evals/**', 'scripts/capture-dom.mjs'],
+    files: ['tests/e2e/**', 'evals/**', 'scripts/capture-dom.mjs', 'scripts/render-site-shots.mjs'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
   {

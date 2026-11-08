@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AFrame: design product UI with your AI</title>
+    <meta
+      name="description"
+      content="AFrame is a free, open-source design canvas that Claude Code or Codex can build on while you watch. Real auto-layout, design tokens, accessibility checks, and export to HTML, React and Tailwind."
+    />
+    <meta property="og:title" content="AFrame: design product UI with your AI" />
+    <meta
+      property="og:description"
+      content="A free, open-source design canvas your AI can build on while you watch, then export as code."
+    />
+    <meta
+      property="og:image"
+      content="https://{{OWNER}}.github.io/{{NAME}}/img/pro-editor-light.png"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="../img/icon-3d.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="top">
+      <a class="brand" href="#top" aria-label="AFrame home">
+        <img src="../img/icon-3d.svg" alt="" width="32" height="32" />
+        <span>AFrame</span>
+      </a>
+      <nav aria-label="Main">
+        <a href="#how">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#starting-points">Templates</a>
+        <a href="#download">Download</a>
+        <a href="https://github.com/{{REPO}}">GitHub</a>
+        <a class="switch" href="../"
+          >Making a game? Game UI site <span aria-hidden="true">→</span></a
+        >
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top">
+        <p class="eyebrow">Free and open source · MIT licence</p>
+        <h1>Design product UI<br />with your AI.</h1>
+        <p class="lead">
+          AFrame is a design canvas that Claude Code or Codex can build on while you watch. It uses
+          real auto-layout and design tokens, checks its own work with screenshots, and exports what
+          you approve as HTML, React or Tailwind.
+        </p>
+        <div class="cta-row">
+          <a class="btn" href="https://github.com/{{REPO}}/releases/latest">Download for Windows</a>
+          <a class="btn btn--ghost" href="https://github.com/{{REPO}}">View the source</a>
+        </div>
+        <p class="fine">Runs on your own computer · no account · no telemetry</p>
+        <figure class="hero__shot">
+          <picture>
+            <source srcset="../img/pro-editor-dark.png" media="(prefers-color-scheme: dark)" />
+            <img
+              src="../img/pro-editor-light.png"
+              width="1500"
+              height="940"
+              alt="The AFrame editor: layers on the left, a landing page on the canvas, and its layout properties on the right"
+            />
+          </picture>
+        </figure>
+      </section>
+
+      <section id="how" class="how">
+        <h2>From a sentence to a screen you can ship</h2>
+        <ol class="steps">
+          <li>
+            <span class="num">1</span>
+            <h3>Connect your AI</h3>
+            <p>
+              Press <strong>Connect AI</strong> in the app and paste one line into Claude Code,
+              Codex or Cursor. Or add an API key and use the built-in chat.
+            </p>
+          </li>
+          <li>
+            <span class="num">2</span>
+            <h3>Ask, then watch</h3>
+            <p>
+              “Improve this pricing page.” It reads the design, edits the canvas, and takes
+              screenshots to check its own work. One undo reverses a whole turn.
+            </p>
+          </li>
+          <li>
+            <span class="num">3</span>
+            <h3>Steer and export</h3>
+            <p>
+              Drop numbered notes on anything you want changed, run <strong>Check</strong>, then
+              export the frame as code.
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <section id="features" class="features">
+        <h2>Built for real interfaces</h2>
+        <ul class="grid">
+          <li>
+            <h3>Auto-layout that is real CSS</h3>
+            <p>
+              Frames lay out as actual flexbox with fixed, hug and fill sizing, so what you see is
+              what exports.
+            </p>
+          </li>
+          <li>
+            <h3>Tokens and components</h3>
+            <p>
+              Colours, fonts and radii are variables. Components carry hover, pressed, disabled and
+              selected states, and every copy follows.
+            </p>
+          </li>
+          <li>
+            <h3>Design checks</h3>
+            <p>
+              <strong>Check</strong> flags low contrast, tiny text, off-scale spacing and near-miss
+              alignment, with one-click fixes.
+            </p>
+          </li>
+          <li>
+            <h3>Code out</h3>
+            <p>
+              HTML + CSS, React + CSS Modules or React + Tailwind. Variables stay variables, images
+              become files, and class names stay stable between exports. PNG and SVG too.
+            </p>
+          </li>
+          <li>
+            <h3>Notes and references</h3>
+            <p>
+              Pin numbered notes to the canvas and attach reference images. Your AI reads them,
+              fixes them and replies.
+            </p>
+          </li>
+          <li>
+            <h3>Bring designs in</h3>
+            <p>
+              Import SVG as editable layers, a Figma frame, a captured web page, or any image for
+              your AI to rebuild.
+            </p>
+          </li>
+          <li>
+            <h3>Local and private</h3>
+            <p>
+              Projects are plain JSON files on your disk. API keys live in your system keychain. No
+              account, no servers of ours.
+            </p>
+          </li>
+          <li>
+            <h3>Open source</h3>
+            <p>MIT licensed. Read it, change it, send a fix.</p>
+          </li>
+        </ul>
+      </section>
+
+      <section id="starting-points" class="templates">
+        <h2>Start from a template</h2>
+        <p class="sub">
+          Each comes with a token set and a small component kit. These are the real screens, as
+          exported by the app.
+        </p>
+        <div class="shots">
+          <figure class="shots__wide">
+            <img
+              src="../img/pro-landing.png"
+              width="1440"
+              height="687"
+              loading="lazy"
+              alt="A product landing page: nav, a one-line promise, two buttons and three feature cards"
+            />
+            <figcaption>Product landing</figcaption>
+          </figure>
+          <figure class="shots__wide">
+            <img
+              src="../img/pro-pricing.png"
+              width="1440"
+              height="764"
+              loading="lazy"
+              alt="A pricing page with a billing toggle and three plan cards, the middle one highlighted"
+            />
+            <figcaption>Pricing page</figcaption>
+          </figure>
+          <figure class="shots__phone">
+            <img
+              src="../img/pro-mobile.png"
+              width="780"
+              height="1688"
+              loading="lazy"
+              alt="A mobile home screen with a list of three cards and a bottom tab bar"
+            />
+            <figcaption>Mobile app</figcaption>
+          </figure>
+        </div>
+        <p class="sub">
+          There is also a SaaS dashboard, a blank canvas, and three
+          <a href="../">game UI templates</a>.
+        </p>
+      </section>
+
+      <section id="download" class="download">
+        <h2>Download</h2>
+        <div class="dl">
+          <div class="dl__main">
+            <h3>Windows</h3>
+            <p>The installer is on the releases page. This is the platform we test.</p>
+            <a class="btn" href="https://github.com/{{REPO}}/releases/latest"
+              >Get the latest release</a
+            >
+          </div>
+          <div class="dl__side">
+            <h3>macOS and Linux</h3>
+            <p>
+              Each release also builds them automatically. We have not been able to test those
+              builds yet, so treat them as experimental.
+            </p>
+          </div>
+        </div>
+        <ul class="notes">
+          <li>
+            <strong>Windows may warn you.</strong> The installer is not code-signed yet, so
+            SmartScreen can say “Windows protected your PC”. Choose <em>More info</em>, then
+            <em>Run anyway</em>, if you trust this page.
+          </li>
+          <li>
+            <strong>You need an AI that speaks MCP</strong> (Claude Code, Codex or Cursor, with
+            Node.js 20 or newer for the connector), or your own Anthropic or OpenAI-compatible API
+            key for the built-in chat.
+          </li>
+          <li>
+            <strong>Early software.</strong> It is a pre-release: the screens, export, checks and
+            imports are tested on Windows and in Chrome. Live runs against a real Figma file and
+            other operating systems are still ahead.
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        AFrame is MIT licensed. Icons: Font Awesome Free (CC BY 4.0) and our own. Fonts: SIL OFL,
+        except Luckiest Guy (Apache 2.0). Full list in
+        <a href="https://github.com/{{REPO}}/blob/main/THIRD-PARTY-NOTICES.md"
+          >THIRD-PARTY-NOTICES.md</a
+        >.
+      </p>
+      <p><a href="../">Game UI site</a> · <a href="#top">Back to top</a></p>
+    </footer>
+  </body>
+</html>
