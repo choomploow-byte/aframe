@@ -73,7 +73,7 @@ jobs:
           fi
       - name: Build and attach to the draft release
         id: tauri
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Optional: without these the installers are unsigned (Windows SmartScreen and macOS Gatekeeper
