@@ -6,6 +6,7 @@ import { runAgentTurn, type AgentEvent } from './agent';
 import { turnContext } from './context';
 import { keyStore } from './keys';
 import { activeModel, settingsStore } from './settings';
+import { refreshUserSkills } from './skills';
 import { SYSTEM_PROMPT } from './system-prompt';
 import { chatToolDefs, createChatToolContext, runChatTool } from './tool-context';
 import { currentTransport } from './transport';
@@ -129,13 +130,19 @@ function onEvent(event: AgentEvent): void {
 export async function sendChat(text: string, images: ImageData[] = []): Promise<void> {
   const trimmed = text.trim();
   if (chatStore.getState().running || (trimmed === '' && images.length === 0)) return;
+  // Busy from the first moment, so a second Send during the checks below cannot start another turn.
+  chatStore.setState({ running: true, turnUsage: null });
   const ready = await chatReadiness();
   if (!ready.ok) {
     push({ kind: 'error', text: ready.reason, errorKind: 'no_key' });
+    chatStore.setState({ running: false });
     return;
   }
   const transport = currentTransport();
-  if (transport === null) return;
+  if (transport === null) {
+    chatStore.setState({ running: false });
+    return;
+  }
 
   const { settings } = settingsStore.getState();
   const state = store.getState();
@@ -143,9 +150,9 @@ export async function sendChat(text: string, images: ImageData[] = []): Promise<
     { type: 'text', text: `${turnContext(state.doc, state.selection)}\n\n${trimmed}` },
     ...images.map((i): Block => ({ type: 'image', mime: i.mime, data: i.data })),
   ];
+  await refreshUserSkills();
   push({ kind: 'user', text: trimmed, images });
   controller = new AbortController();
-  chatStore.setState({ running: true, turnUsage: null });
 
   // One transaction: everything the assistant does in this turn is a single undo step.
   const label = `AI: ${trimmed.replace(/\s+/g, ' ').slice(0, 40) || 'edit'}`;

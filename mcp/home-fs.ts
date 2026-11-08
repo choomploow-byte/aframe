@@ -355,8 +355,10 @@ console.error('Atelier MCP server: not installed yet (this build has no MCP bund
 process.exit(1);
 `;
 const SKILLS_README = `<!-- ${GENERATED_MARKER} -->
-Skills are markdown files the AI agent loads on demand. Atelier's own skills are installed here
-by a later version; put your own \`*.md\` files here too.
+Skills are markdown files the AI agent loads on demand. Put your own \`*.md\` files here: each
+needs a frontmatter block with \`name\` (lowercase letters, digits and dashes) and \`description\`.
+A skill of yours with the same name as one of Atelier's replaces it. See skills/README.md in the
+repository for the format.
 `;
 
 /** Creates the folders and placeholder files; never overwrites an existing file. */

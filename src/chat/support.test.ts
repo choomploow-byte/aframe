@@ -3,7 +3,7 @@ import { bumpRev } from '@core/doc';
 import { buildDoc, sampleDoc } from '@core/testing';
 import type { Doc, ToolContext } from '@core/types';
 import { turnContext } from './context';
-import { chatSkills, parseSkill } from './skills';
+import { chatSkills } from './skills';
 import { extractSystemPrompt, SYSTEM_PROMPT } from './system-prompt';
 import { CHAT_EXCLUDED, chatToolDefs, runChatTool } from './tool-context';
 
@@ -38,10 +38,6 @@ describe('skills', () => {
     expect(names).not.toContain('README');
     expect(names).not.toContain('atelier-SKILL');
     for (const s of chatSkills()) expect(s.description.length).toBeGreaterThan(10);
-  });
-  it('needs a description in the frontmatter', () => {
-    expect(parseSkill('x.md', '# no frontmatter')).toBeNull();
-    expect(parseSkill('x.md', '---\nname: x\ndescription: d\n---\nbody')?.name).toBe('x');
   });
 });
 

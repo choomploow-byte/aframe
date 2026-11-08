@@ -386,7 +386,7 @@ const loadSkill = defineTool({
 const lintDesignTool = defineTool({
   name: 'lint_design',
   description:
-    'Check the design for common problems: low contrast, tiny text, small tap targets, off-scale spacing, overflow, inconsistent radii, default layer names, missing alt text. Each finding names the node and a fix. Run it after you finish editing.',
+    'Check the design for common problems: low contrast, tiny text, small tap targets, off-scale spacing, overflow, inconsistent radii, default layer names, missing alt text. Each finding names the node and a fix; where the right fix is unambiguous it also carries fixOps, valid operations you can pass straight to apply_changes. Run it after you finish editing.',
   inputSchema: z.object({ nodeId: z.string().optional().describe('Limit to this subtree') }),
   handler: async (ctx, { nodeId }) => {
     const doc: Doc = await ctx.getDoc();

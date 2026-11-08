@@ -10,7 +10,7 @@ import type { Tool, ToolResult } from '../src/core/tool-kit';
 import { TOOLS } from '../src/core/tools';
 import { parseProjectText, projectFile } from '../src/projects/projects';
 import type { McpEnv } from './env';
-import { MCP_VERSION, PROMPT_RECIPES, SERVER_INSTRUCTIONS, SKILLS } from './generated';
+import { MCP_VERSION, PROMPT_RECIPES, SERVER_INSTRUCTIONS } from './generated';
 import type { Presence } from './presence';
 
 const PROJECT_PARAM = z
@@ -106,7 +106,7 @@ export function createAtelierServer(env: McpEnv, presence: Presence): McpServer 
     'skill',
     new ResourceTemplate('atelier://skills/{name}', {
       list: () => ({
-        resources: SKILLS.map((s) => ({
+        resources: env.skillList().map((s) => ({
           uri: `atelier://skills/${s.name}`,
           name: s.name,
           description: s.description,
@@ -120,7 +120,7 @@ export function createAtelierServer(env: McpEnv, presence: Presence): McpServer 
       mimeType: 'text/markdown',
     },
     (uri, variables) => {
-      const skill = SKILLS.find((s) => s.name === String(variables.name));
+      const skill = env.skillList().find((s) => s.name === String(variables.name));
       if (!skill) throw new Error(`No skill named ${String(variables.name)}`);
       return { contents: [{ uri: uri.href, mimeType: 'text/markdown', text: skill.body }] };
     },

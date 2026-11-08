@@ -12,6 +12,7 @@ export const SYSTEM_PROMPT: string = extractSystemPrompt(promptDoc);
 export const SUGGESTED_PROMPTS: readonly string[] = [
   'Improve the selected frame',
   'Make this look more professional',
+  'Critique my design (no edits)',
   'Check my spacing and contrast, then fix what you find',
   'Make a mobile version of this screen',
   'Address my open notes',

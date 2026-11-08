@@ -6,6 +6,7 @@
  */
 import path from 'node:path';
 import { bumpRev, serializeDoc } from '../src/core/doc';
+import type { Skill } from '../src/core/skills';
 import { CoreError } from '../src/core/errors';
 import { createTemplateDoc, TEMPLATES, type TemplateName } from '../src/core/templates';
 import type { Tool, ToolResult } from '../src/core/tool-kit';
@@ -30,6 +31,7 @@ import {
 import type { HomeApi } from '../src/platform/fs';
 import { BridgeClient } from './bridge';
 import { writeUserFiles } from './export-write';
+import { allSkills } from './user-skills';
 import { createImageReader } from './files';
 import { Library } from './library';
 import { SKILLS } from './generated';
@@ -291,10 +293,22 @@ export class McpEnv {
       },
       projects: this.projects,
       skills: {
-        list: () => SKILLS.map((s) => ({ name: s.name, description: s.description })),
-        load: (name) => SKILLS.find((s) => s.name === name)?.body ?? null,
+        list: () =>
+          this.skillList().map((s) => ({
+            name: s.name,
+            description: s.source === 'user' ? `${s.description} (your own)` : s.description,
+          })),
+        load: (name) => this.skillList().find((s) => s.name === name)?.body ?? null,
       },
     };
+  }
+
+  /** Shipped skills and the ones in ~/.atelier/skills (theirs win), read fresh each time. */
+  skillList(): Skill[] {
+    return allSkills(
+      this.home.root,
+      SKILLS.map((s) => ({ ...s, source: 'shipped' as const })),
+    );
   }
 
   /** Keeps the PNG for hosts that cannot show images; the newest 20 are kept. Returns the absolute path. */

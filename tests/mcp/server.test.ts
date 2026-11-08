@@ -71,6 +71,33 @@ afterEach(async () => {
 afterAll(() => undefined);
 
 describe('the protocol surface', () => {
+  it('a skill the person drops in ~/.atelier/skills shows up at once and can replace a shipped one', async () => {
+    const c = await connect();
+    const before = (await ok(c, 'list_skills')).json.skills as { name: string }[];
+    expect(before.some((x) => x.name === 'my-brand')).toBe(false);
+    await fs.mkdir(path.join(homeDir, 'skills'), { recursive: true });
+    await fs.writeFile(
+      path.join(homeDir, 'skills', 'my-brand.md'),
+      '---\nname: my-brand\ndescription: Our brand rules\n---\n# Brand\nAlways use the purple.',
+    );
+    await fs.writeFile(
+      path.join(homeDir, 'skills', 'color.md'),
+      '---\nname: color\ndescription: My own colour rules\n---\n# Mine\nOnly purple.',
+    );
+    const after = (await ok(c, 'list_skills')).json.skills as {
+      name: string;
+      description: string;
+    }[];
+    expect(after.find((x) => x.name === 'my-brand')?.description).toContain('Our brand rules');
+    expect((await ok(c, 'load_skill', { name: 'my-brand' })).text).toContain(
+      'Always use the purple',
+    );
+    expect((await ok(c, 'load_skill', { name: 'color' })).text).toContain('Only purple');
+    const resources = await c.listResources();
+    expect(resources.resources.some((r) => r.uri === 'atelier://skills/my-brand')).toBe(true);
+    expect(after.filter((x) => x.name === 'color')).toHaveLength(1);
+  });
+
   it('initialises, sends instructions, and lists every tool with a schema that has `project`', async () => {
     const c = await connect();
     expect(c.getServerVersion()).toMatchObject({ name: 'atelier' });
