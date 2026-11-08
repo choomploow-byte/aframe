@@ -3,7 +3,15 @@ import { createStore } from 'zustand/vanilla';
 
 /** Which modal is open. At most one; opening another replaces it. */
 export type DialogId =
-  'palette' | 'shortcuts' | 'connect' | 'projects' | 'recover' | 'export' | 'settings' | 'lint';
+  | 'palette'
+  | 'shortcuts'
+  | 'connect'
+  | 'projects'
+  | 'recover'
+  | 'export'
+  | 'settings'
+  | 'lint'
+  | 'import';
 
 interface UiState {
   dialog: DialogId | null;

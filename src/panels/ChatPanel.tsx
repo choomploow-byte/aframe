@@ -1,6 +1,7 @@
 import { ImagePlus, RotateCcw, Send, Settings, Square, Undo2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { refreshKeys } from '../chat/keys';
+import { IMAGE_TYPES, readImage } from '../chat/images';
 import { PROVIDERS } from '../chat/providers';
 import {
   chatReadiness,
@@ -20,8 +21,6 @@ import { showToast } from '../ui/toast';
 import { openDialog } from '../ui/ui-state';
 
 const MAX_IMAGES = 4;
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
 
 const TOOL_LABELS: Record<string, string> = {
   get_design: 'Looked at the design',
@@ -49,26 +48,6 @@ const TOOL_LABELS: Record<string, string> = {
 const toolLabel = (name: string): string => TOOL_LABELS[name] ?? `Used ${name.replace(/_/g, ' ')}`;
 
 const tokensLabel = (n: number): string => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
-
-function readImage(file: File): Promise<ImageData> {
-  return new Promise((resolve, reject) => {
-    if (!IMAGE_TYPES.includes(file.type)) {
-      reject(new Error(`${file.name || 'That file'} is not a PNG, JPEG, GIF or WebP image.`));
-      return;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      reject(new Error(`${file.name || 'That image'} is larger than 5 MB.`));
-      return;
-    }
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('The image could not be read.'));
-    reader.onload = () => {
-      const url = typeof reader.result === 'string' ? reader.result : '';
-      resolve({ mime: file.type, data: url.slice(url.indexOf(',') + 1) });
-    };
-    reader.readAsDataURL(file);
-  });
-}
 
 function ToolRow({ item }: { item: Extract<ChatItem, { kind: 'tool' }> }) {
   return (

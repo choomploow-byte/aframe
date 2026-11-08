@@ -128,6 +128,15 @@ export function TopBar() {
       <button
         type="button"
         className="btn btn--ghost btn--small"
+        data-testid="open-import"
+        title="Import an SVG, a Figma frame, a captured web page or an image to rebuild"
+        onClick={() => openDialog('import')}
+      >
+        Import
+      </button>
+      <button
+        type="button"
+        className="btn btn--ghost btn--small"
         data-testid="design-check"
         title="Check the design for contrast, text size, spacing and alignment"
         aria-label={

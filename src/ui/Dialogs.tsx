@@ -5,6 +5,7 @@ import { Dialog } from './Dialog';
 import { groupOf } from './palette-commands';
 import { ConnectDialog } from './ConnectDialog';
 import { ExportDialog } from './ExportDialog';
+import { ImportDialog } from './ImportDialog';
 import { LintDialog } from './LintDialog';
 import { SettingsDialog } from './SettingsDialog';
 import { ProjectsDialog, RecoverDialog } from './ProjectDialogs';
@@ -55,5 +56,6 @@ export function Dialogs() {
   if (dialog === 'export') return <ExportDialog />;
   if (dialog === 'settings') return <SettingsDialog />;
   if (dialog === 'lint') return <LintDialog />;
+  if (dialog === 'import') return <ImportDialog />;
   return null;
 }

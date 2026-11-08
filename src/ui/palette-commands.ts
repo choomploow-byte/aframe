@@ -125,6 +125,12 @@ export function buildPaletteCommands(): PaletteCommand[] {
     },
     { id: 'ai.connect', label: 'Connect your AI', group: 'Help', run: () => openDialog('connect') },
     {
+      id: 'file.import.design',
+      label: 'Import an SVG, Figma frame or web page…',
+      group: 'File',
+      run: () => openDialog('import'),
+    },
+    {
       id: 'design.check',
       label: 'Check the design…',
       group: 'Help',
