@@ -19,7 +19,7 @@
     "test": "vitest run",
     "test:mcp": "node scripts/test-mcp.mjs",
     "test:unit": "vitest run",
-    "test:e2e": "node tests/e2e/shell-smoke.mjs && node tests/e2e/canvas.mjs && node tests/e2e/panels.mjs && node --import tsx tests/e2e/persistence.mjs && node tests/e2e/mcp-live.mjs && node tests/e2e/toolkit.mjs && node tests/e2e/annotations.mjs && node --import tsx tests/e2e/export.mjs && node tests/e2e/export-ui.mjs && node tests/e2e/chat.mjs",
+    "test:e2e": "node tests/e2e/shell-smoke.mjs && node tests/e2e/canvas.mjs && node tests/e2e/panels.mjs && node --import tsx tests/e2e/persistence.mjs && node tests/e2e/mcp-live.mjs && node tests/e2e/toolkit.mjs && node tests/e2e/annotations.mjs && node --import tsx tests/e2e/export.mjs && node tests/e2e/export-ui.mjs && node tests/e2e/chat.mjs && node tests/e2e/lint-ui.mjs",
     "test:e2e:panels": "node tests/e2e/panels.mjs",
     "test:e2e:persist": "node --import tsx tests/e2e/persistence.mjs",
     "test:e2e:mcp": "node tests/e2e/mcp-live.mjs",
@@ -36,7 +36,10 @@
     "test:perf": "node tests/e2e/perf.mjs",
     "test:e2e:export": "node --import tsx tests/e2e/export.mjs",
     "test:e2e:export-ui": "node tests/e2e/export-ui.mjs",
-    "test:e2e:chat": "node tests/e2e/chat.mjs"
+    "test:e2e:chat": "node tests/e2e/chat.mjs",
+    "eval:reference": "node --import tsx evals/run.mjs --reference",
+    "eval": "node --import tsx evals/run.mjs",
+    "test:e2e:lint": "node tests/e2e/lint-ui.mjs"
   },
   "dependencies": {
     "@fontsource-variable/dm-sans": "^5.3.0",

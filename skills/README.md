@@ -38,6 +38,25 @@ Markdown body…
 ## Where skills live at runtime
 - Shipped: bundled into the app and MCP bundle (as TS string modules generated at build).
 - User: `~/.atelier/skills/*.md` (override shipped skills of the same name).
+
+### Your own skills
+Put a `.md` file in `~/.atelier/skills/` and it is available the next time an agent (or the in-app assistant) lists skills; no restart. Rules:
+- The file needs a frontmatter block with `description`; `name` is optional (the file name is used) and must be lowercase letters, digits and dashes, at most 41 characters.
+- A skill of yours with the same name as a shipped one replaces it; `list_skills` marks yours "(your own)".
+- Up to 50 files, 200 KB each; links, folders and files that are not valid skills are ignored.
+- A skill is instructions for the assistant: only keep ones you wrote or trust, as with any prompt.
+
+### Template for a community skill
+```
+---
+name: brand-voice
+description: When to load this, in one sentence an agent can match against a request
+---
+# Title
+## When to use
+## Rules (numbers, ratios, do/don't)
+## Worked example (in tool-call form)
+```
 - Community collection: `skills/community/` in the repo.
 
 ## Ideas for community skills

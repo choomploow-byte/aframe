@@ -26,7 +26,7 @@ Atelier is a desktop design app. You drive it through the `atelier` MCP tools (s
 | `get_annotations / add_annotation / resolve_annotation` | human feedback loop |
 | `list_references / get_reference / add_reference` | style examples |
 | `get_tokens / set_tokens` | colours, fonts, spacing, radii |
-| `lint_design {nodeId?}` | contrast, sizes, spacing, overflow checks |
+| `lint_design {nodeId?}` | contrast, sizes, spacing, alignment, fonts, overflow checks; findings with `fixOps` can be applied as they are |
 | `list_skills / load_skill {name}` | design knowledge |
 | `export_code {nodeId, framework, outDir, overwrite?}` | write HTML/React (CSS Modules or Tailwind) into the user's repo (ask for the folder; `FILE_EXISTS` means ask before `overwrite`) |
 | `export_image {nodeId, format, outPath, scale?, transparent?}` | save a PNG or SVG file (needs the app) |

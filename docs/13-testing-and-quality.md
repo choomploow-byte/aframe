@@ -20,6 +20,8 @@
 6. Changelog entry.
 
 ## Lint rules for `lint_design` (spec)
+**As built (Phase 9):** every rule below exists under the id the code uses (`src/core/lint.ts`, `lint-extra.ts`): `contrast`, `text-size` (12px, 14px on frames 480 wide or less), `tap-target`, `spacing-scale`, `radius-consistency` and `radius-variety`, `overflow`, `unaligned` (look-alike siblings 1-3px apart), `too-many-fonts` (more than 2 families or 5 sizes in a screen; a board of reusable masters is exempt), `line-length`, `layer-name`, `image-alt`, `use-token`, `touching`, plus the game-UI rules. Each finding has `fix` (a sentence) and, where the answer is unambiguous, `fixOps`: operations `apply_changes` accepts as they are (a snapped number, the other sibling's value, black or white whichever reads better). A test applies every `fixOps` of a deliberately bad design and checks they all apply and clear their finding. The table below is the original spec.
+
 | Rule id | Severity | Check |
 |---|---|---|
 | `contrast` | error | Text vs effective background < 4.5:1 (3:1 for >= 24px or >= 18.66px bold). Resolve background by walking ancestors' fills; if gradient/image, sample average or warn "can't verify" |

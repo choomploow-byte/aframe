@@ -55,6 +55,7 @@ Each phase: **goal, deliverables, acceptance criteria, how to verify, estimate**
 **Accept:** fixtures export to code that renders within 2% pixel diff; generated React compiles in a Vite template (CI check); no writes outside `outDir`.
 
 ## Phase 9: Skills, lint and critique (1-2 sessions)
+**Status: built (2026-11-08) except the live evaluation.** Lint rules and fix operations, the Design check dialog and top-bar count, user skills, the critique flow (skill + MCP prompt + a chat suggestion) and the eval harness with its scripted baseline exist and are tested. The acceptance numbers for a model (average rating 4 or more) need a live run and a person: see `evals/RESULTS.md`. The skills were reviewed for consistency with the tools, not rewritten from eval results (there are none yet).
 **Goal:** quality by default.
 **Deliver:** all skills in `skills/` bundled + `list/load_skill`; user skills folder; `lint_design` with rules in doc 13; critique prompt; eval harness with 10 tasks and rubric; tune system prompts using the eval.
 **Accept:** eval average >= 4/5 on the fixed task set with a strong model; lint catches seeded issues (low contrast, 10px text, off-scale spacing, overflow).
