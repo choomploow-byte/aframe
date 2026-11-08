@@ -95,7 +95,7 @@ if (isMain) {
     );
     process.exit(2);
   }
-  const status = execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim();
+  const status = execFileSync('git', ['status', '--porcelain', '--untracked-files=no'], { encoding: 'utf8' }).trim();
   if (args.apply && status !== '') {
     console.error(
       'The working tree has uncommitted changes. Commit or stash them first, so the rename is one reviewable diff.',
