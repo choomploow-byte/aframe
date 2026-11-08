@@ -90,6 +90,27 @@ export function descendantsOf(nodes: Record<string, Node>, id: string): Node[] {
   return out;
 }
 
+/**
+ * Whether master `masterId` contains, at any depth through the instances inside it, an instance of
+ * `targetId` (or is `targetId` itself). Used to refuse nesting that would loop.
+ */
+export function masterDependsOn(
+  nodes: Record<string, Node>,
+  masterId: string,
+  targetId: string,
+): boolean {
+  const seen = new Set<string>();
+  const visit = (id: string): boolean => {
+    if (id === targetId) return true;
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return [nodes[id], ...descendantsOf(nodes, id)].some(
+      (n) => n?.instanceOf !== undefined && n.instanceOf !== id && visit(n.instanceOf),
+    );
+  };
+  return visit(masterId);
+}
+
 export function instancesOf(nodes: Record<string, Node>, masterId: string): Node[] {
   return Object.values(nodes).filter((n) => n.instanceOf === masterId);
 }
@@ -299,7 +320,24 @@ export function settleComponents(
       if (n.instanceOf !== undefined && masters.has(n.instanceOf)) instances.add(n.id);
     }
   }
-  for (const id of instances) syncInstance(space, id);
+  // An instance inside a master (a Buy button in a card) changes what that master looks like, so the
+  // master's own instances are rebuilt too, and so on up. Nesting is a tree, so this ends.
+  const queue = [...instances];
+  const pending = new Set(queue);
+  for (let steps = 0; queue.length > 0 && steps < 500; steps += 1) {
+    const id = queue.shift() as string;
+    pending.delete(id);
+    syncInstance(space, id);
+    const node = nodes[id];
+    const holder = node ? masterRootOf(nodes, node) : null;
+    if (!holder) continue;
+    for (const other of Object.values(nodes)) {
+      if (other.instanceOf === holder.id && other.id !== id && !pending.has(other.id)) {
+        pending.add(other.id);
+        queue.push(other.id);
+      }
+    }
+  }
 }
 
 /** Every instance in the document rebuilt from its master (after a merge or a file load). */
@@ -308,7 +346,8 @@ export function syncAllInstances(doc: Doc, rng: Rng = Math.random): Doc {
   if (instances.length === 0) return doc;
   const nodes = { ...doc.nodes };
   const used = new Set(Object.keys(nodes));
-  let changed = false;
+  let changed: boolean;
+  let anyChange = false;
   const space: NodeSpace = {
     nodes,
     used,
@@ -324,8 +363,15 @@ export function syncAllInstances(doc: Doc, rng: Rng = Math.random): Doc {
       changed = true;
     },
   };
-  for (const inst of instances) syncInstance(space, inst.id);
-  if (!changed) return doc;
+  // Instances inside masters feed other instances, so go round until nothing changes any more
+  // (as many rounds as the nesting is deep, plus one to confirm).
+  for (let round = 0; round < 8; round += 1) {
+    changed = false;
+    for (const inst of instances) syncInstance(space, inst.id);
+    if (!changed) break;
+    anyChange = true;
+  }
+  if (!anyChange) return doc;
   // The page's child list may reference removed nodes only through instances, which sync keeps whole.
   return { ...doc, nodes };
 }
@@ -368,6 +414,80 @@ export function docInState(doc: Doc, state: ComponentState, rootIds: readonly st
   };
   for (const id of rootIds) visit(id);
   return touched ? { ...doc, nodes } : doc;
+}
+
+// ---------------------------------------------------------------------------
+// Preview: the document as it looks while a person hovers, presses and clicks
+// ---------------------------------------------------------------------------
+
+/** What the interactive preview has changed on top of the design. Nothing here is saved. */
+export interface PreviewOverlay {
+  /** Instance roots showing a state (hover, pressed, selected...). */
+  states: Readonly<Record<string, ComponentState>>;
+  /** Copies of a component that sits inside another component (a Buy button in a card) showing a state. */
+  inner: Readonly<Record<string, ComponentState>>;
+  /** Layers shown or hidden (a tab's panel). */
+  visible: Readonly<Record<string, boolean>>;
+}
+
+/** The master an inner copy was made from, when `node` is the root of a component nested in a card. */
+export function innerMasterOf(nodes: Record<string, Node>, node: Node): Node | null {
+  if (node.from === undefined) return null;
+  const inside = nodes[node.from];
+  const master = inside?.instanceOf === undefined ? undefined : nodes[inside.instanceOf];
+  return master?.component === undefined ? null : master;
+}
+
+/**
+ * The document with the overlay applied: instances switched to their state, nested components
+ * restyled from their own master's state, and layers shown or hidden. Returns the same document
+ * when the overlay is empty.
+ */
+export function docForPreview(doc: Doc, overlay: PreviewOverlay): Doc {
+  const nodes = { ...doc.nodes };
+  const space: NodeSpace = {
+    nodes,
+    used: new Set(Object.keys(nodes)),
+    rng: Math.random,
+    put: (n) => {
+      nodes[n.id] = n;
+    },
+    created: () => undefined,
+    removed: () => undefined,
+  };
+  let changed = false;
+  for (const [id, state] of Object.entries(overlay.states)) {
+    const node = nodes[id];
+    if (node?.instanceOf === undefined) continue;
+    space.put({ ...node, state });
+    syncInstance(space, id);
+    changed = true;
+  }
+  for (const [id, state] of Object.entries(overlay.inner)) {
+    const root = nodes[id];
+    const master = root ? innerMasterOf(nodes, root) : null;
+    if (!root || !master || state === 'default') continue;
+    const patches = master.component?.states?.[state] ?? {};
+    for (const layer of [root, ...descendantsOf(nodes, id)]) {
+      const key = layer.id === id ? SELF : nodes[layer.from ?? '']?.from;
+      const patch = key === undefined ? undefined : patches[key];
+      if (!patch) continue;
+      const next: Record<string, unknown> = { ...layer };
+      for (const [k, v] of Object.entries(patch)) {
+        if (v === null) delete next[k];
+        else next[k] = v;
+      }
+      space.put(next as unknown as Node);
+      changed = true;
+    }
+  }
+  for (const [id, visible] of Object.entries(overlay.visible)) {
+    const node = nodes[id];
+    if (!node || node.visible === visible) continue;
+    space.put({ ...node, visible });
+    changed = true;
+  }
+  return changed ? { ...doc, nodes } : doc;
 }
 
 // ---------------------------------------------------------------------------

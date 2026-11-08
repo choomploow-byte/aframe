@@ -28,6 +28,8 @@ import { nextTheme, setThemePreference, useThemePreference } from './theme';
 import { useLintCounts } from './use-lint-counts';
 import { useBetaFeature } from './beta';
 import { openPixelEditor } from '../pixelart/state';
+import { openPreview } from '../preview/state';
+import { showToast } from './toast';
 import { openDialog } from './ui-state';
 
 const THEME_ICON = { system: Monitor, light: Sun, dark: Moon } as const;
@@ -218,6 +220,17 @@ export function TopBar() {
         onClick={() => openDialog('palette')}
       >
         Ctrl K
+      </button>
+      <button
+        type="button"
+        className="btn btn--ghost btn--small"
+        data-testid="open-preview"
+        title="Preview: try the buttons, tabs and links (Alt+P)"
+        onClick={() => {
+          if (!openPreview()) showToast('Draw or open a frame first, then preview it.');
+        }}
+      >
+        Preview
       </button>
       {pixelArt && (
         <button

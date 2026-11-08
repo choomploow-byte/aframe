@@ -1,7 +1,7 @@
 /**
  * The operations behind `define_component`, `create_instance` and `component_list`: whole-document
  * functions built on the same draft the editing ops use, so they are atomic, validated and
- * follow the same rules (instances sync, no nesting).
+ * follow the same rules (instances sync; a master may hold instances of other masters).
  */
 import { descendantsOf, instancesOf, resolveLayerKey, SELF } from './components';
 import { CoreError } from './errors';

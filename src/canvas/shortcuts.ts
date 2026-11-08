@@ -23,6 +23,7 @@ import {
   type CommandResult,
 } from '../store/game-commands';
 import { showToast } from '../ui/toast';
+import { openPreview } from '../preview/state';
 import { setSnapSettings, useSnapSettings } from './snap-settings';
 import type { AlignEdge } from '@core/arrange';
 import { openExportDialog } from '../export/dialog-state';
@@ -177,6 +178,15 @@ export const SHORTCUTS: readonly Shortcut[] = [
     keys: 'Ctrl+G',
     match: (e) => mod(e) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'g',
     run: ({ env }) => void wrapSelectionInFrame(env),
+  },
+  {
+    id: 'view.preview',
+    label: 'Preview the selected frame',
+    keys: 'Alt+P',
+    match: (e) => e.altKey && !mod(e) && !e.shiftKey && e.code === 'KeyP',
+    run: () => {
+      if (!openPreview()) showToast('Draw or open a frame first, then preview it.');
+    },
   },
   {
     id: 'view.snapping',

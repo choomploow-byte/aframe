@@ -12,6 +12,8 @@ import { Toasts } from './ui/Toasts';
 import { useBetaFeature } from './ui/beta';
 import { PixelArtEditor } from './pixelart/PixelArtEditor';
 import { usePixelUi } from './pixelart/state';
+import { Preview } from './preview/Preview';
+import { usePreviewUi } from './preview/state';
 
 /** App shell: top bar, left panel (Layers / Assets / Tokens), canvas, right panel (Design / Notes). */
 export function App() {
@@ -19,6 +21,7 @@ export function App() {
   // Beta feature: with it off there is nothing to open, so nothing is drawn.
   const pixelArt = useBetaFeature('pixelArt');
   const pixelOpen = usePixelUi((s) => s.open);
+  const previewOpen = usePreviewUi((s) => s.open);
   return (
     <div className="shell">
       <TopBar />
@@ -29,6 +32,7 @@ export function App() {
 
       <Canvas />
       {pixelArt && pixelOpen && <PixelArtEditor />}
+      {previewOpen && <Preview />}
 
       <aside className="panel panel--right" aria-label={STRINGS.panels.properties}>
         <RightPanel />

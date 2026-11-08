@@ -75,7 +75,7 @@ create_instance { "component": "Button Chunky", "parentId": "<frame>", "override
 - A state lists **only what differs** from the master. Layers are named by layer name, id or `$self`.
 - Give every button **hover and pressed** (and disabled when it can be). `lint_design` warns when a button has none. Slots and tabs want `selected`; cards want `hover`.
 - Override per instance (label text, icon, width, one colour) through `create_instance { overrides }` or by editing the instance's layer; the change is kept as an override and survives master edits. To change **every** instance, edit the master. Layers inside an instance cannot be deleted or moved: hide one (`visible: false`) or detach the instance (`update` with `instanceOf: null`).
-- Components cannot contain components. Build a master from plain frames, text and icons.
+- **Nest components**: a master may hold instances of other components (a shop card with a Buy button inside: build the button first, then `create_instance { component: "Button Chunky", parentId: "<card master id>" }`). Editing the button updates every card; a card instance can override the button's label like any layer, and a card state may restyle it. A master cannot hold another master or an instance of itself.
 - **Check states by looking:** `screenshot { "nodeId": "<button or frame>", "state": "all" }` draws default, hover, pressed, disabled and selected side by side, labelled. `state: "pressed"` shows one. Nothing is saved.
 
 ## 5. HUD, shop and inventory layouts

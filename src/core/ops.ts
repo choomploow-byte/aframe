@@ -2,6 +2,7 @@ import {
   descendantsOf,
   detachInstance,
   instanceRootOf,
+  masterDependsOn,
   masterRootOf,
   mergeOverride,
   ROOT_OWNED_KEYS,
@@ -118,14 +119,19 @@ export function lookupId(nodes: Record<string, unknown>, ref: string): string {
   return ref;
 }
 
-const containsComponent = (nodes: Record<string, Node>, id: string): boolean => {
+/** Whether the node is, or contains, a master component (instances do not count). */
+const containsMaster = (nodes: Record<string, Node>, id: string): boolean => {
   const self = nodes[id];
   return (
-    self?.component !== undefined ||
-    self?.instanceOf !== undefined ||
-    descendantsOf(nodes, id).some((n) => n.component !== undefined || n.instanceOf !== undefined)
+    self?.component !== undefined || descendantsOf(nodes, id).some((n) => n.component !== undefined)
   );
 };
+
+/** The masters that instances at or below this node are instances of. */
+const instanceMastersIn = (nodes: Record<string, Node>, id: string): string[] =>
+  [nodes[id], ...descendantsOf(nodes, id)].flatMap((n) =>
+    n?.instanceOf === undefined ? [] : [n.instanceOf],
+  );
 
 /** Layers inside an instance are derived from the master: nothing may be added to or taken from them. */
 function insideInstance(nodes: Record<string, Node>, id: string): Node | null {
@@ -146,22 +152,45 @@ function guardParentNotInstance(d: Draft, parentId: string): void {
   );
 }
 
-/** Components cannot contain components (yet): keeps instances one level deep and sync simple. */
-function guardNoNesting(
+/**
+ * Where components may go. A master cannot sit inside another master. An instance can (a card
+ * master can hold a Buy button instance), as long as that does not make a master contain itself,
+ * directly or through the masters its instances come from.
+ */
+function guardNesting(
   d: Draft,
   movedId: string | null,
-  hasComponent: boolean,
+  creating: { master?: boolean; instanceOf?: string },
   parentId: string,
 ): void {
-  const carries = movedId === null ? hasComponent : containsComponent(d.nodes, movedId);
-  if (!carries) return;
   const parent = d.nodes[parentId];
-  if (parent && masterRootOf(d.nodes, parent)) {
+  const container = parent ? masterRootOf(d.nodes, parent) : null;
+  if (!container) return;
+  const carriesMaster =
+    movedId === null ? creating.master === true : containsMaster(d.nodes, movedId);
+  if (carriesMaster) {
     throw new CoreError(
       'BAD_PARENT',
-      `A component or instance cannot be placed inside the master component ${parentId}.`,
-      'Components cannot contain other components yet. Build the master from plain frames, text and icons.',
+      `A master component cannot be placed inside the master component ${container.id}.`,
+      'Masters cannot be nested. Place an instance of it inside instead (create_instance with parentId).',
     );
+  }
+  const used =
+    movedId === null
+      ? creating.instanceOf === undefined
+        ? []
+        : [creating.instanceOf]
+      : instanceMastersIn(d.nodes, movedId);
+  for (const masterId of used) {
+    if (masterDependsOn(d.nodes, masterId, container.id)) {
+      throw new CoreError(
+        'CYCLE',
+        masterId === container.id
+          ? `A component cannot contain an instance of itself (${container.id}).`
+          : `That would make ${container.id} contain itself: ${masterId} already contains an instance of it.`,
+        'Component nesting must be a tree: put the inner component in a different master, or detach it.',
+      );
+    }
   }
 }
 
@@ -320,7 +349,7 @@ function buildSubtree(
       );
     }
     props.instanceOf = masterId;
-    guardNoNesting(d, null, true, parentId);
+    guardNesting(d, null, { instanceOf: masterId }, parentId);
     if (Array.isArray(children) && children.length > 0) {
       throw new CoreError(
         'BAD_PARENT',
@@ -330,7 +359,7 @@ function buildSubtree(
       );
     }
   }
-  if (props.component !== undefined) guardNoNesting(d, null, true, parentId);
+  if (props.component !== undefined) guardNesting(d, null, { master: true }, parentId);
 
   if (children !== undefined) {
     if (!Array.isArray(children)) {
@@ -412,11 +441,11 @@ function buildSubtree(
   const childIds = (Array.isArray(children) ? (children as unknown[]) : []).map((child, i) =>
     buildSubtree(d, child, newId, depth + 1, `${path}.children.${i}`, ownFlex),
   );
-  if (props.component !== undefined && childIds.some((c) => containsComponent(d.nodes, c))) {
+  if (props.component !== undefined && childIds.some((c) => containsMaster(d.nodes, c))) {
     throw new CoreError(
       'BAD_PARENT',
-      'A master component cannot contain other components.',
-      'Build the master from plain frames, text and icons.',
+      'A master component cannot contain another master component.',
+      'Put instances of the other component inside (create_instance), not the master itself.',
       `${path}.children`,
     );
   }
@@ -491,19 +520,15 @@ export function draftUpdate(d: Draft, idRef: string, rawPatch: unknown): void {
       throw new CoreError(
         'BAD_PARENT',
         `${id} is inside a component, so it cannot become a master itself.`,
-        'Components cannot be nested. Move it out first.',
+        'A master cannot sit inside another master. Move it out first (an instance of it can go inside).',
         'set.component',
       );
     }
-    if (
-      descendantsOf(d.nodes, id).some(
-        (n) => n.component !== undefined || n.instanceOf !== undefined,
-      )
-    ) {
+    if (descendantsOf(d.nodes, id).some((n) => n.component !== undefined)) {
       throw new CoreError(
         'BAD_PARENT',
-        `${id} contains other components, so it cannot become a master.`,
-        'A master is built from plain frames, text and icons.',
+        `${id} contains another master component, so it cannot become a master.`,
+        'A master may hold instances of other components, but not other masters.',
         'set.component',
       );
     }
@@ -523,6 +548,15 @@ export function draftUpdate(d: Draft, idRef: string, rawPatch: unknown): void {
         'INVALID_VALUE',
         `${id} already has content; turning it into an instance would replace that content.`,
         'Use create_instance to place a new instance instead.',
+        'set.instanceOf',
+      );
+    }
+    const holder = masterRootOf(d.nodes, node);
+    if (holder && masterDependsOn(d.nodes, masterId, holder.id)) {
+      throw new CoreError(
+        'CYCLE',
+        `That would make ${holder.id} contain itself.`,
+        'Component nesting must be a tree.',
         'set.instanceOf',
       );
     }
@@ -676,7 +710,7 @@ export function draftMove(d: Draft, idRef: string, parentRef: string, index?: nu
   assertContainer(newParent);
   guardLayerOfInstance(d, node, 'moved', 'Reorder the layers in the master instead.');
   guardParentNotInstance(d, newParentId);
-  guardNoNesting(d, id, false, newParentId);
+  guardNesting(d, id, {}, newParentId);
   if (isInSubtree(d.nodes, newParentId, id)) {
     throw new CoreError(
       'CYCLE',
@@ -780,7 +814,7 @@ export function draftDuplicate(
   assertContainer(target);
   guardLayerOfInstance(d, node, 'duplicated', 'Duplicate the whole instance instead.');
   guardParentNotInstance(d, targetId);
-  guardNoNesting(d, id, false, targetId);
+  guardNesting(d, id, {}, targetId);
   if (isInSubtree(d.nodes, targetId, id)) {
     throw new CoreError(
       'CYCLE',

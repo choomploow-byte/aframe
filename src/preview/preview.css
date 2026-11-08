@@ -1,0 +1,74 @@
+/* Interactive preview: fills the canvas area of the shell, above the design canvas. */
+.preview {
+  grid-area: canvas;
+  position: relative;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg);
+  color: var(--ink);
+  outline: none;
+}
+.preview__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  flex-wrap: wrap;
+}
+.preview__bar h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.preview__hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+.preview__spacer {
+  flex: 1;
+}
+.preview__stage {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background-color: var(--canvas-bg, var(--bg));
+  background-image: radial-gradient(var(--canvas-dot, var(--border)) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.preview__scaler {
+  flex: none;
+  overflow: visible;
+  box-shadow: 0 0 0 1px var(--border);
+}
+.preview__host {
+  transform-origin: 0 0;
+  cursor: default;
+}
+/* A state change is a style change on the same elements, so it can animate. */
+.preview__host [data-node-id] {
+  transition:
+    background-color 0.12s ease,
+    background-image 0.12s ease,
+    color 0.12s ease,
+    box-shadow 0.12s ease,
+    outline-color 0.12s ease,
+    opacity 0.12s ease,
+    filter 0.12s ease,
+    transform 0.12s ease;
+}
+.preview__host [data-node-id] [data-node-id] {
+  cursor: default;
+}
+@media (prefers-reduced-motion: reduce) {
+  .preview__host [data-node-id] {
+    transition: none;
+  }
+}

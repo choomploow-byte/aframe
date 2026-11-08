@@ -11,12 +11,21 @@ import type { Store } from './commands';
 const isFlex = (n: Node | undefined): boolean =>
   n?.type === 'frame' && (n.layout === 'row' || n.layout === 'column');
 
-/** Nothing can be added inside a component or one of its instances: those take the page instead. */
-const insideComponent = (doc: Doc, n: Node): boolean =>
-  instanceRootOf(doc.nodes, n) !== null || masterRootOf(doc.nodes, n) !== null;
+/**
+ * Nothing can be added inside a component or one of its instances: those take the page instead. The
+ * exception is placing an instance, which may go inside a master (a card holding a button), but
+ * never inside an instance.
+ */
+const insideComponent = (doc: Doc, n: Node, instanceMayGoInMaster = false): boolean =>
+  instanceRootOf(doc.nodes, n) !== null ||
+  (!instanceMayGoInMaster && masterRootOf(doc.nodes, n) !== null);
 
 /** A selected frame, else the parent of what is selected, else the page; never inside a component. */
-export function insertionParent(doc: Doc, selection: readonly string[]): Node {
+export function insertionParent(
+  doc: Doc,
+  selection: readonly string[],
+  instanceMayGoInMaster = false,
+): Node {
   const page = doc.nodes[doc.rootId] as Node;
   const first = selection[0] ? doc.nodes[selection[0]] : undefined;
   const candidates: (Node | undefined)[] = [
@@ -24,14 +33,26 @@ export function insertionParent(doc: Doc, selection: readonly string[]): Node {
     first?.parentId ? doc.nodes[first.parentId] : undefined,
   ];
   for (const c of candidates) {
-    if (c && (c.type === 'frame' || c.type === 'page') && !insideComponent(doc, c)) return c;
+    if (
+      c &&
+      (c.type === 'frame' || c.type === 'page') &&
+      !insideComponent(doc, c, instanceMayGoInMaster)
+    ) {
+      return c;
+    }
   }
   return page;
 }
 
-function insert(store: Store, spec: NodeSpec, label: string, center: Point | null): boolean {
+function insert(
+  store: Store,
+  spec: NodeSpec,
+  label: string,
+  center: Point | null,
+  instanceMayGoInMaster = false,
+): boolean {
   const s = store.getState();
-  const parent = insertionParent(s.doc, s.selection);
+  const parent = insertionParent(s.doc, s.selection, instanceMayGoInMaster);
   const node: NodeSpec = { ...spec, tempId: 'inserted' };
   // x/y only mean something where the parent places children by hand; in auto-layout they are ignored.
   if (!isFlex(parent) && center) {
@@ -62,6 +83,7 @@ export function insertInstance(store: Store, masterId: string, center: Point | n
     { type: 'frame', name: master.name, instanceOf: masterId },
     `Add ${master.name}`,
     center,
+    true,
   );
 }
 

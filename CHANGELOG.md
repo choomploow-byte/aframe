@@ -4,6 +4,11 @@ All notable changes are recorded here. Format: [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+### Added
+
+- **Nested components**: a component can hold instances of other components (a card with a Buy button). Changing the inner component updates every card; a card instance can override the button, and a card state can restyle it. Loops are refused.
+- **Interactive preview** (Preview button, Alt+P): components react to hover and press, tabs and slots select, `#Name` links go to frames or show panels, with state changes animated. Your design and undo history are untouched.
+
 ## [0.5.0] - 2026-11-08 (pre-release)
 
 ### Added

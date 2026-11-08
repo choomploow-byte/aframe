@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { applyChanges } from './apply';
 import { createInstance, defineComponent, findMaster, listComponents } from './component-ops';
-import { descendantsOf, docInState, syncAllInstances } from './components';
+import {
+  descendantsOf,
+  docForPreview,
+  docInState,
+  innerMasterOf,
+  syncAllInstances,
+} from './components';
 import { createEmptyDoc } from './doc';
 import { seededRng } from './ids';
 import type { Doc, Op } from './types';
@@ -291,12 +297,12 @@ describe('structure rules', () => {
     );
   });
 
-  it('forbids nesting components', () => {
+  it('forbids a component containing itself', () => {
     const { doc, master } = withButton();
     const made = createInstance(doc, { component: master }, rng);
     const r = applyChanges(made.doc, [{ op: 'move', id: made.instanceId, parentId: master }]);
     expect(r.ok).toBe(false);
-    expect(r.ok ? '' : r.errors[0]?.message).toMatch(/cannot be placed inside the master/);
+    expect(r.ok ? '' : r.errors[0]?.message).toMatch(/cannot contain an instance of itself/);
     const r2 = applyChanges(made.doc, [
       { op: 'create', parentId: master, node: { type: 'frame', instanceOf: master } },
     ]);
@@ -465,5 +471,206 @@ describe('instances stay consistent through merges and loads', () => {
   it('a document with no components is returned untouched', () => {
     const empty = createEmptyDoc();
     expect(syncAllInstances(empty)).toBe(empty);
+  });
+});
+
+/** A Card master that holds a Buy button instance, plus one instance of the card. */
+function withCard(): {
+  doc: Doc;
+  button: string;
+  card: string;
+  inner: string;
+  instance: string;
+} {
+  const base = withButton();
+  const r = apply(base.doc, [
+    {
+      op: 'create',
+      parentId: base.doc.rootId,
+      node: {
+        type: 'frame',
+        name: 'Card',
+        layout: 'column',
+        gap: 8,
+        fill: '#222222',
+        children: [
+          { type: 'text', name: 'Title', text: 'Sword', color: '#FFFFFF' },
+          { type: 'frame', name: 'Buy', instanceOf: base.master },
+        ],
+      },
+    },
+  ]);
+  const card = r.created[0] as string;
+  const defined = defineComponent(r.doc, { nodeId: card, kind: 'card' });
+  const made = createInstance(defined.doc, { component: card }, rng);
+  return {
+    doc: made.doc,
+    button: base.master,
+    card,
+    inner: r.created[2] as string,
+    instance: made.instanceId,
+  };
+}
+
+const layerNamed = (doc: Doc, root: string, name: string) =>
+  descendantsOf(doc.nodes, root).find((n) => n.name === name);
+
+describe('components inside components', () => {
+  it('a master can hold an instance of another component, and its instances show the whole thing', () => {
+    const { doc, instance, inner } = withCard();
+    expect(doc.nodes[inner]?.instanceOf).toBeDefined();
+    expect(descendantsOf(doc.nodes, instance).map((n) => n.name)).toEqual([
+      'Title',
+      'Buy',
+      'Label',
+    ]);
+    expect(layerNamed(doc, instance, 'Label')?.text).toBe('Click');
+  });
+
+  it('editing the inner component updates the card and every card instance', () => {
+    const { doc, button, instance } = withCard();
+    const r = apply(doc, [{ op: 'update', id: button, set: { fill: '#00AA00' } }]);
+    expect(layerNamed(r.doc, instance, 'Buy')?.fill).toBe('#00AA00');
+  });
+
+  it('editing a layer of the inner master reaches the card instance', () => {
+    const { doc, button, instance } = withCard();
+    const label = doc.nodes[button]?.children[0] as string;
+    const r = apply(doc, [{ op: 'update', id: label, set: { text: 'Buy now' } }]);
+    expect(layerNamed(r.doc, instance, 'Label')?.text).toBe('Buy now');
+  });
+
+  it('an override on the card instance changes a layer of the inner component, and survives master edits', () => {
+    const { doc, button, instance } = withCard();
+    const label = layerNamed(doc, instance, 'Label') as { id: string };
+    const r = apply(doc, [{ op: 'update', id: label.id, set: { text: 'Buy 250' } }]);
+    expect(layerNamed(r.doc, instance, 'Label')?.text).toBe('Buy 250');
+    const again = apply(r.doc, [{ op: 'update', id: button, set: { fill: '#112233' } }]);
+    expect(layerNamed(again.doc, instance, 'Label')?.text).toBe('Buy 250');
+    expect(layerNamed(again.doc, instance, 'Buy')?.fill).toBe('#112233');
+  });
+
+  it('a card state may restyle the inner button', () => {
+    const { doc, card, inner, instance } = withCard();
+    const withState = defineComponent(doc, {
+      nodeId: card,
+      states: { hover: { [inner]: { fill: '#FF0000' } } },
+    });
+    const hovered = apply(withState.doc, [{ op: 'update', id: instance, set: { state: 'hover' } }]);
+    expect(layerNamed(hovered.doc, instance, 'Buy')?.fill).toBe('#FF0000');
+  });
+
+  it('refuses a loop: a button that holds the card that holds the button', () => {
+    const { doc, button, card } = withCard();
+    const r = applyChanges(doc, [
+      { op: 'create', parentId: button, node: { type: 'frame', instanceOf: card } },
+    ]);
+    expect(r.ok).toBe(false);
+    expect(r.ok ? '' : r.errors[0]?.code).toBe('CYCLE');
+    expect(r.ok ? '' : r.errors[0]?.message).toMatch(/contain itself/);
+  });
+
+  it('still refuses a master inside a master', () => {
+    const { doc, button, card } = withCard();
+    const r = applyChanges(doc, [{ op: 'move', id: button, parentId: card }]);
+    expect(r.ok).toBe(false);
+    expect(r.ok ? '' : r.errors[0]?.message).toMatch(/master component cannot be placed inside/);
+  });
+
+  it('deleting the inner component detaches it in the card; card instances keep their content', () => {
+    const { doc, button, instance } = withCard();
+    const r = apply(doc, [{ op: 'delete', id: button }]);
+    expect(descendantsOf(r.doc.nodes, instance).map((n) => n.name)).toContain('Label');
+    expect(Object.values(r.doc.nodes).some((n) => n.instanceOf === button)).toBe(false);
+  });
+
+  it('works three levels deep, and a load or merge settles every level', () => {
+    const { doc, card } = withCard();
+    const shelf = apply(doc, [
+      {
+        op: 'create',
+        parentId: doc.rootId,
+        node: {
+          type: 'frame',
+          name: 'Shelf',
+          children: [{ type: 'frame', name: 'Slot', instanceOf: card }],
+        },
+      },
+    ]);
+    const shelfId = shelf.created[0] as string;
+    const defined = defineComponent(shelf.doc, { nodeId: shelfId, kind: 'panel' });
+    const placed = createInstance(defined.doc, { component: shelfId }, rng);
+    const labels = (d: Doc): string[] =>
+      descendantsOf(d.nodes, placed.instanceId)
+        .filter((n) => n.name === 'Label')
+        .map((n) => n.text ?? '');
+    expect(labels(placed.doc)).toEqual(['Click']);
+    // The innermost master is edited behind the editor's back (a file changed by hand).
+    const button = Object.values(placed.doc.nodes).find((n) => n.component?.kind === 'button');
+    const labelId = button?.children[0] as string;
+    const edited: Doc = {
+      ...placed.doc,
+      nodes: {
+        ...placed.doc.nodes,
+        [labelId]: {
+          ...(placed.doc.nodes[labelId] as object),
+          text: 'Deep',
+        } as Doc['nodes'][string],
+      },
+    };
+    expect(labels(syncAllInstances(edited))).toEqual(['Deep']);
+  });
+});
+
+describe('docForPreview', () => {
+  it('returns the same document for an empty overlay', () => {
+    const { doc } = withCard();
+    expect(docForPreview(doc, { states: {}, inner: {}, visible: {} })).toBe(doc);
+  });
+
+  it('shows an instance in a state without saving anything', () => {
+    const { doc, instance } = withCard();
+    const button = Object.values(doc.nodes).find((n) => n.component?.kind === 'button');
+    const plain = createInstance(doc, { component: button?.id as string }, rng);
+    const shown = docForPreview(plain.doc, {
+      states: { [plain.instanceId]: 'hover' },
+      inner: {},
+      visible: {},
+    });
+    expect(shown.nodes[plain.instanceId]?.fill).toBe('#4A2F94');
+    expect(plain.doc.nodes[plain.instanceId]?.fill).not.toBe('#4A2F94');
+    expect(instance).toBeDefined();
+  });
+
+  it('restyles a button nested in a card from the button master own hover state', () => {
+    const { doc, instance } = withCard();
+    const copy = layerNamed(doc, instance, 'Buy') as { id: string; fill?: string };
+    expect(innerMasterOf(doc.nodes, copy as never)?.component?.kind).toBe('button');
+    const hover = docForPreview(doc, { states: {}, inner: { [copy.id]: 'hover' }, visible: {} });
+    expect(hover.nodes[copy.id]?.fill).toBe('#4A2F94');
+    const pressed = docForPreview(doc, {
+      states: {},
+      inner: { [copy.id]: 'pressed' },
+      visible: {},
+    });
+    expect(pressed.nodes[copy.id]?.fill).toBe('#3C2678');
+    const label = layerNamed(pressed, instance, 'Label');
+    expect(label?.color).toBe('#EEEEEE');
+    // a card layer that is not part of the button is untouched
+    expect(layerNamed(pressed, instance, 'Title')?.color).toBe('#FFFFFF');
+  });
+
+  it('a plain layer is not an inner component', () => {
+    const { doc, instance } = withCard();
+    const title = layerNamed(doc, instance, 'Title') as never;
+    expect(innerMasterOf(doc.nodes, title)).toBeNull();
+  });
+
+  it('shows and hides layers', () => {
+    const { doc, instance } = withCard();
+    const title = layerNamed(doc, instance, 'Title') as { id: string };
+    const out = docForPreview(doc, { states: {}, inner: {}, visible: { [title.id]: false } });
+    expect(out.nodes[title.id]?.visible).toBe(false);
+    expect(doc.nodes[title.id]?.visible).toBe(true);
   });
 });

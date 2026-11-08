@@ -170,7 +170,7 @@ const componentList = defineTool({
 const createInstanceTool = defineTool({
   name: 'create_instance',
   description:
-    'Place an instance of a master component. It follows the master: edit the master and every instance changes. Override per instance with `overrides`, keyed by layer name or id: { "Label": { "text": "Buy" }, "$self": { "w": 200 } }. `state` shows hover, pressed, disabled or selected. Returns the instance id and its layer ids. Editing a layer of an instance later (apply_changes update) is also kept as an override.',
+    'Place an instance of a master component. It follows the master: edit the master and every instance changes. Override per instance with `overrides`, keyed by layer name or id: { "Label": { "text": "Buy" }, "$self": { "w": 200 } }. `state` shows hover, pressed, disabled or selected. parentId may be a master, to nest the instance inside it. Returns the instance id and its layer ids. Editing a layer of an instance later (apply_changes update) is also kept as an override.',
   inputSchema: z.object({
     component: z.string().describe('Master id or exact name (see component_list)'),
     parentId: z
@@ -208,7 +208,7 @@ const createInstanceTool = defineTool({
 const defineComponentTool = defineTool({
   name: 'define_component',
   description:
-    'Turn a frame into a master component (button, card, tab, slot, panel, toast, custom) and optionally define its states. A state lists only what differs from the master: states: { hover: { "$self": { "fill": "$primaryHover" }, "Label": { "color": "#FFFFFF" } }, pressed: { "$self": { "effects": ["bevel-pressed"] } } }. Layers are named by layer name, id or $self. Call again to add or change states (null removes one). A master is built from plain frames, text and icons; components cannot nest. Buttons should define hover and pressed (lint_design checks).',
+    'Turn a frame into a master component (button, card, tab, slot, panel, toast, custom) and optionally define its states. A state lists only what differs from the master: states: { hover: { "$self": { "fill": "$primaryHover" }, "Label": { "color": "#FFFFFF" } }, pressed: { "$self": { "effects": ["bevel-pressed"] } } }. Layers are named by layer name, id or $self. Call again to add or change states (null removes one). A master is built from frames, text and icons, and may hold instances of other components (a card with a Buy button inside: create_instance with parentId set to the card master); it cannot hold another master, or itself. Buttons should define hover and pressed (lint_design checks).',
   inputSchema: z.object({
     nodeId: z.string().describe('The frame to turn into a master'),
     kind: kindSchema.optional().describe("Default: button/card from the frame's role, else custom"),

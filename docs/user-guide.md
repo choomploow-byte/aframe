@@ -77,6 +77,14 @@ shows one over or beside a frame.
 Skills are short markdown guides the AI loads on demand (typography, colour, layout, patterns,
 accessibility, critique, game UI...). Put your own in `~/.aframe/skills/`; see `skills/README.md`.
 
+## Preview
+
+Press **Preview** in the top bar (or Alt+P) to try a frame as it would behave. Buttons and other components show their **hover** and **pressed** states under the pointer, **tabs** and **slots** select one at a time, and a layer with a link such as `#Settings` (set the Link field in Design) goes to that frame, with Back to return, or, if it points at a layer inside the frame, shows that panel and hides the other linked panels (a tab and its panel). Reset puts everything back, Escape closes. Previewing never changes your design or your undo history. It shows states changing, not other animations.
+
+## Nested components
+
+A component can hold other components: build a Buy button, then place an instance of it inside a Card component (select the Card master and add the button from the Components tab, or ask your AI to create_instance with the card as parent). Change the button and every card follows. A card instance can still override the button's label, and a card state can restyle it. A component cannot hold itself, directly or through the components inside it, and cannot hold another master.
+
 ## Beta features
 
 Settings (the AI settings dialog, Ctrl+K then "AI settings") has a **Beta features** section: a master
