@@ -4,6 +4,8 @@ All notable changes are recorded here. Format: [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-08 (pre-release)
+
 ### Added
 
 - **Beta features** in Settings: a master switch and one switch per feature (everything off by default); a feature that is off is fully hidden, including its AI tools.
