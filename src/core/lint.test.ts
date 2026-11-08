@@ -151,3 +151,49 @@ describe('templates', () => {
     expect(nodes.some((n) => n.fill === '$primary')).toBe(true);
   });
 });
+
+describe('lint-ignore', () => {
+  const tiny = (extra: object = {}, frameExtra: object = {}): Doc =>
+    buildDoc([
+      {
+        id: 'n_frame',
+        type: 'frame',
+        name: 'Card',
+        w: 400,
+        h: 300,
+        layout: 'none',
+        fill: '#ffffff',
+        ...frameExtra,
+        children: [
+          {
+            id: 'n_t',
+            type: 'text',
+            name: 'Fine print',
+            text: 'x',
+            fontSize: 6,
+            x: 0,
+            y: 0,
+            ...extra,
+          },
+        ],
+      } as never,
+    ]);
+
+  it('leaves findings out for a layer that marks the rule, and counts them', () => {
+    expect(rules(tiny())).toContain('text-size');
+    const marked = lintDesign(tiny({ props: { 'lint-ignore': 'text-size' } }));
+    expect(marked.findings.map((f) => f.rule)).not.toContain('text-size');
+    expect(marked.ignored).toBeGreaterThan(0);
+  });
+
+  it('works from a frame above, takes several rules, and "all"', () => {
+    expect(rules(tiny({}, { props: { 'lint-ignore': 'overflow, text-size' } }))).not.toContain(
+      'text-size',
+    );
+    expect(lintDesign(tiny({}, { props: { 'lint-ignore': 'all' } })).findings).toHaveLength(0);
+  });
+
+  it('only silences the named rule', () => {
+    expect(rules(tiny({ props: { 'lint-ignore': 'overflow' } }))).toContain('text-size');
+  });
+});

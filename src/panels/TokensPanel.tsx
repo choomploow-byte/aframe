@@ -14,6 +14,8 @@ import { store, useAFrame } from '../store/store';
 import { ColorField } from '../ui/ColorField';
 import { NumberField, Section, Select, TextField } from '../ui/fields';
 import { showToast } from '../ui/toast';
+import { deleteTextStyle, renameTextStyle, textStyleUsage } from '../store/text-style-commands';
+import { TEXT_STYLE_NAME } from '@core/validate';
 import type { TokenGroup } from '@core/tokens';
 
 /**
@@ -172,6 +174,50 @@ export function TokensPanel() {
             </div>
           );
         })}
+      </Section>
+
+      <Section title="Text styles">
+        {Object.keys(doc.tokens.textStyles ?? {}).length === 0 && (
+          <p className="row__note">
+            Select a text layer and choose "New style from this" in Design to make one. Every layer
+            that uses a style follows it.
+          </p>
+        )}
+        {Object.entries(doc.tokens.textStyles ?? {}).map(([name, style]) => (
+          <div className="token token--textstyle" key={name} data-token-row={name}>
+            <span
+              className="token__sample"
+              aria-hidden="true"
+              style={{ fontFamily: style.fontFamily, fontSize: 15 }}
+            >
+              Aa
+            </span>
+            <TextField
+              ariaLabel="Text style name"
+              field={`textstyle-name-${name}`}
+              value={name}
+              validate={(v) => TEXT_STYLE_NAME.test(v)}
+              onCommit={(next) => {
+                const r = renameTextStyle(store, name, next);
+                if (!r.ok) fail(r.error.message);
+              }}
+            />
+            <Usage count={textStyleUsage(doc)[name] ?? 0} />
+            <button
+              type="button"
+              className="icon-btn icon-btn--small"
+              aria-label={`Delete text style ${name}`}
+              title="Delete (layers keep the look)"
+              data-action="delete-text-style"
+              onClick={() => {
+                const r = deleteTextStyle(store, name);
+                if (!r.ok) fail(r.error.message);
+              }}
+            >
+              <Trash2 size={13} strokeWidth={1.75} aria-hidden="true" />
+            </button>
+          </div>
+        ))}
       </Section>
 
       <Section title="Corner radii" actions={<AddButton group="radius" label="Add radius token" />}>

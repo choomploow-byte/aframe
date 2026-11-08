@@ -214,7 +214,7 @@ describe('exportDesign', () => {
       expect(screen).toBeDefined();
       for (const f of FORMATS) {
         const out = exportDesign(doc, screen?.id ?? '', f);
-        expect(out.files.length).toBeGreaterThan(2);
+        expect(out.files.length).toBeGreaterThanOrEqual(2);
         expect(out.files.every((x) => !x.path.includes('..') && !x.path.startsWith('/'))).toBe(
           true,
         );

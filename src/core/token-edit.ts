@@ -1,7 +1,8 @@
 import { CoreError } from './errors';
 import { parseTokenRef, resolveColor, resolveFont, resolveRadius, type TokenGroup } from './tokens';
-import type { Doc, Node, Tokens } from './types';
-import { isValidColor } from './validate';
+import type { Doc, Node, TextStyle, Tokens } from './types';
+import { isValidColor, propIssues, TEXT_STYLE_NAME } from './validate';
+import { TEXT_STYLE_KEYS } from './types';
 
 /**
  * Editing design tokens as a document operation (`set_tokens`, the Tokens panel). Renaming keeps
@@ -14,6 +15,8 @@ export interface TokenPatch {
   fonts?: Record<string, string | null>;
   spacing?: number[];
   radii?: Record<string, number | null>;
+  /** `null` removes a text style. */
+  textStyles?: Record<string, TextStyle | null>;
 }
 
 const NAME_RE = /^[A-Za-z][A-Za-z0-9_-]{0,39}$/;
@@ -45,6 +48,7 @@ export function mergeTokens(tokens: Tokens, patch: TokenPatch): Tokens {
     fonts: { ...tokens.fonts },
     spacing: tokens.spacing,
     radii: { ...tokens.radii },
+    ...(tokens.textStyles === undefined ? {} : { textStyles: { ...tokens.textStyles } }),
   };
   for (const [name, value] of Object.entries(patch.colors ?? {})) {
     if (!NAME_RE.test(name)) throw badName(name);
@@ -75,6 +79,36 @@ export function mergeTokens(tokens: Tokens, patch: TokenPatch): Tokens {
         'Use a number of 0 or more.',
       );
     } else next.radii[name] = value;
+  }
+  for (const [name, value] of Object.entries(patch.textStyles ?? {})) {
+    if (!TEXT_STYLE_NAME.test(name)) {
+      throw new CoreError(
+        'INVALID_VALUE',
+        `'${name}' is not a valid text style name.`,
+        'Use letters, digits, spaces, - and _, starting with a letter (e.g. "Title Outline").',
+      );
+    }
+    const styles: Record<string, TextStyle> = { ...(next.textStyles ?? {}) };
+    if (value === null) delete styles[name];
+    else {
+      const unknown = Object.keys(value).filter(
+        (k) => !(TEXT_STYLE_KEYS as readonly string[]).includes(k),
+      );
+      const issue =
+        unknown.length > 0
+          ? `unknown setting ${unknown.join(', ')}`
+          : propIssues({ ...value }, 'text')[0]?.message;
+      if (issue !== undefined) {
+        throw new CoreError(
+          'INVALID_VALUE',
+          `Invalid text style '${name}': ${issue}`,
+          `A text style sets: ${TEXT_STYLE_KEYS.join(', ')}.`,
+        );
+      }
+      styles[name] = value;
+    }
+    if (Object.keys(styles).length > 0) next.textStyles = styles;
+    else delete next.textStyles;
   }
   if (patch.spacing !== undefined) {
     if (

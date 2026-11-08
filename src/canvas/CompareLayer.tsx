@@ -1,7 +1,8 @@
-import { X } from 'lucide-react';
+import { Ruler, X } from 'lucide-react';
 import { useLayoutEffect, useState } from 'react';
 import { annotationUi, useAnnotationUi } from '../annotations/ui-state';
-import { useAFrame } from '../store/store';
+import { store, useAFrame } from '../store/store';
+import { showToast } from '../ui/toast';
 import { Segmented } from '../ui/fields';
 import type { Rect } from './geometry';
 import type { Measurer } from './measure';
@@ -54,6 +55,16 @@ export function CompareLayer({ measurer }: { measurer: Measurer }) {
           }}
         />
       )}
+      {ok && target && compare.mode === 'difference' && (
+        <img
+          className="compare__overlay compare__overlay--difference"
+          data-testid="compare-difference"
+          src={url}
+          alt=""
+          draggable={false}
+          style={{ left: target.x, top: target.y, width: target.w, height: target.h }}
+        />
+      )}
       {ok && target && compare.mode === 'side' && (
         <figure
           className="compare__side"
@@ -82,6 +93,7 @@ export function CompareLayer({ measurer }: { measurer: Measurer }) {
           value={compare.mode}
           options={[
             { value: 'overlay', label: 'Overlay' },
+            { value: 'difference', label: 'Difference' },
             { value: 'side', label: 'Side by side' },
           ]}
           onChange={(mode) => annotationUi.getState().setCompare({ ...compare, mode })}
@@ -104,6 +116,37 @@ export function CompareLayer({ measurer }: { measurer: Measurer }) {
             />
           </label>
         )}
+        <button
+          type="button"
+          className="btn btn--secondary btn--small"
+          data-action="measure-compare"
+          disabled={!ok}
+          title="Measure how much of the frame matches the reference"
+          onClick={() => {
+            const s = store.getState();
+            const id = s.selection.find((n) => s.doc.nodes[n] && n !== s.doc.rootId);
+            void import('./compare-reference')
+              .then(({ compareWithReference }) =>
+                compareWithReference(s.doc, s.viewport.zoom, {
+                  ...(id === undefined ? {} : { nodeId: id }),
+                  referenceId: compare.referenceId,
+                }),
+              )
+              .then((r) => {
+                const worst = r.worstRegions[0];
+                showToast(
+                  `${r.matchPercent}% of the frame matches${worst ? `; the biggest difference is ${worst.where} (${worst.mismatchPercent}% off)` : ''}${r.aspectDiffers ? '. The reference has different proportions, so match the frame size first.' : '.'}`,
+                );
+              })
+              .catch((e: unknown) =>
+                showToast(e instanceof Error ? e.message : 'That could not be measured.', {
+                  kind: 'error',
+                }),
+              );
+          }}
+        >
+          <Ruler size={13} strokeWidth={1.75} aria-hidden="true" /> Measure
+        </button>
         <button
           type="button"
           className="icon-btn icon-btn--small"

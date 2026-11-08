@@ -474,3 +474,43 @@ describe('blend modes', () => {
     ).toBeUndefined();
   });
 });
+
+describe('shared text styles', () => {
+  const tokens = {
+    ...DEFAULT_TOKENS,
+    textStyles: {
+      'Title Outline': {
+        fontFamily: 'Lilita One',
+        fontSize: 48,
+        color: '#FFFFFF',
+        textStroke: '#120B24',
+        textStrokeWidth: 4,
+      },
+    },
+  };
+  const label = node({
+    type: 'text',
+    text: 'PLAY',
+    fontSize: 12,
+    color: '#000000',
+    textStyle: 'Title Outline',
+  });
+
+  it("the style replaces the layer's own typography, the layer keeps its text", () => {
+    const out = nodeToCss(label, page, tokens);
+    expect(out.fontSize).toBe('48px');
+    expect(out.color).toBe('#FFFFFF');
+    expect(out.WebkitTextStroke).toBe('8px #120B24');
+    expect(out.fontFamily).toContain('Lilita One');
+  });
+
+  it('editing the style changes every layer that uses it', () => {
+    const bigger = { ...tokens, textStyles: { 'Title Outline': { fontSize: 60 } } };
+    expect(nodeToCss(label, page, bigger).fontSize).toBe('60px');
+  });
+
+  it('an unknown style name leaves the layer as it is', () => {
+    const lone = node({ type: 'text', text: 'x', fontSize: 12, textStyle: 'Nope' });
+    expect(nodeToCss(lone, page, tokens).fontSize).toBe('12px');
+  });
+});

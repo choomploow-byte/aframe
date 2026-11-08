@@ -1,4 +1,4 @@
-import { lintDesign, type Finding, type Severity } from '@core/lint';
+import { lintDesign, LINT_IGNORE_KEY, type Finding, type Severity } from '@core/lint';
 import { AlertTriangle, CheckCircle2, Info, OctagonAlert, Wand2 } from 'lucide-react';
 import { useMemo } from 'react';
 import { getCanvasApi } from '../canvas/canvas-api';
@@ -27,6 +27,29 @@ function applyFinding(f: Finding): void {
   if (f.fixOps === undefined) return;
   const r = store.getState().dispatch(f.fixOps, { label: `Fix: ${f.rule}` });
   if (!r.ok) showToast(r.errors[0]?.message ?? 'That fix could not be applied.', { kind: 'error' });
+}
+
+/** Marks the finding's rule as intentional on that layer (and what is inside it), as one undo step. */
+function markIntentional(f: Finding): void {
+  const node = store.getState().doc.nodes[f.nodeId];
+  if (!node) return;
+  const have = (node.props?.[LINT_IGNORE_KEY] ?? '').split(/[\s,]+/).filter(Boolean);
+  if (!have.includes(f.rule)) have.push(f.rule);
+  const r = store.getState().dispatch(
+    [
+      {
+        op: 'update',
+        id: f.nodeId,
+        set: { props: { ...node.props, [LINT_IGNORE_KEY]: have.join(', ') } },
+      },
+    ],
+    { label: `Mark ${f.rule} as intentional` },
+  );
+  if (r.ok) {
+    showToast(`"${f.rule}" is now ignored on ${node.name}.`, {
+      action: { label: 'Undo', run: () => void store.getState().undo() },
+    });
+  } else showToast(r.errors[0]?.message ?? 'That could not be saved.', { kind: 'error' });
 }
 
 /** Everything that has a one-click fix, as a single step. */
@@ -113,6 +136,15 @@ export function LintDialog() {
                               Fix
                             </button>
                           )}
+                          <button
+                            type="button"
+                            className="btn btn--small btn--secondary"
+                            data-action="lint-ignore"
+                            title="This is on purpose: stop flagging it on this layer"
+                            onClick={() => markIntentional(f)}
+                          >
+                            Intentional
+                          </button>
                         </li>
                       );
                     })}

@@ -8,6 +8,7 @@ import { fontInfo, supportsWeight } from './fonts';
 import { getIcon, suggestIcons } from './icons';
 import { resolveColor, resolveFont } from './tokens';
 import { attachFixOps, groupFindings, isMobileFrame } from './lint-extra';
+import { withTextStyle } from './style';
 import type { Doc, Node, Op } from './types';
 
 export type Severity = 'error' | 'warning' | 'info';
@@ -29,6 +30,8 @@ export interface LintResult {
   total: number;
   counts: Record<Severity, number>;
   nodesChecked: number;
+  /** Findings left out because the layer (or a frame above it) is marked `props["lint-ignore"]`. */
+  ignored: number;
 }
 
 const MAX_FINDINGS = 100;
@@ -105,6 +108,27 @@ function* walk(doc: Doc, startId: string): Generator<Node> {
 
 const isNumber = (v: unknown): v is number => typeof v === 'number';
 
+/** The key in a layer's `props` that marks findings as intentional: "overflow, radius-variety" or "all". */
+export const LINT_IGNORE_KEY = 'lint-ignore';
+
+/** Whether this finding's layer, or a frame above it, says the rule is intentional there. */
+function isIgnored(doc: Doc, f: Finding): boolean {
+  for (
+    let cur: Node | undefined = doc.nodes[f.nodeId];
+    cur;
+    cur = cur.parentId === null ? undefined : doc.nodes[cur.parentId]
+  ) {
+    const list = cur.props?.[LINT_IGNORE_KEY];
+    if (list === undefined) continue;
+    const rules = list
+      .toLowerCase()
+      .split(/[\s,]+/)
+      .filter(Boolean);
+    if (rules.includes('all') || rules.includes('*') || rules.includes(f.rule)) return true;
+  }
+  return false;
+}
+
 export function lintDesign(doc: Doc, nodeId?: string): LintResult {
   const start = nodeId ?? doc.rootId;
   const findings: Finding[] = [];
@@ -119,7 +143,8 @@ export function lintDesign(doc: Doc, nodeId?: string): LintResult {
   const distinctRadii = new Set<string>();
   let checked = 0;
 
-  for (const node of walk(doc, start)) {
+  for (const rawNode of walk(doc, start)) {
+    const node = withTextStyle(rawNode, doc.tokens);
     if (node.id === doc.rootId) continue;
     checked += 1;
 
@@ -387,6 +412,9 @@ export function lintDesign(doc: Doc, nodeId?: string): LintResult {
 
   findings.push(...groupFindings(doc, start));
   attachFixOps(doc, findings);
+  const ignored = findings.filter((f) => isIgnored(doc, f)).length;
+  if (ignored > 0)
+    findings.splice(0, findings.length, ...findings.filter((f) => !isIgnored(doc, f)));
 
   const order: Record<Severity, number> = { error: 0, warning: 1, info: 2 };
   findings.sort((a, b) => order[a.severity] - order[b.severity]);
@@ -397,6 +425,7 @@ export function lintDesign(doc: Doc, nodeId?: string): LintResult {
     total: findings.length,
     counts,
     nodesChecked: checked,
+    ignored,
   };
 }
 

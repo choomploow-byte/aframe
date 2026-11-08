@@ -170,3 +170,24 @@ describe('deleteToken', () => {
     expect(next.tokens.colors).not.toHaveProperty('muted');
   });
 });
+
+describe('text styles', () => {
+  it('adds, changes and removes a style, and refuses a bad one', () => {
+    const t0 = DEFAULT_TOKENS;
+    const t1 = mergeTokens(t0, {
+      textStyles: { 'Title Outline': { fontSize: 48, textStroke: '#000000', textStrokeWidth: 3 } },
+    });
+    expect(t1.textStyles?.['Title Outline']?.fontSize).toBe(48);
+    const t2 = mergeTokens(t1, { textStyles: { 'Title Outline': null } });
+    expect(t2.textStyles).toBeUndefined();
+    expect(() => mergeTokens(t0, { textStyles: { 'bad/name': { fontSize: 10 } } })).toThrow(
+      /valid text style name/,
+    );
+    expect(() => mergeTokens(t0, { textStyles: { Ok: { fontSize: -4 } } })).toThrow(
+      /Invalid text style/,
+    );
+    expect(() => mergeTokens(t0, { textStyles: { Ok: { fill: '#fff' } as never } })).toThrow(
+      /unknown setting/,
+    );
+  });
+});

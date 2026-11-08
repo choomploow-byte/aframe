@@ -21,7 +21,8 @@ export type NotesFilter = 'open' | 'resolved' | 'all';
 
 export interface Compare {
   referenceId: string;
-  mode: 'overlay' | 'side';
+  /** 'difference' lays the reference over the design with a difference blend: black where they match. */
+  mode: 'overlay' | 'side' | 'difference';
   /** 0..1, for the overlay mode. */
   opacity: number;
 }

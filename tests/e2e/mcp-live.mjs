@@ -106,7 +106,7 @@ await group('the agent sees the open project', async () => {
   );
   check('instructions arrived at connect', (client.getInstructions() ?? '').includes('screenshot'));
   const tools = (await client.listTools()).tools.length;
-  check('all 39 tools are listed', tools === 39, String(tools));
+  check('all 40 tools are listed', tools === 40, String(tools));
 });
 
 // ---------------------------------------------------------------------------------------------

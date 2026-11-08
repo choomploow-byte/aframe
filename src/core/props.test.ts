@@ -60,6 +60,7 @@ const ALL_PROPS: Record<NodePropKey, true> = {
   textTransform: true,
   textStroke: true,
   textStrokeWidth: true,
+  textStyle: true,
   assetId: true,
   fit: true,
   tileSize: true,

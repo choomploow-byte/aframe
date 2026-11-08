@@ -108,6 +108,7 @@ export function normalizeTokens(input: Partial<Tokens> | undefined): Tokens {
     fonts: input?.fonts ?? {},
     spacing: input?.spacing ?? [...DEFAULT_TOKENS.spacing],
     radii: input?.radii ?? {},
+    ...(input?.textStyles === undefined ? {} : { textStyles: input.textStyles }),
   };
 }
 

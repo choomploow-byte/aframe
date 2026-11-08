@@ -149,6 +149,8 @@ export interface Node {
   /** Outline round the glyphs (the classic game title look); `textStrokeWidth` is how far it reaches outside. */
   textStroke?: string;
   textStrokeWidth?: number;
+  /** Name of a shared text style in `tokens.textStyles`; its values replace this layer's own typography. */
+  textStyle?: string;
 
   // Image
   assetId?: string;
@@ -181,11 +183,44 @@ export interface Node {
 export type NodeProps = Omit<Node, 'id' | 'type' | 'parentId' | 'children' | 'from'>;
 export type NodePropKey = keyof NodeProps;
 
+/**
+ * A named, reusable look for text ("Title Outline"). Every text layer that names it takes these
+ * values, so editing the style updates every label. The layer keeps its own text, alignment,
+ * position and size.
+ */
+export interface TextStyle {
+  fontFamily?: string;
+  fontSize?: number;
+  fontWeight?: number;
+  lineHeight?: number;
+  letterSpacing?: number;
+  textTransform?: 'none' | 'uppercase' | 'capitalize';
+  color?: string;
+  textStroke?: string;
+  textStrokeWidth?: number;
+  shadow?: Shadow[];
+}
+
+export const TEXT_STYLE_KEYS = [
+  'fontFamily',
+  'fontSize',
+  'fontWeight',
+  'lineHeight',
+  'letterSpacing',
+  'textTransform',
+  'color',
+  'textStroke',
+  'textStrokeWidth',
+  'shadow',
+] as const satisfies readonly (keyof TextStyle)[];
+
 export interface Tokens {
   colors: Record<string, string>;
   fonts: Record<string, string>;
   spacing: number[];
   radii: Record<string, number>;
+  /** Named text looks (see TextStyle). Absent when the project has none. */
+  textStyles?: Record<string, TextStyle>;
 }
 
 export interface Annotation {
@@ -327,6 +362,8 @@ export interface ScreenshotOptions {
   maxWidth?: number;
   /** Show components in this state (without changing the design); 'all' draws every state side by side. */
   state?: ComponentState | 'all';
+  /** The newest revision the tool has seen: the app waits until it has it, so the picture is never of an older edit. */
+  minRev?: number;
 }
 
 export interface ScreenshotResult {
@@ -343,6 +380,36 @@ export interface ExportImageOptions {
   scale: 1 | 2 | 3;
   /** PNG only: leave the area behind the design transparent instead of filling it. */
   transparent: boolean;
+  /** The newest revision the tool has seen; the app waits until it has it. */
+  minRev?: number;
+}
+
+export interface CompareReferenceOptions {
+  nodeId?: string;
+  /** A reference id or name; the first reference when omitted. */
+  referenceId?: string;
+  /** Largest per-channel difference (0-255) still counted as a match. Default 24. */
+  tolerance?: number;
+  minRev?: number;
+}
+
+export interface CompareReferenceResult {
+  width: number;
+  height: number;
+  matchPercent: number;
+  meanDifferencePercent: number;
+  worstRegions: {
+    where: string;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    mismatchPercent: number;
+  }[];
+  diffPngBase64: string;
+  referenceName: string;
+  aspectDiffers: boolean;
+  referenceScale: number;
 }
 
 export interface ExportImageResult {
@@ -417,4 +484,6 @@ export interface ToolContext {
   ) => Promise<{ root: string; written: string[]; unchanged: string[] }>;
   /** Renders a node to PNG or SVG bytes in the running app (the app must be open). */
   exportImage?: (opts: ExportImageOptions) => Promise<ExportImageResult>;
+  /** Compares a frame with a reference image (needs the app: it renders and decodes pictures). */
+  compareReference?: (opts: CompareReferenceOptions) => Promise<CompareReferenceResult>;
 }

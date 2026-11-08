@@ -95,6 +95,7 @@ const screenshot = defineTool({
       opts.nodeId = lookupId(doc.nodes, opts.nodeId);
     }
     const result = await take({
+      minRev: (await ctx.getDoc()).rev,
       ...(opts.state === undefined ? {} : { state: opts.state }),
       ...(opts.nodeId === undefined ? {} : { nodeId: opts.nodeId }),
       ...(opts.scale === undefined ? {} : { scale: opts.scale }),
@@ -269,6 +270,37 @@ async function readImage(ctx: ToolContext, path: string): Promise<Uint8Array> {
   return read(path);
 }
 
+const compareReference = defineTool({
+  name: 'compare_reference',
+  description:
+    'Measure how close a frame is to a reference image instead of judging by eye. The frame is rendered, the reference is stretched to the same size, and you get: matchPercent (share of pixels that match within tolerance, 100 = identical), meanDifferencePercent, the worst regions in words and pixels (e.g. "bottom right" with its box), and a difference picture (the design dimmed, every difference in red). Use it after a rebuild: fix the worst region, compare again. If aspectDiffers is true the reference has different proportions from the frame, so match the frame size to the reference first. Needs the AFrame app open.',
+  inputSchema: z.object({
+    nodeId: z.string().optional().describe('The frame to compare (default: the first frame)'),
+    reference: z.string().optional().describe('A reference id or name (default: the first one)'),
+    tolerance: z
+      .number()
+      .min(0)
+      .max(255)
+      .optional()
+      .describe(
+        'Per-channel difference that still counts as a match (default 24, which ignores anti-aliasing)',
+      ),
+  }),
+  handler: async (ctx, input) => {
+    const compare = need(ctx.compareReference, 'Comparing with a reference');
+    const doc = await ctx.getDoc();
+    const nodeId = input.nodeId === undefined ? undefined : lookupId(doc.nodes, input.nodeId);
+    const result = await compare({
+      ...(nodeId === undefined ? {} : { nodeId }),
+      ...(input.reference === undefined ? {} : { referenceId: input.reference }),
+      ...(input.tolerance === undefined ? {} : { tolerance: input.tolerance }),
+      minRev: doc.rev,
+    });
+    const { diffPngBase64, ...numbers } = result;
+    return withImages(numbers, [{ data: diffPngBase64, mimeType: 'image/png' }]);
+  },
+});
+
 const addReferenceTool = defineTool({
   name: 'add_reference',
   description:
@@ -386,7 +418,7 @@ const loadSkill = defineTool({
 const lintDesignTool = defineTool({
   name: 'lint_design',
   description:
-    'Check the design for common problems: low contrast, tiny text, small tap targets, off-scale spacing, overflow, inconsistent radii, default layer names, missing alt text. Each finding names the node and a fix; where the right fix is unambiguous it also carries fixOps, valid operations you can pass straight to apply_changes. Run it after you finish editing.',
+    'Check the design for common problems: low contrast, tiny text, small tap targets, off-scale spacing, overflow, inconsistent radii, default layer names, missing alt text. Each finding names the node and a fix; where the right fix is unambiguous it also carries fixOps, valid operations you can pass straight to apply_changes. Run it after you finish editing. A layer (or a frame above it) can mark findings as intentional with props {"lint-ignore": "overflow, radius-variety"} (or "all"); those are left out and counted in `ignored`.',
   inputSchema: z.object({ nodeId: z.string().optional().describe('Limit to this subtree') }),
   handler: async (ctx, { nodeId }) => {
     const doc: Doc = await ctx.getDoc();
@@ -441,10 +473,10 @@ const PREVIEW_CHARS = 4000;
 const exportCode = defineTool({
   name: 'export_code',
   description:
-    'Export a frame (or any node) as code into a folder the user has confirmed: framework "html" (index.html + styles.css), "react-css" (a TSX component + CSS Module) or "react-tailwind" (Tailwind v4 utilities + a @theme from the tokens). Colours, fonts and radii that came from tokens become CSS variables; images are written to assets/. Files are only ever written inside outDir; if files already exist with different content nothing is written and you get FILE_EXISTS (ask the user, then pass overwrite: true). Returns the files written, warnings (missing alt text, absolute positioning, unknown icons) and the start of the main file.',
+    'Export a frame (or any node) as code into a folder the user has confirmed: framework "html" (index.html + styles.css), "react-css" (a TSX component + CSS Module) "react-tailwind" (Tailwind v4 utilities + a @theme from the tokens) or "roblox" (a Luau script that builds the ScreenGui in Studio, plus the pictures to upload: pixel-exact at the design resolution with a UIScale that fits the screen; things Roblox cannot draw are listed as warnings). Colours, fonts and radii that came from tokens become CSS variables; images are written to assets/. Files are only ever written inside outDir; if files already exist with different content nothing is written and you get FILE_EXISTS (ask the user, then pass overwrite: true). Returns the files written, warnings (missing alt text, absolute positioning, unknown icons) and the start of the main file.',
   inputSchema: z.object({
     nodeId: z.string(),
-    framework: z.enum(['html', 'react-css', 'react-tailwind']),
+    framework: z.enum(['html', 'react-css', 'react-tailwind', 'roblox']),
     outDir: z.string().describe('Absolute folder the user confirmed'),
     componentName: z
       .string()
@@ -532,6 +564,7 @@ const exportImage = defineTool({
       format: input.format,
       scale: input.scale ?? 1,
       transparent: input.transparent === true,
+      minRev: doc.rev,
     });
     const report = await write(
       dir,
@@ -557,6 +590,7 @@ export const EXTRA_TOOLS: readonly Tool[] = [
   resolveAnnotation,
   listReferences,
   getReference,
+  compareReference,
   addReferenceTool,
   importImage,
   listSkills,

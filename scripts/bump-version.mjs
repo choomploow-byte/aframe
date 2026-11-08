@@ -34,9 +34,6 @@ jsonVersion('src-tauri/Cargo.toml', (t) => t.replace(/^version = "[^"]+"/m, `ver
 // Cargo.lock: the entry for this crate (named in Cargo.toml).
 const crate = /^name = "([^"]+)"/m.exec(read('src-tauri/Cargo.toml'))?.[1];
 jsonVersion('src-tauri/Cargo.lock', (t) =>
-  t.replace(
-    new RegExp(`(name = "${crate}"\\nversion = )"[^"]+"`),
-    `$1"${next}"`,
-  ),
+  t.replace(new RegExp(`(name = "${crate}"\\nversion = )"[^"]+"`), `$1"${next}"`),
 );
 console.log(`${old} -> ${next}`);

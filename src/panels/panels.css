@@ -495,3 +495,10 @@
   grid-template-columns: 1fr 1fr;
   gap: 6px;
 }
+.token--textstyle {
+  grid-template-columns: 28px minmax(0, 1fr) 16px 22px;
+}
+.token__sample {
+  text-align: center;
+  color: var(--ink);
+}

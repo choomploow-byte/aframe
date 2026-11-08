@@ -129,6 +129,23 @@ export function describeNotice(n: SyncNotice): {
   }
 }
 
+/**
+ * Before a picture is taken for an agent, make sure the app has the edit the agent just made: the
+ * file poll runs every 400 ms, so a screenshot asked for right after an edit could otherwise show
+ * the version before it. Waits up to 4 s, polling the project file, then carries on regardless.
+ */
+async function catchUpTo(sync: SyncService, minRev: unknown): Promise<void> {
+  if (typeof minRev !== 'number') return;
+  const deadline = Date.now() + 4000;
+  while (store.getState().doc.rev < minRev && Date.now() < deadline) {
+    await sync.poll();
+    if (store.getState().doc.rev >= minRev) break;
+    await new Promise((r) => setTimeout(r, 60));
+  }
+  // Let React and the renderer settle on the new document before it is drawn.
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+}
+
 function ensureSession(): Promise<Session> {
   session ??= (async (): Promise<Session> => {
     const fs = await getFs();
@@ -156,6 +173,7 @@ function ensureSession(): Promise<Session> {
       screenshot: async (params) => {
         const { captureScreenshot, ScreenshotError } = await import('../canvas/screenshot');
         const p: Record<string, unknown> = params;
+        await catchUpTo(sync, p.minRev);
         try {
           const state = store.getState();
           return await captureScreenshot(state.doc, state.viewport.zoom, {
@@ -179,6 +197,7 @@ function ensureSession(): Promise<Session> {
       exportImage: async (params) => {
         const { captureExport, ScreenshotError } = await import('../canvas/screenshot');
         const p: Record<string, unknown> = params;
+        await catchUpTo(sync, p.minRev);
         if (typeof p.nodeId !== 'string' || (p.format !== 'png' && p.format !== 'svg')) {
           throw new RequestError('BAD_REQUEST', 'params.nodeId and params.format are required.');
         }
@@ -194,6 +213,24 @@ function ensureSession(): Promise<Session> {
         } catch (e) {
           if (e instanceof ScreenshotError) throw new RequestError(e.code, e.message);
           throw e;
+        }
+      },
+      compareReference: async (params) => {
+        const { compareWithReference } = await import('../canvas/compare-reference');
+        const p: Record<string, unknown> = params;
+        await catchUpTo(sync, p.minRev);
+        try {
+          const state = store.getState();
+          return await compareWithReference(state.doc, state.viewport.zoom, {
+            ...(typeof p.nodeId === 'string' ? { nodeId: p.nodeId } : {}),
+            ...(typeof p.referenceId === 'string' ? { referenceId: p.referenceId } : {}),
+            ...(typeof p.tolerance === 'number' ? { tolerance: p.tolerance } : {}),
+          });
+        } catch (e) {
+          throw new RequestError(
+            'INVALID_VALUE',
+            e instanceof Error ? e.message : 'That comparison failed.',
+          );
         }
       },
       nodeBounds: async (nodeId) => {

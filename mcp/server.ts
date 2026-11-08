@@ -37,6 +37,7 @@ const READ_ONLY = new Set([
   'component_list',
   'search_library',
   'list_themes',
+  'compare_reference',
   'find_nodes',
 ]);
 

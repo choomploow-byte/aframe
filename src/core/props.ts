@@ -58,6 +58,7 @@ export const TEXT_PROPS = [
   'textTransform',
   'textStroke',
   'textStrokeWidth',
+  'textStyle',
 ] as const satisfies readonly NodePropKey[];
 
 export const IMAGE_PROPS = ['assetId', 'fit', 'tileSize'] as const satisfies readonly NodePropKey[];

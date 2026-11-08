@@ -4,7 +4,7 @@ import { CONTAINER_TYPES, NODE_TYPES, ownersOf, propsFor, REQUIRED_PROPS } from 
 import { suggest } from './suggest';
 import { parseTokenRef } from './tokens';
 import type { Doc, NodeType, OpError, Tokens, Warning } from './types';
-import { BLEND_MODES, SCHEMA_VERSION } from './types';
+import { BLEND_MODES, SCHEMA_VERSION, TEXT_STYLE_KEYS } from './types';
 import { isFiniteNumber, isPlainObject } from './util';
 
 /** One problem found by a validator. Converted to `OpError` by callers that know the op index. */
@@ -266,6 +266,9 @@ const componentDef: Check = (v) => {
   return null;
 };
 
+/** Names of shared text styles: readable ones such as "Title Outline". */
+export const TEXT_STYLE_NAME = /^[A-Za-z][A-Za-z0-9 _-]{0,39}$/;
+
 const CHECKS: Record<string, Check> = {
   name: (v) =>
     typeof v === 'string' && v.trim().length > 0 && v.length <= 200
@@ -320,6 +323,10 @@ const CHECKS: Record<string, Check> = {
   textTransform: oneOf('none', 'uppercase', 'capitalize'),
   textStroke: color,
   textStrokeWidth: num(0, 100, 'px'),
+  textStyle: (v) =>
+    typeof v === 'string' && TEXT_STYLE_NAME.test(v)
+      ? null
+      : 'a text style name (letters, digits, spaces, - and _; up to 40 characters)',
   assetId: (v) => (isValidId(v, 'img') ? null : "an asset id like 'img_ab12c'"),
   icon: (v) =>
     typeof v === 'string' && ICON_NAME_RE.test(v)
@@ -523,6 +530,23 @@ function validateTokensShape(tokens: unknown, fail: Fail): void {
   }
   if (!isNumberRecord(tokens.radii))
     fail('tokens.radii must map names to numbers.', 'tokens.radii');
+  if (tokens.textStyles !== undefined) {
+    if (!isPlainObject(tokens.textStyles)) {
+      return fail('tokens.textStyles must map names to text styles.', 'tokens.textStyles');
+    }
+    for (const [name, style] of Object.entries(tokens.textStyles)) {
+      const path = `tokens.textStyles.${name}`;
+      if (!TEXT_STYLE_NAME.test(name)) fail('Not a valid text style name.', path);
+      else if (!isPlainObject(style)) fail('A text style must be an object.', path);
+      else if (
+        Object.keys(style).some((k) => !(TEXT_STYLE_KEYS as readonly string[]).includes(k))
+      ) {
+        fail(`A text style may only set ${TEXT_STYLE_KEYS.join(', ')}.`, path);
+      } else {
+        for (const issue of propIssues(style, 'text')) fail(issue.message, path);
+      }
+    }
+  }
 }
 
 function validateAnnotations(list: unknown, fail: Fail): void {

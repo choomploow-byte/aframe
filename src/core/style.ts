@@ -273,12 +273,21 @@ function typography(node: Node, tokens: Tokens, issues: TokenIssue[], out: CssRe
  * CSS for one node given its parent (undefined for the page, or for a subtree rendered on its
  * own). Unresolvable tokens are left out of the result and appended to `issues` when given.
  */
+/** A text layer with its shared text style (if it names one that exists) laid over its own typography. */
+export function withTextStyle(node: Node, tokens: Tokens): Node {
+  if (node.type !== 'text' || node.textStyle === undefined) return node;
+  const style = tokens.textStyles?.[node.textStyle];
+  if (!style) return node;
+  return { ...node, ...style };
+}
+
 export function nodeToCss(
-  node: Node,
+  rawNode: Node,
   parent: Node | undefined,
   tokens: Tokens,
   issues: TokenIssue[] = [],
 ): CssRecord {
+  const node = withTextStyle(rawNode, tokens);
   const out: CssRecord = {};
   placeAndSize(node, parent, out);
   frameLayout(node, out);

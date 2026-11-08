@@ -366,7 +366,9 @@ describe('export_image', () => {
       scale: 2,
       transparent: true,
     });
-    expect(asked).toEqual([{ nodeId: 'n_frame', format: 'png', scale: 2, transparent: true }]);
+    expect(asked).toEqual([
+      { nodeId: 'n_frame', format: 'png', scale: 2, transparent: true, minRev: 1 },
+    ]);
     expect(written).toEqual([{ root: 'C:\\Users\\me\\app\\public', name: 'hero.png' }]);
     expect(r.data).toMatchObject({ format: 'png', width: 1, height: 1, bytes: PNG.byteLength });
     expect((r.data as { path: string }).path).toBe('C:\\Users\\me\\app\\public\\hero.png');
@@ -398,5 +400,43 @@ describe('export_image', () => {
     expect(
       await fail(ctx, 'export_image', { nodeId: 'n_frame', format: 'png', outPath: '/p/a.png' }),
     ).toMatchObject({ code: 'APP_NOT_RUNNING' });
+  });
+});
+
+describe('compare_reference', () => {
+  it('asks the app to compare at the newest revision and returns numbers plus the difference picture', async () => {
+    const asked: unknown[] = [];
+    const { ctx } = memory({
+      compareReference: (o) => {
+        asked.push(o);
+        return Promise.resolve({
+          width: 100,
+          height: 50,
+          matchPercent: 91.5,
+          meanDifferencePercent: 2,
+          worstRegions: [
+            { where: 'bottom right', x: 75, y: 34, w: 25, h: 16, mismatchPercent: 40 },
+          ],
+          diffPngBase64: 'AAAA',
+          referenceName: 'Target',
+          aspectDiffers: false,
+          referenceScale: 1,
+        });
+      },
+    });
+    const r = await ok(ctx, 'compare_reference', {
+      nodeId: 'n_frame',
+      reference: 'Target',
+      tolerance: 10,
+    });
+    expect(asked).toEqual([{ nodeId: 'n_frame', referenceId: 'Target', tolerance: 10, minRev: 1 }]);
+    expect(r.data).toMatchObject({ matchPercent: 91.5, referenceName: 'Target' });
+    expect(r.data).not.toHaveProperty('diffPngBase64');
+    expect(r.images).toEqual([{ data: 'AAAA', mimeType: 'image/png' }]);
+  });
+
+  it('says it needs the app when it is not available', async () => {
+    const { ctx } = memory();
+    expect((await fail(ctx, 'compare_reference', {})).code).toBe('NOT_IMPLEMENTED');
   });
 });

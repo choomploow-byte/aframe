@@ -12,9 +12,10 @@ import { buildIr, fontsourcePackage, type ExportFile, type IrResult } from './ir
 import { kebab, pascal } from './names';
 import { toReactCss } from './jsx';
 import { toReactTailwind } from './tailwind';
+import { toRoblox } from './roblox';
 import type { Doc } from '../types';
 
-export type ExportFormat = 'html' | 'react-css' | 'react-tailwind';
+export type ExportFormat = 'html' | 'react-css' | 'react-tailwind' | 'roblox';
 
 export const EXPORT_FORMATS: readonly { id: ExportFormat; label: string; description: string }[] = [
   { id: 'html', label: 'HTML + CSS', description: 'index.html and styles.css, no framework.' },
@@ -28,6 +29,12 @@ export const EXPORT_FORMATS: readonly { id: ExportFormat; label: string; descrip
     label: 'React + Tailwind',
     description:
       'A TSX component using Tailwind v4 utilities, a @theme from your tokens, and a small CSS file for what has no exact utility.',
+  },
+  {
+    id: 'roblox',
+    label: 'Roblox ScreenGui',
+    description:
+      'A Luau script that builds the ScreenGui in Studio (Frames, TextLabels, UICorner, UIStroke, UIGradient, UIListLayout) and the pictures to upload.',
   },
 ];
 
@@ -76,6 +83,17 @@ export function exportDesign(
   const componentName = options.componentName
     ? pascal(options.componentName)
     : pascal(node.name, 'Design');
+  if (format === 'roblox') {
+    const guiName = pascal(node.name, 'AFrameUI');
+    const built = toRoblox(doc, nodeId, guiName);
+    return {
+      format,
+      main: `${guiName}.lua`,
+      files: built.files,
+      warnings: built.warnings,
+      componentName: guiName,
+    };
+  }
   const ir: IrResult = buildIr(doc, nodeId, { tokens: 'variables' });
   let files: ExportFile[];
   let main: string;

@@ -96,6 +96,7 @@ Must include, concisely:
 | Tool | Input | Output |
 |---|---|---|
 | `screenshot` | `{ nodeId?: string, scale?: 1\|2 (default 1), annotations?: boolean, maxWidth?: number (default 1600), state?: 'default'\|'hover'\|'pressed'\|'disabled'\|'selected'\|'all' }` | PNG image + `{ width, height }`. Needs app online; times out after 15 s with hint |
+| `compare_reference` | `{ nodeId?, reference?, tolerance? }` | Measures a frame against a reference image: `matchPercent`, `meanDifferencePercent`, the worst regions (words and pixel boxes) and a difference picture (design dimmed, differences in red). Needs the app |
 | `get_reference` | `{ id }` | Reference image + note |
 | `list_references` | `{}` | `[{ id, name, note, scope }]` |
 | `add_reference` | `{ path, name?, note?, scope? }` | Adds reference image from disk |

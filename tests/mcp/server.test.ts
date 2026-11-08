@@ -115,6 +115,7 @@ describe('the protocol surface', () => {
         'apply_changes',
         'apply_theme',
         'arrange_nodes',
+        'compare_reference',
         'component_list',
         'create_instance',
         'create_project',
@@ -167,6 +168,7 @@ describe('the protocol surface', () => {
       'search_library',
       'list_themes',
       'find_nodes',
+      'compare_reference',
     ])
       expect(tools.find((t) => t.name === name)?.annotations?.readOnlyHint, name).toBe(true);
     for (const name of [

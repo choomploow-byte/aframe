@@ -327,6 +327,7 @@ await group('every doc-04 property is reachable from the panels', async () => {
     'flipX',
     'flipY',
     'textStroke',
+    'textStyle',
     'textStrokeWidth',
     'text',
     'fontFamily',

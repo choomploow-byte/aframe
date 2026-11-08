@@ -26,6 +26,11 @@ import {
   ungroupSelection,
   type CommandResult,
 } from '../store/game-commands';
+import {
+  applyTextStyle,
+  createTextStyleFromNode,
+  updateTextStyleFromNode,
+} from '../store/text-style-commands';
 import { store } from '../store/store';
 import { ColorField } from '../ui/ColorField';
 import { NumberField, Row, Section, Segmented, Select } from '../ui/fields';
@@ -211,6 +216,75 @@ export function ArrangeSection({ ctx }: { ctx: PropCtx }) {
             </button>
           ))}
         </div>
+      )}
+    </Section>
+  );
+}
+
+/** A shared text style: pick one, make one from this layer, update it, or detach. */
+export function TextStyleSection({ ctx }: { ctx: PropCtx }) {
+  const styles = ctx.tokens.textStyles ?? {};
+  const names = Object.keys(styles);
+  const current = ctx.get('textStyle');
+  const textIds = ctx.nodes.filter((n) => n.type === 'text').map((n) => n.id);
+  const report = (r: { ok: boolean; error?: { message: string } }): void => {
+    if (!r.ok) showToast(r.error?.message ?? 'That did not work.', { kind: 'error' });
+  };
+  return (
+    <Section title="Text style" defaultOpen={current.value !== undefined || names.length > 0}>
+      <Row label="Style">
+        <Select<string>
+          ariaLabel="Text style"
+          field="textStyle"
+          value={current.value ?? ''}
+          mixed={current.mixed}
+          options={[{ value: '', label: 'None' }, ...names.map((n) => ({ value: n, label: n }))]}
+          disabled={ctx.locked}
+          onChange={(v) => report(applyTextStyle(store, textIds, v === '' ? null : v))}
+        />
+      </Row>
+      <div className="toolrow toolrow--text">
+        {ctx.single && current.value === undefined && (
+          <button
+            type="button"
+            className="btn btn--secondary btn--small"
+            data-field="textstyle-new"
+            disabled={ctx.locked}
+            title="Save this text's font, size, colour, outline and shadow as a style"
+            onClick={() => report(createTextStyleFromNode(store, ctx.single!.id).result)}
+          >
+            New style from this
+          </button>
+        )}
+        {ctx.single && current.value !== undefined && (
+          <>
+            <button
+              type="button"
+              className="btn btn--secondary btn--small"
+              data-field="textstyle-update"
+              disabled={ctx.locked}
+              title="Make the style match this layer; every layer using it follows"
+              onClick={() => report(updateTextStyleFromNode(store, current.value!, ctx.single!.id))}
+            >
+              Update style
+            </button>
+            <button
+              type="button"
+              className="btn btn--secondary btn--small"
+              data-field="textstyle-detach"
+              disabled={ctx.locked}
+              onClick={() => report(applyTextStyle(store, textIds, null))}
+            >
+              Detach
+            </button>
+          </>
+        )}
+      </div>
+      {current.value !== undefined && (
+        <p className="row__note">
+          This layer takes its font, size, colour, outline and shadow from the style. Edit them on
+          the style (Tokens tab), or detach to change just this layer.
+        </p>
       )}
     </Section>
   );

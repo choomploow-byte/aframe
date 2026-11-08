@@ -43,6 +43,11 @@ export function createChatToolContext(): ToolContext {
       const out = await captureScreenshot(s.doc, s.viewport.zoom, opts);
       return { pngBase64: out.pngBase64, width: out.width, height: out.height };
     },
+    compareReference: async (opts) => {
+      const { compareWithReference } = await import('../canvas/compare-reference');
+      const s = store.getState();
+      return compareWithReference(s.doc, s.viewport.zoom, opts);
+    },
     getNodeBounds: async (nodeId) => {
       const { nodeBounds } = await import('../canvas/screenshot');
       return nodeBounds(nodeId, store.getState().viewport.zoom);

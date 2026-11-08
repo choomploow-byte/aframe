@@ -11,6 +11,7 @@ import { CoreError } from '../src/core/errors';
 import { createTemplateDoc, TEMPLATES, type TemplateName } from '../src/core/templates';
 import type { Tool, ToolResult } from '../src/core/tool-kit';
 import type {
+  CompareReferenceResult,
   Doc,
   ProjectSummary,
   ScreenshotOptions,
@@ -268,6 +269,17 @@ export class McpEnv {
       },
       readUserFile: createImageReader({ aframeHome: this.home.root }),
       writeUserFiles: (root, files, options) => writeUserFiles(root, files, options ?? {}),
+      compareReference: async (opts) => {
+        const r = (await this.bridge.request(
+          'compare_reference',
+          { ...opts },
+          { project: await id(), timeoutMs: 60_000 },
+        )) as CompareReferenceResult | null;
+        if (typeof r?.diffPngBase64 !== 'string' || typeof r.matchPercent !== 'number') {
+          throw new CoreError('INTERNAL', 'The app returned an unreadable comparison.');
+        }
+        return r;
+      },
       exportImage: async (opts) => {
         const r = (await this.bridge.request(
           'export_image',

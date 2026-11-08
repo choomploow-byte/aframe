@@ -77,6 +77,20 @@ const effectRefSchema = z.union([
     color: z.string().optional().describe('inner-glow tint or hard-3d-bottom ledge colour'),
   }),
 ]);
+const textStyleSchema = z
+  .object({
+    fontFamily: z.string().optional(),
+    fontSize: z.number().optional(),
+    fontWeight: z.number().optional(),
+    lineHeight: z.number().optional(),
+    letterSpacing: z.number().optional(),
+    textTransform: z.enum(['none', 'uppercase', 'capitalize']).optional(),
+    color: z.string().optional(),
+    textStroke: z.string().optional(),
+    textStrokeWidth: z.number().optional(),
+    shadow: z.array(shadowSchema).optional(),
+  })
+  .strict();
 const layerPatchesSchema = z.record(z.string(), z.record(z.string(), z.unknown()));
 
 /** One entry per node property; `satisfies` makes adding a property to `Node` fail to compile here. */
@@ -149,6 +163,11 @@ const nodeProps = {
       'Text outline colour: the game-title look. Pair with textStrokeWidth (3-6 for big titles)',
     ),
   textStrokeWidth: z.number().describe('How far the outline reaches outside the letters, px'),
+  textStyle: z
+    .string()
+    .describe(
+      "Name of a shared text style (set_tokens textStyles). Its font, size, colour, outline and shadow replace this layer's own; null detaches",
+    ),
   assetId: z.string().describe('Image nodes only'),
   fit: z
     .enum(['cover', 'contain', 'fill', 'tile'])
@@ -327,6 +346,12 @@ const setTokens = defineTool({
     colors: z.record(z.string(), z.string().nullable()).optional(),
     fonts: z.record(z.string(), z.string().nullable()).optional(),
     radii: z.record(z.string(), z.number().nullable()).optional(),
+    textStyles: z
+      .record(z.string(), textStyleSchema.nullable())
+      .optional()
+      .describe(
+        'Shared text looks: { "Title Outline": { fontFamily, fontSize, fontWeight, lineHeight, letterSpacing, textTransform, color, textStroke, textStrokeWidth, shadow } | null }. Apply with the textStyle property on text layers; editing the style updates every layer that uses it.',
+      ),
     spacing: z.array(z.number()).optional(),
     label: z.string().max(100).optional().describe('Short description shown in the undo history'),
   }),

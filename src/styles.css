@@ -803,6 +803,10 @@ body {
   z-index: 3;
   mix-blend-mode: normal;
 }
+.compare__overlay--difference {
+  mix-blend-mode: difference;
+  opacity: 1;
+}
 .compare__side {
   position: absolute;
   margin: 0;

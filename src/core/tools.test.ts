@@ -286,6 +286,7 @@ describe('registry', () => {
         'apply_changes',
         'apply_theme',
         'arrange_nodes',
+        'compare_reference',
         'component_list',
         'create_instance',
         'create_project',
