@@ -19,6 +19,8 @@ pub enum Provider {
     Anthropic,
     OpenAi,
     Custom,
+    /// The Figma personal access token (not an AI provider: only `figma.rs` reads it).
+    Figma,
 }
 
 impl Provider {
@@ -27,6 +29,7 @@ impl Provider {
             "anthropic" => Ok(Provider::Anthropic),
             "openai" => Ok(Provider::OpenAi),
             "custom" => Ok(Provider::Custom),
+            "figma" => Ok(Provider::Figma),
             _ => Err("unknown provider".into()),
         }
     }
@@ -36,6 +39,7 @@ impl Provider {
             Provider::Anthropic => "anthropic",
             Provider::OpenAi => "openai",
             Provider::Custom => "custom",
+            Provider::Figma => "figma",
         }
     }
 }
@@ -63,6 +67,15 @@ pub fn key_set(provider: Provider, key: &str) -> Result<(), String> {
         .map_err(|_| "The system credential store refused to save the key.".to_string())
 }
 
+/// The stored key, for the module that makes the request. Never sent to the page.
+pub fn key_get(provider: Provider) -> Result<Option<String>, String> {
+    match entry(provider)?.get_password() {
+        Ok(k) if !k.is_empty() => Ok(Some(k)),
+        Ok(_) | Err(keyring::Error::NoEntry) => Ok(None),
+        Err(_) => Err("The system credential store could not be read.".into()),
+    }
+}
+
 pub fn key_clear(provider: Provider) -> Result<(), String> {
     match entry(provider)?.delete_credential() {
         Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
@@ -74,6 +87,7 @@ pub fn key_clear(provider: Provider) -> Result<(), String> {
 /// or plain http only on this machine (Ollama, LM Studio).
 pub fn endpoint(provider: Provider, base_url: Option<&str>) -> Result<String, String> {
     match provider {
+        Provider::Figma => Err("That key is not for AI requests.".into()),
         Provider::Anthropic => Ok("https://api.anthropic.com/v1/messages".into()),
         Provider::OpenAi => Ok("https://api.openai.com/v1/chat/completions".into()),
         Provider::Custom => {

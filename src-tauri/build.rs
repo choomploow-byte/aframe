@@ -21,6 +21,8 @@ fn main() {
             "ai_key_set",
             "ai_key_clear",
             "ai_send",
+            "figma_get",
+            "figma_download",
         ]),
     ))
     .expect("failed to run the Tauri build script");

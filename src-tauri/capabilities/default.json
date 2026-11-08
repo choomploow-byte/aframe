@@ -22,6 +22,8 @@
     "allow-ai-key-status",
     "allow-ai-key-set",
     "allow-ai-key-clear",
-    "allow-ai-send"
+    "allow-ai-send",
+    "allow-figma-get",
+    "allow-figma-download"
   ]
 }

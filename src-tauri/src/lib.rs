@@ -8,6 +8,7 @@ mod ai;
 mod appstate;
 mod bridge;
 mod export;
+mod figma;
 mod fsops;
 mod home;
 mod layout;
@@ -186,6 +187,27 @@ async fn ai_send(
         .map_err(|_| "The request was interrupted.".to_string())?
 }
 
+/// One Figma request with the stored token. See `figma.rs` for what the page can and cannot ask.
+#[tauri::command]
+async fn figma_get(
+    kind: String,
+    key: String,
+    ids: Option<String>,
+    depth: Option<u8>,
+) -> Result<figma::FigmaReply, String> {
+    tauri::async_runtime::spawn_blocking(move || figma::get(&kind, &key, ids.as_deref(), depth))
+        .await
+        .map_err(|_| "The request was interrupted.".to_string())?
+}
+
+/// Downloads a picture from an address Figma gave back (https, Figma's own hosts only).
+#[tauri::command]
+async fn figma_download(url: String) -> Result<figma::Picture, String> {
+    tauri::async_runtime::spawn_blocking(move || figma::download(&url))
+        .await
+        .map_err(|_| "The request was interrupted.".to_string())?
+}
+
 /// The page has flushed its unsaved work; now the window may really close.
 #[tauri::command]
 async fn app_quit(app: tauri::AppHandle) -> Result<(), String> {
@@ -282,7 +304,9 @@ pub fn run() {
             ai_key_status,
             ai_key_set,
             ai_key_clear,
-            ai_send
+            ai_send,
+            figma_get,
+            figma_download
         ])
         .run(tauri::generate_context!())
         .expect("error while running Atelier");
