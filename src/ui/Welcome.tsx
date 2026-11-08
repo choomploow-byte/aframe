@@ -1,4 +1,5 @@
-import { Frame, MessageCircle, Sparkles } from 'lucide-react';
+import { Frame, KeyRound, MessageCircle, Sparkles, Upload } from 'lucide-react';
+import { openChat } from '../chat/focus';
 import { createSampleProject } from '../projects/session';
 import { store } from '../store/store';
 import { STRINGS } from '../strings';
@@ -43,6 +44,29 @@ export function Welcome() {
           <MessageCircle size={20} strokeWidth={1.5} aria-hidden="true" />
           <span className="welcome__card-title">{w.connect}</span>
           <span className="welcome__card-hint">{w.connectHint}</span>
+        </button>
+        <button
+          type="button"
+          className="welcome__card"
+          data-action="welcome-apikey"
+          onClick={() => {
+            openChat();
+            openDialog('settings');
+          }}
+        >
+          <KeyRound size={20} strokeWidth={1.5} aria-hidden="true" />
+          <span className="welcome__card-title">{w.apiKey}</span>
+          <span className="welcome__card-hint">{w.apiKeyHint}</span>
+        </button>
+        <button
+          type="button"
+          className="welcome__card"
+          data-action="welcome-import"
+          onClick={() => openDialog('import')}
+        >
+          <Upload size={20} strokeWidth={1.5} aria-hidden="true" />
+          <span className="welcome__card-title">{w.import}</span>
+          <span className="welcome__card-hint">{w.importHint}</span>
         </button>
       </div>
     </div>

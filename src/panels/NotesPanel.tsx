@@ -106,7 +106,7 @@ function NoteRow({
       <button
         type="button"
         className="nrow__main"
-        aria-label={`Go to ${open ? `note ${number}` : 'resolved note'}`}
+        title={`Go to ${open ? `note ${number}` : 'this resolved note'}`}
         onClick={() => focusAnnotation(a.id)}
       >
         <span className={`nrow__num${open ? '' : ' nrow__num--resolved'}`}>

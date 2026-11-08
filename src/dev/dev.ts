@@ -49,6 +49,8 @@ export async function installDevTools(): Promise<void> {
       ]);
       return { transport, keys, settings, session };
     },
+    /** Makes the app throw while rendering, to see the recovery page. */
+    crash: async () => (await import('../ui/ErrorBoundary')).requestTestCrash(),
     loadBlank: () => {
       projects.detachForTests();
       store.getState().loadDoc(createEmptyDoc());

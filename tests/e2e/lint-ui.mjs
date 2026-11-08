@@ -20,7 +20,7 @@ await page.evaluate(() => document.fonts.ready);
 await settle(page);
 await sleep(800); // the badge settles shortly after edits stop
 const badge = await page
-  .$eval('[data-testid="check-badge"]', (el) => Number(el.textContent))
+  .$eval('[data-testid="check-badge"]', (el) => Number.parseInt(el.textContent ?? '0', 10))
   .catch(() => 0);
 check('the top bar shows how many things need a look', badge > 0, String(badge));
 

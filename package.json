@@ -19,7 +19,7 @@
     "test": "vitest run",
     "test:mcp": "node scripts/test-mcp.mjs",
     "test:unit": "vitest run",
-    "test:e2e": "node tests/e2e/shell-smoke.mjs && node tests/e2e/canvas.mjs && node tests/e2e/panels.mjs && node --import tsx tests/e2e/persistence.mjs && node tests/e2e/mcp-live.mjs && node tests/e2e/toolkit.mjs && node tests/e2e/annotations.mjs && node --import tsx tests/e2e/export.mjs && node tests/e2e/export-ui.mjs && node tests/e2e/chat.mjs && node tests/e2e/lint-ui.mjs && node tests/e2e/import.mjs",
+    "test:e2e": "node tests/e2e/shell-smoke.mjs && node tests/e2e/canvas.mjs && node tests/e2e/panels.mjs && node --import tsx tests/e2e/persistence.mjs && node tests/e2e/mcp-live.mjs && node tests/e2e/toolkit.mjs && node tests/e2e/annotations.mjs && node --import tsx tests/e2e/export.mjs && node tests/e2e/export-ui.mjs && node tests/e2e/chat.mjs && node tests/e2e/lint-ui.mjs && node tests/e2e/import.mjs && node tests/e2e/a11y.mjs && node tests/e2e/resilience.mjs",
     "test:e2e:panels": "node tests/e2e/panels.mjs",
     "test:e2e:persist": "node --import tsx tests/e2e/persistence.mjs",
     "test:e2e:mcp": "node tests/e2e/mcp-live.mjs",
@@ -41,7 +41,11 @@
     "eval": "node --import tsx evals/run.mjs",
     "test:e2e:lint": "node tests/e2e/lint-ui.mjs",
     "capture-dom": "node scripts/capture-dom.mjs",
-    "test:e2e:import": "node tests/e2e/import.mjs"
+    "test:e2e:import": "node tests/e2e/import.mjs",
+    "pack:mcp": "node scripts/pack-mcp.mjs",
+    "test:e2e:a11y": "node tests/e2e/a11y.mjs",
+    "test:e2e:resilience": "node tests/e2e/resilience.mjs",
+    "rename": "node scripts/rename.mjs"
   },
   "dependencies": {
     "@fontsource-variable/dm-sans": "^5.3.0",
@@ -75,6 +79,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.2.1",
     "@vitest/coverage-v8": "^5.1.0",
+    "axe-core": "^4.14.0",
     "esbuild": "^0.28.2",
     "eslint": "^10.14.0",
     "eslint-plugin-react-hooks": "^7.1.1",

@@ -118,7 +118,7 @@ export function TopBar() {
       <button
         type="button"
         className="btn btn--ghost btn--small"
-        aria-label="Command palette"
+        aria-label="Ctrl K: open the command palette"
         title="Command palette (Ctrl+K)"
         data-testid="open-palette"
         onClick={() => openDialog('palette')}
@@ -139,20 +139,16 @@ export function TopBar() {
         className="btn btn--ghost btn--small"
         data-testid="design-check"
         title="Check the design for contrast, text size, spacing and alignment"
-        aria-label={
-          lint.problems > 0
-            ? `Design check: ${lint.problems} to look at`
-            : 'Design check: all clear'
-        }
         onClick={() => openDialog('lint')}
       >
         Check
         {lint.problems > 0 && (
           <span
-            className={`badge${lint.errors > 0 ? ' badge--error' : ''}`}
+            className={`checkbadge${lint.errors > 0 ? ' checkbadge--error' : ''}`}
             data-testid="check-badge"
           >
             {lint.problems}
+            <span className="sr-only"> to look at</span>
           </span>
         )}
       </button>

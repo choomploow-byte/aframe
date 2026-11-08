@@ -1,19 +1,39 @@
 name: Release
+
+# Push a tag like v0.2.0 (it must match the version in package.json, src-tauri/Cargo.toml and
+# src-tauri/tauri.conf.json) to build the desktop app for Windows, macOS and Linux into a DRAFT GitHub
+# Release with checksums, and publish the standalone MCP server to npm.
+#
+# Not verified yet: this workflow has not run. The Windows build has been made by hand on a Windows
+# machine; macOS and Linux have never been built. Read docs/release.md before the first tag.
 on:
   push:
     tags: ['v*']
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: The tag, package.json, Cargo.toml and tauri.conf.json must agree
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg=$(node -p "require('./package.json').version")
+          tauri=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          cargo=$(grep -m1 '^version' src-tauri/Cargo.toml | sed -E 's/version *= *"([^"]+)"/\1/')
+          echo "tag=$tag package.json=$pkg tauri.conf.json=$tauri Cargo.toml=$cargo"
+          [ "$tag" = "$pkg" ] && [ "$tag" = "$tauri" ] && [ "$tag" = "$cargo" ]
+
   desktop:
+    needs: check
     permissions: { contents: write }
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { platform: macos-latest, args: '--target aarch64-apple-darwin' }
-          - { platform: macos-13, args: '--target x86_64-apple-darwin' }
-          - { platform: ubuntu-22.04, args: '' }
-          - { platform: windows-latest, args: '' }
+          - { platform: windows-latest, args: '', label: windows }
+          - { platform: macos-latest, args: '--target universal-apple-darwin', label: macos }
+          - { platform: ubuntu-22.04, args: '', label: linux }
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
@@ -21,37 +41,69 @@ jobs:
         with: { node-version: 22, cache: npm }
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
-      - name: Linux deps
-        if: matrix.platform == 'ubuntu-22.04'
+          targets: ${{ matrix.label == 'macos' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: src-tauri }
+      - name: Linux dependencies
+        if: matrix.label == 'linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev patchelf
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev libdbus-1-dev pkg-config patchelf
       - run: npm ci
       - run: npm run build:mcp
-      - uses: tauri-apps/tauri-action@v0
+      - name: Build and attach to the draft release
+        id: tauri
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Signing (optional for alpha, required for smooth installs):
-          # APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY, APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID
-          # WINDOWS signing via Azure Trusted Signing or a certificate; TAURI_SIGNING_PRIVATE_KEY for the updater
+          # Optional: without these the installers are unsigned (Windows SmartScreen and macOS Gatekeeper
+          # will warn). See docs/release.md for what each secret is and how to get it.
+          # macOS: APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY, APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID
+          # Updater signature (only once the updater plugin is configured): TAURI_SIGNING_PRIVATE_KEY, TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'Atelier ${{ github.ref_name }}'
-          releaseBody: 'See CHANGELOG.md for details.'
+          releaseBody: 'See CHANGELOG.md for what changed. Installers are unsigned unless the release notes say otherwise.'
           releaseDraft: true
+          prerelease: true
           args: ${{ matrix.args }}
+      - name: Checksums
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACTS: ${{ steps.tauri.outputs.artifactPaths }}
+        run: |
+          node -e '
+            const crypto = require("node:crypto");
+            const fs = require("node:fs");
+            const paths = JSON.parse(process.env.ARTIFACTS || "[]");
+            const lines = paths.filter((p) => fs.statSync(p).isFile()).map((p) => {
+              const sum = crypto.createHash("sha256").update(fs.readFileSync(p)).digest("hex");
+              return `${sum}  ${require("node:path").basename(p)}`;
+            });
+            fs.writeFileSync("SHA256SUMS-${{ matrix.label }}.txt", lines.join("\n") + "\n");
+            console.log(lines.join("\n"));
+          '
+          gh release upload "${{ github.ref_name }}" "SHA256SUMS-${{ matrix.label }}.txt" --clobber
 
   npm-mcp:
+    needs: check
     runs-on: ubuntu-latest
     permissions: { contents: read, id-token: write }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 22, registry-url: 'https://registry.npmjs.org' }
+        with: { node-version: 22, registry-url: 'https://registry.npmjs.org', cache: npm }
       - run: npm ci
       - run: npm run build:mcp
-      # Publishes the standalone MCP bundle package (see docs/09 Route 3)
-      - run: npm publish --provenance --access public
+      - run: npm run pack:mcp
+      - name: Publish atelier-mcp (needs the NPM_TOKEN secret; see docs/release.md)
+        run: npm publish --provenance --access public
         working-directory: mcp-package
         env: { NODE_AUTH_TOKEN: '${{ secrets.NPM_TOKEN }}' }

@@ -5,6 +5,7 @@ import { RightPanel } from './panels/RightPanel';
 import { STRINGS } from './strings';
 import { ContextMenus } from './ui/ContextMenus';
 import { Dialogs } from './ui/Dialogs';
+import { CrashProbe } from './ui/ErrorBoundary';
 import { useImageDropAndPaste } from './ui/image-import';
 import { TopBar } from './ui/TopBar';
 import { Toasts } from './ui/Toasts';
@@ -30,6 +31,7 @@ export function App() {
       <Dialogs />
       <Toasts />
       <AgentActivity />
+      <CrashProbe />
     </div>
   );
 }

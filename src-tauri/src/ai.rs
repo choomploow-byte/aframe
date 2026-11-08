@@ -130,6 +130,8 @@ pub fn send(
     let key = match entry(provider)?.get_password() {
         Ok(k) if !k.is_empty() => Some(k),
         Ok(_) | Err(keyring::Error::NoEntry) => None,
+        // A local server may need no key, so a missing credential store must not stop it.
+        Err(_) if provider == Provider::Custom => None,
         Err(_) => return Err("The system credential store could not be read.".into()),
     };
     if key.is_none() && provider != Provider::Custom {
