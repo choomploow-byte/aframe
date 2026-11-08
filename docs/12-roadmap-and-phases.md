@@ -67,6 +67,7 @@ Each phase: **goal, deliverables, acceptance criteria, how to verify, estimate**
 **Accept:** 3 real-world Figma files convert with a report and < 20% manual fixing; running-app import gives a usable starting frame for a standard Vite/Next page.
 
 ## Phase 11: Polish, packaging, launch (2-3 sessions)
+**Status: built (2026-11-08) except what needs your accounts and machines.** Done and tested: accessibility audit and fixes, recovery page with diagnostics, fuzzing, performance check (2,000 nodes stays interactive), `atelier-mcp` npm package, release workflow (never run), rename tool (proved on a clone), user guide, demo script, alpha kit, README. Not done: auto-update, code signing and notarisation, publishing to npm, clean-VM installs on any OS, macOS and Linux builds. Culling was not added: the measured numbers did not call for it. See docs/14 for the checklist and docs/release.md.
 **Goal:** something strangers can install and love.
 **Deliver:** onboarding + sample projects/templates, empty/error states, command palette completeness, perf pass (doc 19), accessibility pass, auto-update, signing/notarisation, docs site (README + `docs/`), demo GIF/video script, issue templates, contributor guide, Release workflow for 3 OSes, `atelier-mcp` on npm.
 **Accept:** clean-machine install on Win/macOS/Linux < 2 min; Lighthouse-style a11y checks on the UI pass; cold start < 2 s; docs enable a new contributor to run dev in 10 min.

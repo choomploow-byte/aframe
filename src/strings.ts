@@ -121,7 +121,7 @@ export const STRINGS = {
     placeholder: 'Type a command…',
     empty: 'No command matches.',
   },
-  shortcuts: { title: 'Keyboard shortcuts' },
+  shortcuts: { title: 'Keyboard shortcuts', version: (v: string) => `Atelier version ${v}` },
   export: {
     title: 'Export',
     titleFor: (name: string) => `Export "${name}"`,

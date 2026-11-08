@@ -20,10 +20,13 @@ Local-first. No accounts. No telemetry. Least privilege everywhere. Treat everyt
 
 ## Tauri hardening checklist
 - [x] CSP set; `dangerousDisableAssetCspModification` not used (Phase 0; the installed release build was checked running under it, Phase 4)
-- [x] Capabilities limited to the main window (`core:default` plus one named permission per app command; no fs, shell, dialog or opener plugin)
+- [x] Capabilities limited to the main window (`core:default` plus one named permission per app command; the page has no fs, shell, dialog or opener permission. The dialog plugin is initialised for the native folder picker but only Rust calls it; `tauri-plugin-fs` is compiled in as a dependency of the dialog plugin and has no permission granted)
 - [x] Custom fs commands canonicalise paths and enforce prefix `~/.atelier` (`home.rs`, tested; the Node twin in `mcp/home-fs.ts` has the same tests)
-- [ ] Remote URLs not loaded in the main WebView; external links open in system browser via shell-less `opener`
-- [ ] Updater pubkey configured; signing key stored in CI secrets
+- [x] Remote URLs not loaded in the main WebView: `default-src 'self'`, `connect-src 'self' ipc:` (provider and Figma calls are made by Rust), no remote anchors in the app. There is no opener plugin: nothing in the app opens an external link
+- [ ] Updater pubkey configured; signing key stored in CI secrets (not done: needs a key pair only the owner can create; steps in docs/release.md)
+- [x] Dependency audit: `npm audit --omit=dev` reports 0 vulnerabilities in what ships; the 10 moderate findings are in the lint tooling (minimatch inside eslint, dev only). `cargo audit` has not been run (not installed here)
+- [x] Malformed input: the document loader, SVG, Figma and page-capture importers and the code exporter are fuzzed with 3000 deterministic mutations each (`tests/node/fuzz.test.ts`); a project file cannot change `Object.prototype`
+- [x] Accessibility audit of the editor chrome with axe-core (WCAG 2 A/AA, both themes, every dialog): `tests/e2e/a11y.mjs`
 
 ## Privacy
 - Design content stays on disk. It leaves the device only when: the user's external agent reads it (their chosen host/model), or the in-app chat sends it to the chosen provider.

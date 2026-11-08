@@ -1,8 +1,33 @@
 # Atelier
 
-Open-source, local-first AI design studio. Let Claude Code, Codex, or an API-key chat design real UI on a canvas you can see, annotate and approve, then export it as code into your repo.
+Open-source, local-first AI design studio. Let Claude Code, Codex or a chat with your own API key design real UI on a canvas you can see, annotate and approve, then export it as code into your repo.
 
-> Status: early development (Phases 0-5: foundations, core library, canvas editor, panels, persistence and sync, the MCP server). There is nothing to install yet. See [`docs/12-roadmap-and-phases.md`](docs/12-roadmap-and-phases.md).
+> **Status: early pre-release (v0.1.x).** A Windows installer is on the [releases page](https://github.com/choomploow-byte/atelier/releases) (unsigned: Windows will warn). macOS and Linux build from source but have not been run by the author. Everything below is tested on Windows and in Chrome; what has not been tried is listed in [`docs/14-open-source-and-release.md`](docs/14-open-source-and-release.md).
+
+## What it does
+
+- **A canvas for AI.** Frames with real auto-layout, text, shapes, images, icons, patterns and bevel presets, reusable components with hover and pressed states, tokens for colours, fonts and radii. Games and apps: templates for a landing page, a dashboard, a mobile app, a pricing page, and a game HUD, shop and inventory.
+- **Your AI, your way.** Claude Code, Codex and Cursor drive the app through an MCP server (screenshot, edit, lint, export). Or use the built-in chat with your own Anthropic, OpenAI or compatible key, kept in your system keychain. Either way it looks at the design, edits it, takes a screenshot to check its work, and one undo reverses a whole turn.
+- **You steer.** Drop numbered notes on anything; the AI reads them, fixes them and replies. Attach reference images with a note and a scope. Press **Check** for contrast, text size, spacing and alignment problems, with one-click fixes.
+- **Code out.** Export a frame as HTML + CSS, React + CSS Modules or React + Tailwind (colours stay variables, images become files, class names stay stable between exports), or as PNG or SVG. Verified: every format builds with Vite and renders within 2% of the canvas.
+- **Bring designs in.** SVG as editable layers, a Figma frame, a captured web page (prototype), or any image for the AI to rebuild.
+- **Local first.** Projects are plain JSON files under `~/.atelier`. No account, no servers of ours, no telemetry.
+
+Start with [`docs/user-guide.md`](docs/user-guide.md); there is a two-minute walkthrough in [`docs/demo-script.md`](docs/demo-script.md).
+
+## Install
+
+1. Download the installer from the [releases page](https://github.com/choomploow-byte/atelier/releases) and run it. It is not code-signed yet, so Windows SmartScreen will say "unknown publisher": choose *More info*, then *Run anyway*. Checksums are next to the installer.
+2. Open Atelier and press **Explore the sample project**.
+3. Connect an AI: press **Connect AI** and paste the text it shows into Claude Code or Codex, or press the **Chat** tab and add an API key. Then ask: *"in atelier, improve my design"*.
+
+Or only the MCP server, without the app, for an agent that will edit files (screenshots and image export need the app open):
+
+```bash
+npx -y atelier-mcp install     # needs Node 20+; registers with Claude Code, Codex and Cursor
+```
+
+(`atelier-mcp` is built and tested from a clean install but has not been published to npm yet.)
 
 ## Develop
 
@@ -20,7 +45,7 @@ npm run tauri:dev  # desktop shell (needs Rust)
 Browser tests (need Chrome; set `CHROME_PATH` if it is not in a standard place):
 
 ```bash
-npm run test:e2e      # shell smoke + canvas + panels + persistence + a live agent (real mouse and keyboard)
+npm run test:e2e      # every browser suite: canvas, panels, persistence, a live agent, export, chat, import, accessibility (real mouse and keyboard)
 npm run test:visual   # screenshot baselines; UPDATE_BASELINES=1 refreshes them deliberately
 npm run test:perf     # frame timing on a 500-node document (optimised build); PERF_NODES=2000 to scale
 npm run probe:css     # proves the nodeToCss layout contract in a real browser
@@ -75,6 +100,12 @@ the AI tools are pointed at. Working on the server: `npm run test:mcp` (the buil
 real MCP client, the installers, and the real `claude` CLI if present) and `npm run test:e2e:mcp` (an
 agent editing the running app). What only a real model session can show is in
 [`docs/manual-e2e.md`](docs/manual-e2e.md).
+
+## Contributing
+
+Read [`CONTRIBUTING.md`](CONTRIBUTING.md). The short version: one phase of the roadmap at a time, small conventional commits, and nothing is called done until it has been run. Skills (markdown the AI loads) are the easiest first contribution: see [`skills/README.md`](skills/README.md). To measure whether a change to a skill or prompt helped, use the eval harness in [`evals/`](evals/README.md).
+
+To pick a different product name: `node scripts/rename.mjs --name "Foo Studio" --slug foostudio` (dry run first; [`docs/release.md`](docs/release.md) lists what it cannot do).
 
 ## Licence
 

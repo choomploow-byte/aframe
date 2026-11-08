@@ -39,10 +39,23 @@ GitHub Sponsors / Open Collective; optional paid hosted add-ons later (cloud syn
 `SECURITY.md` with private reporting via GitHub Security Advisories; response within 72 h.
 
 ## Release checklist
-- [ ] Version bumped in package.json, Cargo.toml, tauri.conf.json, MCP server constant
-- [ ] Doc `schema` migration tested from previous release fixtures
-- [ ] `atelier-mcp` bundle rebuilt and embedded in the app
-- [ ] Installers signed/notarised; smoke-tested on clean VMs
-- [ ] Install text (Connect dialog) verified against current Claude Code/Codex docs
-- [ ] Changelog + release notes + GIFs
-- [ ] npm publish; GitHub Release; update docs site
+State as of 2026-11-08 (docs/release.md has the how):
+- [ ] Version bumped in package.json, Cargo.toml, tauri.conf.json, MCP server constant: **to do at release**; the new tools (export, lint fixOps, skills) need version 0.1.3 or later for installed apps to refresh their server, and the release workflow refuses a tag that disagrees
+- [x] Doc `schema` migration: schema 1 is the only version; a newer one is refused with a clear message (tested). Nothing to migrate yet
+- [x] `atelier-mcp` bundle rebuilt and embedded in the app on every build
+- [ ] Installers signed/notarised: **not done** (needs your certificates). Windows installer smoke-tested by script on this machine; **no clean-VM run, and macOS/Linux never built**
+- [ ] Install text (Connect dialog) verified against current Claude Code/Codex docs: written against the docs read earlier, not re-verified; run the Connect steps with the real CLIs before launch (docs/manual-e2e.md)
+- [ ] Changelog + release notes + GIFs: changelog done; release notes and GIFs to do (docs/demo-script.md is the script)
+- [ ] npm publish (package built and tested from a clean install, not published); GitHub Release (v0.1.2 pre-release exists; the release workflow has never run); update docs site
+- [ ] Live-provider check of the built-in chat, a real Figma file and the eval harness with a real model: **none done**; they need your keys and files
+- [ ] Auto-updater: not built (needs a signing key pair; docs/release.md)
+
+### Outstanding risks
+1. Everything model-facing (chat, evals) is proved against scripted replies, not a live model.
+2. Three platforms are claimed by the code and proved on one.
+3. Unsigned installers will scare some first users.
+4. Figma import is untested on real files; the web-page import is a prototype.
+5. The Claude/Codex install text may drift from those tools' current behaviour.
+
+### Recommended alpha invitees
+Five to ten people who build with Claude Code, Codex or Cursor, are not designers, and are on Windows. See docs/alpha-kit.md.

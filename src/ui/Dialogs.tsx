@@ -40,6 +40,9 @@ function ShortcutSheet() {
             </dl>
           </section>
         ))}
+        <p className="dialog__muted shortcuts__version" data-testid="app-version">
+          {STRINGS.shortcuts.version(typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : 'dev')}
+        </p>
       </div>
     </Dialog>
   );
