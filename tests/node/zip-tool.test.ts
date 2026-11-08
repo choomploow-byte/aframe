@@ -12,6 +12,7 @@ const entries = [
 
 describe('zipStore with a real unzip tool', () => {
   it('is accepted by a real unzip tool', () => {
+    fs.mkdirSync(path.resolve('.shots'), { recursive: true });
     const dir = fs.mkdtempSync(path.resolve('.shots', 'zip-'));
     try {
       const file = path.join(dir, 'x.zip');
