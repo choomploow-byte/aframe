@@ -61,6 +61,7 @@ Each phase: **goal, deliverables, acceptance criteria, how to verify, estimate**
 **Accept:** eval average >= 4/5 on the fixed task set with a strong model; lint catches seeded issues (low contrast, 10px text, off-scale spacing, overflow).
 
 ## Phase 10: Import (2-3 sessions)
+**Status: built (2026-11-08), with two parts unverified**: the Figma importer has never run against a real file or the live API (no token), and the running-app capture has been tried on one small page only. See docs/10 for exact numbers and gaps. No `import_svg` MCP tool was added; agents bring an SVG in with `import_image`, and the editable import is in the app.
 **Goal:** bring existing designs in.
 **Deliver:** SVG importer; Figma REST JSON importer (+ Rust fetch, token UI, import report); Canva via export+rebuild flow and docs; "import my running app" (localhost URL -> screenshot/DOM -> nodes) as a spike.
 **Accept:** 3 real-world Figma files convert with a report and < 20% manual fixing; running-app import gives a usable starting frame for a standard Vite/Next page.
